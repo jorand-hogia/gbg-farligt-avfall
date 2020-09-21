@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node bin/gfa-iac.ts",
+  "app": "npx ts-node bin/gfa-pipeline.ts",
   "context": {
     "@aws-cdk/core:enableStackNameDuplicates": "true",
     "aws-cdk:enableDiffNoFail": "true",
