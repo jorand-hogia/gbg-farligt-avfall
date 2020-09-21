@@ -49,7 +49,7 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         version: '0.2',
         phases: {
           install: {
-            commands: 'curl https://sh.rustup.rs -sSf | sh'
+            commands: 'curl https://sh.rustup.rs -sSf | sh -y'
           },
           build: {
             commands: [
