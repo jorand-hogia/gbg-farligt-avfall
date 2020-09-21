@@ -49,20 +49,20 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         version: '0.2',
         phases: {
           install: {
-            commands: 'curl https://sh.rustup.rs -sSf | sh -y'
+            commands: 'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y'
           },
           build: {
             commands: [
               'cd gfa-poller',
-              'rustup target add x86_64-unknown-linux-musl',
-              'cargo build --release --target x86_64-unknown-linux-musl',
-              'cp target/x86_64-unknown-linux-musl/release/gfa-poller ./bootstrap && zip lambda.zip bootstrap && rm bootstrap'
+              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
+              '$HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl',
+              'cp target/x86_64-unknown-linux-musl/release/gfa-poller ./bootstrap'
             ]    
           },
         },
         artifacts: {
           'base-directory': 'gfa-poller',
-          files: 'lambda.zip'
+          files: './bootstrap'
         },
       }),
       environment: {
