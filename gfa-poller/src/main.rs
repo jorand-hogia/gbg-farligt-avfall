@@ -12,8 +12,9 @@ struct EmptyEvent {}
 struct EmptyOutput {}
 
 fn main() -> Result<(), Box<dyn Error>> {
-    SimpleLogger::new()
-        .with_level(LevelFilter::Info);
+    let _log = SimpleLogger::new()
+        .with_level(LevelFilter::Info)
+        .init();
     lambda!(handle_request);
     Ok(())
 }
