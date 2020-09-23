@@ -23,6 +23,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerError> {
     info!("Hello farligt avfall!");
-    let urls_to_scrape = url_parser::obtain_urls();
+    let urls_to_scrape = url_parser::obtain_urls().unwrap();
+    for url in urls_to_scrape {
+        info!("{}", url);
+    }
     Ok(EmptyOutput{})
 }
