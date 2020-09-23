@@ -16,3 +16,5 @@ https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
 - `cd gfa iac`
 - `cdk deploy GbgFarligtAvfallPipelineStack`
 
+## Deploy main stack
+Not needed! The deploy pipeline will trigger on commits to master.
