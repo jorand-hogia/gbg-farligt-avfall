@@ -49,7 +49,10 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         version: '0.2',
         phases: {
           install: {
-            commands: 'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y'
+            commands: [
+              'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
+              'apt update && apt install -y musl-tools'
+            ]
           },
           build: {
             commands: [
