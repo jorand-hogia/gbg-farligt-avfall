@@ -322,6 +322,7 @@ dependencies = [
 name = "gfa-poller"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "lambda_runtime",
  "log",
  "regex",

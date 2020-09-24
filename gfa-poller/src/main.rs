@@ -6,6 +6,7 @@ use log::{self, info, LevelFilter};
 use serde::{Deserialize, Serialize};
 
 mod page_fetcher;
+mod page_parser;
 
 #[derive(Deserialize)]
 struct EmptyEvent {}
