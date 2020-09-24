@@ -5,7 +5,7 @@ use simple_logger::{SimpleLogger};
 use log::{self, info, LevelFilter};
 use serde::{Deserialize, Serialize};
 
-mod url_parser;
+mod page_fetcher;
 
 #[derive(Deserialize)]
 struct EmptyEvent {}
@@ -23,9 +23,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerError> {
     info!("Hello farligt avfall!");
-    let urls_to_scrape = url_parser::obtain_urls().unwrap();
-    for url in urls_to_scrape {
-        info!("{}", url);
+    let pages_to_scrape = page_fetcher::obtain_pages().unwrap();
+    for p in pages_to_scrape {
+        println!("{}", p.len());
     }
     Ok(EmptyOutput{})
 }
