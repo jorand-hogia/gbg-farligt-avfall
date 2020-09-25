@@ -15,6 +15,7 @@ simple_logger = "1.6.0"
 ureq = "1.4.1" 
 select = "0.5.0"
 regex = "1"
-chrono = "0.4.15"
+chrono = "0.4"
+chrono-tz = "0.4"
 
 [dev-dependencies]

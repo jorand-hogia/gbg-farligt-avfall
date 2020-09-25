@@ -1,5 +1,6 @@
 use std::fmt;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc, TimeZone, Datelike};
+use chrono_tz::Europe::Stockholm;
 use regex::Regex;
 use select::{document, predicate, selection, node};
 
@@ -7,7 +8,7 @@ pub struct PickUpEvent {
     street: String,
     district: String,
     description: Option<String>,
-    time: DateTime<Utc>,
+    time: DateTime<FixedOffset>,
 }
 
 pub struct PageParserError {
@@ -52,7 +53,15 @@ fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
                 }
             };
         let (description, raw_times) = split_desc_and_times(other_stuff).unwrap();
-        println!("{} - {}\n{}\n{}\n\n", district, street, description.unwrap_or("".to_string()), raw_times);
+        let utc = Utc::now().naive_utc();
+        let current_year = Stockholm.from_utc_datetime(&utc).year();
+        let times: Vec<DateTime::<FixedOffset>> = match parse_times(&raw_times, current_year) {
+            Ok(times) => times,
+            Err(e) => return Err(PageParserError{
+                message: e.message
+            })
+        };
+        println!("{}", raw_times);
     }
     Ok(Vec::new())
 } 
@@ -80,6 +89,10 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
     };
     let raw_times = String::from(String::from(&raw[result..]).trim_matches('.').trim()); // TODO: Do something about this crap when you learn how to
     Ok((description, raw_times))
+}
+
+fn parse_times(raw: &String, year: i32) -> Result<Vec<DateTime::<FixedOffset>>, PageParserError> {
+    Ok(Vec::new())
 }
 
 #[cfg(test)]
@@ -122,6 +135,14 @@ mod tests {
         assert_eq!(true, description.is_some());
         assert_eq!("vid pizzerian", description.unwrap());
         assert_eq!("tisdag 6 oktober 19-19.45", raw_times);
+    }
+
+    #[test]
+    fn should_parse_single_date() {
+        let raw = "måndag 28 september 17-17.45";
+        let time = parse_times(&raw.to_string(), 2020 as i32).unwrap();
+        assert_eq!(1, time.len());
+        assert_eq!(DateTime::parse_from_rfc3339("2020-09-28T15:00:00Z").unwrap(), *time.get(0).unwrap())
     }
 
     #[test]
