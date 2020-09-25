@@ -34,13 +34,25 @@ fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
                     continue;
                 }
             };
-        println!("{}", street);
+        let district = match node.find(predicate::Class("c-snippet__meta"))
+            .into_selection().first() {
+                Some(element) => format_district(element.text()),
+                None => {
+                    println!("Not found :(");
+                    continue; // TODO: Proper log statements
+                }
+            };
+        println!("{} - {}", district, street);
     }
     Ok(Vec::new())
 } 
 
 fn format_street(raw: String) -> String {
     String::from(raw.trim())
+}
+
+fn format_district(raw: String) -> String {
+    String::from(raw.replace("Kommunal,", "").trim())
 }
 
 #[cfg(test)]
@@ -64,6 +76,13 @@ mod tests {
                                     Bankebergsgatan/Kennedygatan";
         let formatted_street = format_street(String::from(raw_street));
         assert_eq!("Bankebergsgatan/Kennedygatan", formatted_street);
+    }
+
+    #[test]
+    fn should_format_district() {
+        let raw_district = "Kommunal, Västra Göteborg";
+        let formatted_district = format_district(String::from(raw_district));
+        assert_eq!("Västra Göteborg", formatted_district);
     }
 
     #[test]
