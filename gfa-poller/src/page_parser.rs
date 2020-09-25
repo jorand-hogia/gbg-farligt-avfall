@@ -1,5 +1,6 @@
 use std::fmt;
 use chrono::{DateTime, Utc};
+use regex::Regex;
 use select::{document, predicate, selection, node};
 
 pub struct PickUpEvent {
@@ -42,7 +43,16 @@ fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
                     continue; // TODO: Proper log statements
                 }
             };
-        println!("{} - {}", district, street);
+        let other_stuff = match node.find(predicate::Class("c-snippet__section"))
+            .into_selection().first() {
+                Some(element) => element.text(),
+                None => {
+                    println!("Not found :(");
+                    continue;
+                }
+            };
+        let (description, raw_times) = split_desc_and_times(other_stuff).unwrap();
+        println!("{} - {}\n{}\n{}\n\n", district, street, description.unwrap_or("".to_string()), raw_times);
     }
     Ok(Vec::new())
 } 
@@ -53,6 +63,23 @@ fn format_street(raw: String) -> String {
 
 fn format_district(raw: String) -> String {
     String::from(raw.replace("Kommunal,", "").trim())
+}
+
+fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PageParserError> {
+    let raw = raw.trim().to_lowercase();
+    let re = Regex::new("måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag").unwrap();
+    let result = match re.find(&raw) {
+        Some(res) => res.start(),
+        None => return Err(PageParserError{
+            message: format!("Could not find a swedish day name. This input is fucked :(")
+        }) 
+    };
+    let description = match result == 0 {
+        true => None,
+        false => Some(String::from(String::from(&raw[0..result]).replace(".", "").trim()))
+    };
+    let raw_times = String::from(String::from(&raw[result..]).trim_matches('.').trim()); // TODO: Do something about this crap when you learn how to
+    Ok((description, raw_times))
 }
 
 #[cfg(test)]
@@ -83,6 +110,18 @@ mod tests {
         let raw_district = "Kommunal, Västra Göteborg";
         let formatted_district = format_district(String::from(raw_district));
         assert_eq!("Västra Göteborg", formatted_district);
+    }
+
+    #[test]
+    fn should_split_description_and_times() {
+        let raw = "
+                                        Vid pizzerian. Tisdag 6 oktober 19-19.45.
+
+                                    ";
+        let (description, raw_times) = split_desc_and_times(String::from(raw)).unwrap();
+        assert_eq!(true, description.is_some());
+        assert_eq!("vid pizzerian", description.unwrap());
+        assert_eq!("tisdag 6 oktober 19-19.45", raw_times);
     }
 
     #[test]
