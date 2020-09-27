@@ -1,14 +1,14 @@
 use std::fmt;
 use chrono::{DateTime, FixedOffset, Utc, TimeZone, Datelike};
 use chrono_tz::Europe::Stockholm;
-use regex::Regex;
+use regex::{Regex, CaptureNames};
 use select::{document, predicate, selection, node};
 
 pub struct PickUpEvent {
     street: String,
     district: String,
     description: Option<String>,
-    time: DateTime<FixedOffset>,
+    time: DateTime<Utc>,
 }
 
 pub struct PageParserError {
@@ -61,7 +61,6 @@ fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
                 message: e.message
             })
         };
-        println!("{}", raw_times);
     }
     Ok(Vec::new())
 } 
@@ -92,7 +91,51 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
 }
 
 fn parse_times(raw: &String, year: i32) -> Result<Vec<DateTime::<FixedOffset>>, PageParserError> {
-    Ok(Vec::new())
+    let datetimes: Vec::<DateTime::<FixedOffset>> = Vec::new();
+    for dt in raw.split_terminator("och") {
+        let dt = append_zeros_in_timestamp(dt); 
+        let re = Regex::new(r"\w+ (?P<day>\d{1,2}) (?P<month>\w+) (?P<start>\d{2}\.\d{2})-(?P<end>\d{2}\.\d{2})").unwrap();
+        let captures = match re.captures(&dt) {
+            Some(caps) => caps,
+            None => return Err(PageParserError{
+                message: format!("Could not parse timestamp: {}", dt)
+            })
+        };
+        let day = match captures.name("day") {
+            Some(day) => day.as_str(),
+            None => return Err(PageParserError{
+                message: format!("Missing day in timestamp: {}", dt)
+            })
+        };
+        let month = match captures.name("month") {
+            Some(month) => month.as_str(),
+            None => return Err(PageParserError{
+                message: format!("Missing month in timestamp: {}", dt)
+            })
+        };
+        let start_time = match captures.name("start") {
+            Some(start) => start.as_str(),
+            None => return Err(PageParserError{
+                message: format!("Missing start time in timestamp: {}", dt)
+            })
+        };
+        let end_time = match captures.name("end") {
+            Some(end) => end.as_str(),
+            None => return Err(PageParserError{
+                message: format!("Missing end time in timestamp: {}", dt)
+            })
+        };
+        println!("{} - {}", dt, year);
+        println!("Day: {}, Month: {}, Start time: {}, End time: {}", day, month, start_time, end_time);
+    }
+    Ok(datetimes)
+}
+
+fn append_zeros_in_timestamp(raw: &str) -> String {
+    let dt = raw.trim();
+    let re = Regex::new(r"[^\.](?P<bad_hour>\d{2})-").unwrap();
+    let dt = re.replace(dt, " $bad_hour.00-");
+    String::from(dt)
 }
 
 #[cfg(test)]
@@ -138,6 +181,11 @@ mod tests {
     }
 
     #[test]
+    fn should_append_zeros_to_timestamp() {
+        let raw = " torsdag 29 oktober 17-17.20";
+        assert_eq!("torsdag 29 oktober 17.00-17.20".to_string(), append_zeros_in_timestamp(&raw))
+    }
+
     fn should_parse_single_date() {
         let raw = "måndag 28 september 17-17.45";
         let time = parse_times(&raw.to_string(), 2020 as i32).unwrap();
