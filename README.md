@@ -18,3 +18,6 @@ https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
 
 ## Deploy main stack
 Not needed! The deploy pipeline will trigger on commits to master.
+
+## TODO
+- Fix proper logging when parse fails
