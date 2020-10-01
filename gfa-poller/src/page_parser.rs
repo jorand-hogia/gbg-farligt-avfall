@@ -59,7 +59,13 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
                     continue;
                 }
             };
-        let (description, raw_times) = split_desc_and_times(other_stuff).unwrap();
+        let (description, raw_times) = match split_desc_and_times(other_stuff) {
+            Ok(result) => result,
+            Err(e) => {
+                println!("{}", e.message);
+                continue;
+            }
+        };
         let utc = Utc::now().naive_utc();
         let current_year = Stockholm.from_utc_datetime(&utc).year();
         let times: Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = match parse_times(&raw_times, current_year) {
