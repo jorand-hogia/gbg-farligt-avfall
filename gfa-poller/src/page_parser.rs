@@ -183,6 +183,7 @@ fn zero_pad_day_number(raw: &str) -> String {
 }
 
 fn month_to_english(swe_month: &str) -> Result<String, PageParserError> {
+    let swe_month = swe_month.trim();
     match swe_month {
         "januari" => Ok(String::from("january")),
         "februari" => Ok(String::from("february")),
