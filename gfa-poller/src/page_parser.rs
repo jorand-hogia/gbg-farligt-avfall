@@ -102,7 +102,7 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
     let result = match re.find(&raw) {
         Some(res) => res.start(),
         None => return Err(PageParserError{
-            message: format!("Could not find a swedish day name. This input is fucked :(")
+            message: format!("Could not find a swedish day name. This input is fucked: {}", raw)
         }) 
     };
     let description = match result == 0 {
