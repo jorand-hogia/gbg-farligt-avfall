@@ -98,7 +98,7 @@ fn format_district(raw: String) -> String {
 
 fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PageParserError> {
     let raw = raw.trim().to_lowercase();
-    let re = Regex::new("måndag|tisdag|onsdag|torsdag|fredag|lördag|söndag").unwrap();
+    let re = Regex::new("måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag").unwrap();
     let result = match re.find(&raw) {
         Some(res) => res.start(),
         None => return Err(PageParserError{
@@ -244,6 +244,14 @@ mod tests {
         assert_eq!(true, description.is_some());
         assert_eq!("vid pizzerian", description.unwrap());
         assert_eq!("tisdag 6 oktober 19-19.45", raw_times);
+    }
+
+    #[test]
+    fn should_split_description_and_times_with_bad_day_name() {
+        let (description, raw_times) = split_desc_and_times("på parkeringen kringlekullen. tisadg 1 september 18-18.45".to_string()).unwrap();
+        assert_eq!(true, description.is_some());
+        assert_eq!("på parkeringen kringlekullen", description.unwrap());
+        assert_eq!("tisadg 1 september 18-18.45", raw_times);
     }
 
     #[test]
