@@ -13,7 +13,7 @@ pub struct PickUpEvent {
 }
 impl fmt::Display for PickUpEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} - {} ({}): {}-{}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
+        write!(f, "{} - {} ({}): {} to {}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
     }
 }
 
@@ -117,7 +117,7 @@ fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>
     let mut datetimes: Vec::<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = Vec::new();
     for dt in raw.split_terminator("och") {
         let dt = append_zeros_in_timestamp(dt); 
-        let re = Regex::new(r"\w+ (?P<day>\d{1,2}) (?P<month>\w+) (?P<start>\d{2}\.\d{2})-(?P<end>\d{2}\.\d{2})").unwrap();
+        let re = Regex::new(r"\w+ (?P<day>\d{1,2}) (?P<month>\w+) (?P<start>\d{2}\.\d{2})\s{0,1}-\s{0,1}(?P<end>\d{2}\.\d{2})").unwrap();
         let captures = match re.captures(&dt) {
             Some(caps) => caps,
             None => return Err(PageParserError{
@@ -269,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn should_parse_single_event() {
+    fn should_parse_single_timestamp() {
         let raw = "Måndag 28 september 17-17.45";
         let time = parse_times(&raw.to_string(), 2020 as i32).unwrap();
         assert_eq!(1, time.len());
@@ -278,20 +278,28 @@ mod tests {
     }
 
     #[test]
-    fn should_handle_daylight_saving() {
-        let with_dst = "Tisdag 24 oktober 16-16.20";
-        let without_dst = "Måndag 25 oktober 16-16.20";
-        assert_eq!("2020-10-24T16:00:00+02:00", parse_times(&with_dst.to_string(), 2020).unwrap().get(0).unwrap().0.to_rfc3339());
-        assert_eq!("2020-10-25T16:00:00+01:00", parse_times(&without_dst.to_string(), 2020).unwrap().get(0).unwrap().0.to_rfc3339());
-    }
-
-    #[test]
-    fn should_parse_multiple_events() {
+    fn should_parse_multiple_timestamps() {
         let raw = "Torsdag 17 september 17-17.20 och torsdag 20 oktober 17-17.20";
         let times = parse_times(&raw.to_string(), 2020).unwrap();
         assert_eq!(2, times.len());
         assert_eq!("2020-10-20T17:00:00+02:00".to_string(), times.get(1).unwrap().0.to_rfc3339());
         assert_eq!("2020-10-20T17:20:00+02:00".to_string(), times.get(1).unwrap().1.to_rfc3339());
+    }
+
+    #[test]
+    fn should_handle_timestamp_with_bad_spacing() {
+        let raw = "tisdag 27 oktober 18.10- 18.30";
+        let times = parse_times(&raw.to_string(), 2020).unwrap();
+        assert_eq!("2020-10-27T18:10:00+01:00".to_string(), times.get(0).unwrap().0.to_rfc3339());
+        assert_eq!("2020-10-27T18:30:00+01:00".to_string(), times.get(0).unwrap().1.to_rfc3339());
+    }
+
+    #[test]
+    fn should_handle_daylight_saving() {
+        let with_dst = "Tisdag 24 oktober 16-16.20";
+        let without_dst = "Måndag 25 oktober 16-16.20";
+        assert_eq!("2020-10-24T16:00:00+02:00", parse_times(&with_dst.to_string(), 2020).unwrap().get(0).unwrap().0.to_rfc3339());
+        assert_eq!("2020-10-25T16:00:00+01:00", parse_times(&without_dst.to_string(), 2020).unwrap().get(0).unwrap().0.to_rfc3339());
     }
 
     #[test]
