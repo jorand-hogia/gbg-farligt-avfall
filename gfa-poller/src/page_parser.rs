@@ -193,6 +193,7 @@ fn month_to_english(swe_month: &str) -> Result<String, PageParserError> {
         "juli" => Ok(String::from("july")),
         "augusti" => Ok(String::from("august")),
         "september" => Ok(swe_month.to_string()),
+        "sepetmber" => Ok(String::from("september")),
         "oktober" => Ok(String::from("october")),
         "november" => Ok(swe_month.to_string()),
         "december" => Ok(swe_month.to_string()),
@@ -260,6 +261,11 @@ mod tests {
     fn should_not_zero_pad_double_digit_day() {
         let raw = "29";
         assert_eq!("29".to_string(), zero_pad_day_number(raw))
+    }
+
+    #[test]
+    fn should_handle_month_misspellings() {
+        assert_eq!("september".to_string(), month_to_english(&"sepetmber".to_string()).unwrap());
     }
 
     #[test]
