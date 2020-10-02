@@ -20,4 +20,8 @@ https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
 Not needed! The deploy pipeline will trigger on commits to master.
 
 ## TODO
+- Handle misspelled month name (Invalid month name: sepetmber)
+- Handle unexpected spacing (Could not parse timestamp: tisdag 27 oktober 18.10- 18.30)
 - Fix proper logging when parse fails
+- Do page parsing in parallell
+
