@@ -115,19 +115,26 @@ fn format_district(raw: String) -> String {
 
 fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PageParserError> {
     let raw = raw.trim().to_lowercase();
-    let first_time = raw.split("och").collect::<Vec<&str>>()[0];
-    let re = Regex::new("måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag").unwrap();
-    let result = match re.find(&first_time) {
-        Some(res) => res.start(),
+    // Should match either "vid ica gunnilse och återvinningsstationen. onsdag 16 september 17.35-17.55" or "onsdag 16 september 17.35-17.55"
+    // Index of second group indicates where to split description and time data.
+    let re = Regex::new(r"([\w\s]+\. |^)(måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag)").unwrap();
+    let captures = match re.captures(&raw) {
+        Some(caps) => caps,
         None => return Err(PageParserError{
-            message: format!("Could not find a swedish day name. This input is fucked: {}", raw)
-        }) 
+            message: format!("No match found while splitting description and times: {}", raw)
+        })
     };
-    let description = match result == 0 {
+    let index = match captures.get(2) {
+        Some(group) => group.start(),
+        None => return Err(PageParserError{
+            message: format!("Second capturing group (swedish day name) not found while splitting description and times: {}", raw)
+        })
+    };
+    let description = match index == 0 {
         true => None,
-        false => Some(String::from(String::from(&raw[0..result]).replace(".", "").trim()))
+        false => Some(String::from(&raw[0..index]).replace(".", "").trim().to_string())
     };
-    let raw_times = String::from(String::from(&raw[result..]).trim_matches('.').trim()); // TODO: Do something about this crap when you learn how to
+    let raw_times = (String::from(&raw[index..]).trim_matches('.').trim()).to_string();
     Ok((description, raw_times))
 }
 
@@ -285,6 +292,14 @@ mod tests {
     fn should_error_on_unknown_bad_day_name() {
         let result = split_desc_and_times("på parkeringen. tossdag 1 september 18-18.45 och torsdag 21 september 19-19.30".to_string());
         assert_eq!(true, result.is_err());
+    }
+
+    #[test]
+    fn should_split_description_and_times_with_och_in_description() {
+        let (description, raw_times) = split_desc_and_times("vid ica gunnilse och återvinningsstationen. onsdag 16 september 17.35-17.55 och onsdag 28 oktober 17-17.20.".to_string()).unwrap();
+        assert_eq!(true, description.is_some());
+        assert_eq!("vid ica gunnilse och återvinningsstationen", description.unwrap());
+        assert_eq!("onsdag 16 september 17.35-17.55 och onsdag 28 oktober 17-17.20", raw_times);
     }
 
     #[test]
