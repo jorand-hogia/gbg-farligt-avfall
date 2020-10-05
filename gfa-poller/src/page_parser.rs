@@ -1,8 +1,8 @@
 use std::fmt;
-use chrono::{DateTime, FixedOffset, Utc, TimeZone, Datelike};
+use chrono::{DateTime, Utc, TimeZone, Datelike};
 use chrono_tz::Europe::Stockholm;
-use regex::{Regex, CaptureNames};
-use select::{document, predicate, selection, node};
+use regex::{Regex};
+use select::{document, predicate};
 
 pub struct PickUpEvent {
     street: String,
@@ -17,12 +17,13 @@ impl fmt::Display for PickUpEvent {
     }
 }
 
+#[derive(fmt::Debug)]
 pub struct PageParserError {
     pub message: String,
 }
-impl fmt::Debug for PageParserError {
+impl fmt::Display for PageParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ file: {}, line: {} }}", file!(), line!())
+        write!(f, "{}", self.message)
     }
 }
 
@@ -38,43 +39,28 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
         let street = match node.find(predicate::Class("c-snippet__title"))
             .into_selection().children().first() {
                 Some(element) => format_street(element.text()), 
-                None => {
-                    println!("Not found :(");
-                    continue;
-                }
+                None => return Err(PageParserError{
+                    message: format!("No element with class c-snippet__title found")
+                })
             };
         let district = match node.find(predicate::Class("c-snippet__meta"))
             .into_selection().first() {
                 Some(element) => format_district(element.text()),
-                None => {
-                    println!("Not found :(");
-                    continue; // TODO: Proper log statements
-                }
+                None => return Err(PageParserError{
+                    message: format!("No element with class c-snippet__meta found")
+                })
             };
         let other_stuff = match node.find(predicate::Class("c-snippet__section"))
             .into_selection().first() {
                 Some(element) => element.text(),
-                None => {
-                    println!("Not found :(");
-                    continue;
-                }
+                None => return Err(PageParserError{
+                    message: format!("No element with class c-snippet__selection found")
+                })
             };
-        let (description, raw_times) = match split_desc_and_times(other_stuff) {
-            Ok(result) => result,
-            Err(e) => {
-                println!("{}", e.message);
-                continue;
-            }
-        };
+        let (description, raw_times) = split_desc_and_times(other_stuff)?;
         let utc = Utc::now().naive_utc();
         let current_year = Stockholm.from_utc_datetime(&utc).year();
-        let times: Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = match parse_times(&raw_times, current_year) {
-            Ok(times) => times,
-            Err(e) => {
-                println!("{}", e.message);
-                continue;
-            }
-        };
+        let times: Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = parse_times(&raw_times, current_year)?; 
         for t in times {
             events.push(PickUpEvent{
                 street: String::from(&street),
