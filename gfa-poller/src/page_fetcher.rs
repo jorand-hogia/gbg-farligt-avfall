@@ -6,14 +6,16 @@ use select::{document, predicate};
 
 const BASE_URL: &str = "https://goteborg.se";
 
+#[derive(fmt::Debug)]
 pub struct PageFetcherError {
     message: String,
 }
-impl fmt::Debug for PageFetcherError {
+impl fmt::Display for PageFetcherError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ file: {}, line: {} }}", file!(), line!())
+        write!(f, "{}\n", self.message)
     }
 }
+
 
 pub fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
     let main_page = fetch_page(&format!("{}/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen", BASE_URL))?;
