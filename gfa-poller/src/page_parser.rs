@@ -115,9 +115,8 @@ fn format_district(raw: String) -> String {
 
 fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PageParserError> {
     let raw = raw.trim().to_lowercase();
-    let first_time = raw.split("och").collect::<Vec<&str>>()[0];
-    let re = Regex::new("måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag").unwrap();
-    let result = match re.find(&first_time) {
+    let re = Regex::new(r"[\w\s]+\. (måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag)").unwrap();
+    let result = match re.find(&raw) {
         Some(res) => res.start(),
         None => return Err(PageParserError{
             message: format!("Could not find a swedish day name. This input is fucked: {}", raw)
