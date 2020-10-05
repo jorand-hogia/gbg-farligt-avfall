@@ -1,9 +1,11 @@
 use std::fmt;
+use std::result::Result;
 use chrono::{DateTime, Utc, TimeZone, Datelike};
 use chrono_tz::Europe::Stockholm;
 use regex::{Regex};
 use select::{document, predicate};
 
+#[derive(fmt::Debug)]
 pub struct PickUpEvent {
     street: String,
     district: String,
@@ -11,6 +13,7 @@ pub struct PickUpEvent {
     time_start: String,
     time_end: String, 
 }
+
 impl fmt::Display for PickUpEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} - {} ({}): {} to {}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
@@ -27,40 +30,65 @@ impl fmt::Display for PageParserError {
     }
 }
 
-pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
+pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError>> {
+    let mut errors: Vec::<PageParserError> = Vec::new();
     let doc = match document::Document::from_read(page.as_slice()) {
         Ok(doc) => doc,
-        Err(_e) => return Err(PageParserError{
-            message: format!("Could not parse HTML document")
-        })
+        Err(_e) => {
+            errors.push(PageParserError{
+                message: format!("Could not parse HTML document")
+            });
+            return Err(errors);
+        }
     };
     let mut events: Vec::<PickUpEvent> = Vec::new();
     for node in doc.find(predicate::Class("c-snippet")) {
         let street = match node.find(predicate::Class("c-snippet__title"))
             .into_selection().children().first() {
                 Some(element) => format_street(element.text()), 
-                None => return Err(PageParserError{
-                    message: format!("No element with class c-snippet__title found")
-                })
+                None => {
+                    errors.push(PageParserError{
+                        message: format!("No element with class c-snippet__title found")
+                    });
+                    continue;
+                }
             };
         let district = match node.find(predicate::Class("c-snippet__meta"))
             .into_selection().first() {
                 Some(element) => format_district(element.text()),
-                None => return Err(PageParserError{
-                    message: format!("No element with class c-snippet__meta found")
-                })
+                None => {
+                    errors.push(PageParserError{
+                        message: format!("No element with class c-snippet__meta found")
+                    });
+                    continue;
+                }
             };
         let other_stuff = match node.find(predicate::Class("c-snippet__section"))
             .into_selection().first() {
                 Some(element) => element.text(),
-                None => return Err(PageParserError{
-                    message: format!("No element with class c-snippet__selection found")
-                })
+                None => {
+                    errors.push(PageParserError{
+                        message: format!("No element with class c-snippet__selection found")
+                    });
+                    continue;
+                }
             };
-        let (description, raw_times) = split_desc_and_times(other_stuff)?;
+        let (description, raw_times) = match split_desc_and_times(other_stuff) {
+            Ok(description_and_times) => description_and_times,
+            Err(e) => {
+                errors.push(e);
+                continue;
+            }
+        };
         let utc = Utc::now().naive_utc();
         let current_year = Stockholm.from_utc_datetime(&utc).year();
-        let times: Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = parse_times(&raw_times, current_year)?; 
+        let times: Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = match parse_times(&raw_times, current_year) {
+            Ok(times) => times,
+            Err(e) => {
+                errors.push(e);
+                continue;
+            }
+        };
         for t in times {
             events.push(PickUpEvent{
                 street: String::from(&street),
@@ -71,7 +99,10 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
             })
         }
     }
-    Ok(events)
+    if errors.len() > 0 {
+        return Err(errors);
+    }
+    return Ok(events);
 } 
 
 fn format_street(raw: String) -> String {
@@ -84,8 +115,9 @@ fn format_district(raw: String) -> String {
 
 fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PageParserError> {
     let raw = raw.trim().to_lowercase();
+    let first_time = raw.split("och").collect::<Vec<&str>>()[0];
     let re = Regex::new("måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag").unwrap();
-    let result = match re.find(&raw) {
+    let result = match re.find(&first_time) {
         Some(res) => res.start(),
         None => return Err(PageParserError{
             message: format!("Could not find a swedish day name. This input is fucked: {}", raw)
@@ -147,7 +179,7 @@ fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>
         let end = match Stockholm.datetime_from_str(&end, "%Y-%B-%d %H.%M") {
             Ok(res) => res,
             Err(_e) => return Err(PageParserError{
-                message: format!("Could not parse timestamp: {}", start)
+                message: format!("Could not parse timestamp: {}", end)
             })
         };
         datetimes.push((start, end));
@@ -233,11 +265,26 @@ mod tests {
     }
 
     #[test]
-    fn should_split_description_and_times_with_bad_day_name() {
+    fn should_split_description_and_times_with_multiple_events() {
+        let raw = "På parkeringen. Torsdag 17 september 18.45-19.05 och torsdag 29 oktober 18.45-19.05.";
+        let (description, raw_times) = split_desc_and_times(raw.to_string()).unwrap();
+        assert_eq!(true, description.is_some());
+        assert_eq!("på parkeringen", description.unwrap());
+        assert_eq!("torsdag 17 september 18.45-19.05 och torsdag 29 oktober 18.45-19.05", raw_times);
+    }
+
+    #[test]
+    fn should_split_description_and_times_with_handled_bad_day_name() {
         let (description, raw_times) = split_desc_and_times("på parkeringen kringlekullen. tisadg 1 september 18-18.45".to_string()).unwrap();
         assert_eq!(true, description.is_some());
         assert_eq!("på parkeringen kringlekullen", description.unwrap());
         assert_eq!("tisadg 1 september 18-18.45", raw_times);
+    }
+
+    #[test]
+    fn should_error_on_unknown_bad_day_name() {
+        let result = split_desc_and_times("på parkeringen. tossdag 1 september 18-18.45 och torsdag 21 september 19-19.30".to_string());
+        assert_eq!(true, result.is_err());
     }
 
     #[test]
@@ -302,8 +349,13 @@ mod tests {
         let file = read_file("body_with_items.html");
         let events = parse_page(file).unwrap();
         assert_eq!(39, events.len());
-        for e in events {
-            println!("{}", e);
-        }
+    }
+
+    #[test]
+    fn should_return_multiple_errors() {
+        let file = read_file("body_with_very_bad_content.html");
+        let events = parse_page(file);
+        assert_eq!(true, events.is_err());
+        assert_eq!(2, events.unwrap_err().len())
     }
 }

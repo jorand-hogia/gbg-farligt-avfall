@@ -33,8 +33,10 @@ fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerErr
     for page in pages_to_scrape {
         let mut events = match page_parser::parse_page(page) {
             Ok(events) => events,
-            Err(e) => {
-                error!("{}", e);
+            Err(errors) => {
+                for error in errors {
+                    error!("{}", error);
+                }
                 return Ok(EmptyOutput{});
             }
         };
