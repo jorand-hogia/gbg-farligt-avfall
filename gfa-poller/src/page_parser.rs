@@ -288,6 +288,14 @@ mod tests {
     }
 
     #[test]
+    fn should_split_description_and_times_with_och_in_description() {
+        let (description, raw_times) = split_desc_and_times("vid ica gunnilse och återvinningsstationen. onsdag 16 september 17.35-17.55 och onsdag 28 oktober 17-17.20.".to_string()).unwrap();
+        assert_eq!(true, description.is_some());
+        assert_eq!("vid ica och gunnilse och återvinningsstationen", description.unwrap());
+        assert_eq!("onsdag 16 september 17.35-17.55 och onsdag 28 oktober 17-17.20", raw_times);
+    }
+
+    #[test]
     fn should_append_zeros_to_timestamp() {
         let raw = " torsdag 29 oktober 17-17.20";
         assert_eq!("torsdag 29 oktober 17.00-17.20".to_string(), append_zeros_in_timestamp(&raw))
