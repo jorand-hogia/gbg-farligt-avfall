@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::str::FromStr;
 use std::fmt;
 use regex::Regex;
 use ureq::get;
@@ -19,6 +20,8 @@ impl fmt::Display for PageFetcherError {
 
 pub fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
     let main_page = fetch_page(&format!("{}/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen", BASE_URL))?;
+    // TODO: Calculate URLs before starting to make all requests
+    // Parse 'total items' from main_page (.c-result-bar) and calculate e.g. with math.ceiling(total / 30)
     let paging_path = find_paging_path(main_page)?;
     let mut pages: Vec<Vec<u8>> = Vec::new();
     for x in 0..20 {
@@ -67,6 +70,43 @@ fn find_paging_path(page: Vec<u8>) -> Result<String, PageFetcherError> {
         Some(url) => Ok(String::from(url)),
         None => return Err(PageFetcherError{
             message: format!("Could not find href attribute of expected element")
+        })
+    };
+}
+
+fn find_total_items(page: Vec<u8>) -> Result<u16, PageFetcherError> {
+    let doc = match document::Document::from_read(page.as_slice()) {
+        Ok(doc) => doc,
+        Err(_e) => return Err(PageFetcherError{
+            message: format!("Could not parse page")
+        })
+    };
+    let node = match doc.find(predicate::Class("c-result-bar"))
+        .into_selection()
+        .first() {
+            Some(node) => node,
+            None => return Err(PageFetcherError{
+                message: format!("Could not find class c-result-bar on page")
+            })
+        };
+    let re = Regex::new(r".*Hittade\s+(\d+)").unwrap();
+    let node = node.inner_html();
+    let captures = match re.captures(&node) {
+        Some(cap) => cap,
+        None => return Err(PageFetcherError{
+            message: format!("Could not find pattern 'Hittade TOTAL' on page")
+        })
+    };
+    let total = match captures.get(1) {
+        Some(cap) => cap.as_str(),
+        None => return Err(PageFetcherError{
+            message: format!("Could not find capturing group 1 when parsing total")
+        })
+    };
+    return match u16::from_str(total) {
+        Ok(total) => Ok(total),
+        Err(_e) => Err(PageFetcherError{
+            message: format!("Could not parse total as u16")
         })
     };
 }
@@ -125,5 +165,12 @@ mod tests {
     fn should_detect_body_without_items() {
         let file = read_file("body_without_items.html");
         assert_eq!(false, has_items(&file).unwrap());
+    }
+
+    #[test]
+    fn should_find_total_items() {
+        let file = read_file("body_with_items.html");
+        let total = find_total_items(file).unwrap();
+        assert_eq!(177 as u16, total);
     }
 }
