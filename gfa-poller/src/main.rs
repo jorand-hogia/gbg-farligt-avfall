@@ -1,6 +1,7 @@
 use std::error::Error;
 use lambda_runtime::{error::HandlerError, lambda, Context};
 use simple_logger::{SimpleLogger};
+use futures::executor::block_on;
 use log::{self, error, LevelFilter};
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,8 @@ struct EmptyEvent {}
 #[derive(Serialize)]
 struct EmptyOutput {}
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let _log = SimpleLogger::new()
         .with_level(LevelFilter::Info)
         .init();
@@ -22,7 +24,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerError> {
-    let pages_to_scrape = match page_fetcher::obtain_pages() {
+    let pages_to_scrape = block_on(page_fetcher::obtain_pages());
+    let pages_to_scrape = match pages_to_scrape {
         Ok(pages) => pages,
         Err(e) => {
             error!("{}", e);

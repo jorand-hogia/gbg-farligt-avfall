@@ -1,8 +1,12 @@
 use std::io::Read;
+use futures::{future, Future};
+use futures_util::future::{TryFutureExt};
+use std::task::Poll;
 use std::str::FromStr;
 use std::fmt;
 use regex::Regex;
 use ureq::get;
+use reqwest::{Client, Body};
 use select::{document, predicate};
 
 const BASE_URL: &str = "https://goteborg.se";
@@ -17,33 +21,48 @@ impl fmt::Display for PageFetcherError {
     }
 }
 
-pub fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
-    let main_page = fetch_page(&format!("{}/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen", BASE_URL))?;
-    let total_events = find_total_items(&main_page)?;
-    let paging_path = find_paging_path(&main_page)?;
-    let urls = calculate_urls(&paging_path, total_events);
+pub async fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
+    let client = Client::builder()
+        .use_rustls_tls()
+        .build()
+        .unwrap();
+    let main_url = &format!("{}/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen", BASE_URL);
+    let main_page = fetch_page(&client, main_url).await?; 
+    // let total_events = find_total_items(&main_page)?;
+    // let paging_path = find_paging_path(&main_page)?;
+    // let urls = calculate_urls(&paging_path, total_events);
     let mut pages: Vec<Vec<u8>> = Vec::new();
-    for url in urls {
-        let page = fetch_page(&url)?;
-        pages.push(page);
-    }
+    // for url in urls {
+        // let page = fetch_page(&url)?;
+        // pages.push(page);
+    // }
+    pages.push(main_page);
     Ok(pages)
 }
 
-fn fetch_page(url: &String) -> Result<Vec<u8>, PageFetcherError> {
-    let response = get(&url).call();
-    if !response.ok() {
-        return Err(PageFetcherError{
-            message: format!("Response from {} not in 200-range", BASE_URL)
-        });
-    }
-    let mut page_bytes = Vec::<u8>::new();
-    match response.into_reader().read_to_end(&mut page_bytes) {
-        Ok(_size) => Ok(page_bytes),
+async fn fetch_page(client: &Client, url: &String) -> Result<Vec<u8>, PageFetcherError> {
+    let response = match client.get(url).send().await {
+        Ok(res) => res,
         Err(_e) => return Err(PageFetcherError{
-            message: format!("Could not read page")
+            message: format!("Request to {} failed", url)
         })
-    }
+    };
+    match response.status().is_success() {
+        false => return Err(PageFetcherError{
+            message: format!("Non-OK status code from {}: {}", url, response.status())
+        }),
+        _ => {}
+    };
+    let body = response.text().await.unwrap();
+    println!("{}", body);
+    // let body = Body::from(response);
+    // let body = match body.as_bytes() {
+        // Some(body) => body,
+        // None => return Err({PageFetcherError{
+            // message: format!("Missing response body from: {}", url)
+        // }})
+    // };
+    Ok(Vec::from(body))
 }
 
 fn find_paging_path(page: &Vec<u8>) -> Result<String, PageFetcherError> {
@@ -161,8 +180,9 @@ mod tests {
         assert_eq!(expected_urls, urls);
     } 
 
-    #[test]
-    fn temp() {
-        obtain_pages();
+    #[tokio::test]
+    async fn temp() {
+        let res = obtain_pages().await.unwrap();
+        println!("{}", res.len());
     }
 }
