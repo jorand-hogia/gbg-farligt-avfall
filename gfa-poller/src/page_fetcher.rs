@@ -53,15 +53,19 @@ async fn fetch_page(client: &Client, url: &String) -> Result<Vec<u8>, PageFetche
         }),
         _ => {}
     };
-    let body = response.text().await.unwrap();
-    println!("{}", body);
-    // let body = Body::from(response);
-    // let body = match body.as_bytes() {
-        // Some(body) => body,
-        // None => return Err({PageFetcherError{
-            // message: format!("Missing response body from: {}", url)
-        // }})
-    // };
+    let response = match response.bytes().await {
+        Ok(bytes) => bytes,
+        Err(_e) => return Err(PageFetcherError{
+            message: format!("Failed to read response body as bytes from: {}", url)
+        })
+    };
+    let body = Body::from(response); // TODO: Find a better way of transforming response body into Vec<u8> (or use something else than Vec<u8> which select.rs can handle)
+    let body = match body.as_bytes() {
+        Some(body) => body,
+        None => return Err({PageFetcherError{
+            message: format!("Missing response body from: {}", url)
+        }})
+    };
     Ok(Vec::from(body))
 }
 
@@ -183,6 +187,6 @@ mod tests {
     #[tokio::test]
     async fn temp() {
         let res = obtain_pages().await.unwrap();
-        println!("{}", res.len());
+        println!("{}", res[0].len());
     }
 }
