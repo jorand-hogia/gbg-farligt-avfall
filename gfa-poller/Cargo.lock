@@ -65,12 +65,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base-x"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b20b618342cf9891c292c4f5ac2cde7287cc5c87e87e9c769d617793607dec1"
-
-[[package]]
 name = "base64"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -146,7 +140,7 @@ checksum = "942f72db697d8767c22d46a598e01f2d3b475501ea43d0db4f16d90259182d0b"
 dependencies = [
  "num-integer",
  "num-traits",
- "time 0.1.44",
+ "time",
 ]
 
 [[package]]
@@ -158,12 +152,6 @@ dependencies = [
  "chrono",
  "parse-zoneinfo",
 ]
-
-[[package]]
-name = "chunked_transfer"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d29eb15132782371f71da8f947dba48b3717bdb6fa771b9b434d645e40a7193"
 
 [[package]]
 name = "cloudabi"
@@ -183,23 +171,6 @@ dependencies = [
  "atty",
  "lazy_static",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "const_fn"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce90df4c658c62f12d78f7508cf92f9173e5184a539c10bfe54a3107b3ffd0f2"
-
-[[package]]
-name = "cookie"
-version = "0.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1373a16a4937bc34efec7b391f9c1500c30b8478a701a4f44c9165cc0475a6e0"
-dependencies = [
- "percent-encoding",
- "time 0.2.22",
- "version_check",
 ]
 
 [[package]]
@@ -265,12 +236,6 @@ dependencies = [
  "cfg-if",
  "lazy_static",
 ]
-
-[[package]]
-name = "discard"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
 name = "dtoa"
@@ -501,7 +466,6 @@ dependencies = [
  "serde_json",
  "simple_logger",
  "tokio 0.2.22",
- "ureq",
 ]
 
 [[package]]
@@ -650,7 +614,7 @@ dependencies = [
  "log",
  "net2",
  "rustc_version",
- "time 0.1.44",
+ "time",
  "tokio 0.1.22",
  "tokio-buf",
  "tokio-executor",
@@ -1278,15 +1242,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "qstring"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d464fae65fff2680baf48019211ce37aaec0c78e9264c84a3e484717f965104e"
-dependencies = [
- "percent-encoding",
-]
-
-[[package]]
 name = "quote"
 version = "0.6.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1445,7 +1400,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "webpki-roots 0.19.0",
+ "webpki-roots",
  "winreg",
 ]
 
@@ -1617,12 +1572,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha1"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2579985fda508104f7587689507983eadd6a6e84dd35d6d115361f530916fa0d"
-
-[[package]]
 name = "simple_logger"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1673,64 +1622,6 @@ name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
-
-[[package]]
-name = "standback"
-version = "0.2.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33a71ea1ea5f8747d1af1979bfb7e65c3a025a70609f04ceb78425bc5adad8e6"
-dependencies = [
- "version_check",
-]
-
-[[package]]
-name = "stdweb"
-version = "0.4.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d022496b16281348b52d0e30ae99e01a73d737b2f45d38fed4edf79f9325a1d5"
-dependencies = [
- "discard",
- "rustc_version",
- "stdweb-derive",
- "stdweb-internal-macros",
- "stdweb-internal-runtime",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "stdweb-derive"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c87a60a40fccc84bef0652345bbbbbe20a605bf5d0ce81719fc476f5c03b50ef"
-dependencies = [
- "proc-macro2 1.0.21",
- "quote 1.0.7",
- "serde",
- "serde_derive",
- "syn 1.0.41",
-]
-
-[[package]]
-name = "stdweb-internal-macros"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58fa5ff6ad0d98d1ffa8cb115892b6e69d67799f6763e162a1c9db421dc22e11"
-dependencies = [
- "base-x",
- "proc-macro2 1.0.21",
- "quote 1.0.7",
- "serde",
- "serde_derive",
- "serde_json",
- "sha1",
- "syn 1.0.41",
-]
-
-[[package]]
-name = "stdweb-internal-runtime"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 
 [[package]]
 name = "string"
@@ -1864,44 +1755,6 @@ dependencies = [
  "libc",
  "wasi 0.10.0+wasi-snapshot-preview1",
  "winapi 0.3.9",
-]
-
-[[package]]
-name = "time"
-version = "0.2.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55b7151c9065e80917fbf285d9a5d1432f60db41d170ccafc749a136b41a93af"
-dependencies = [
- "const_fn",
- "libc",
- "standback",
- "stdweb",
- "time-macros",
- "version_check",
- "winapi 0.3.9",
-]
-
-[[package]]
-name = "time-macros"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "957e9c6e26f12cb6d0dd7fc776bb67a706312e7299aed74c8dd5b17ebb27e2f1"
-dependencies = [
- "proc-macro-hack",
- "time-macros-impl",
-]
-
-[[package]]
-name = "time-macros-impl"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5c3be1edfad6027c69f5491cf4cb310d1a71ecd6af742788c6ff8bced86b8fa"
-dependencies = [
- "proc-macro-hack",
- "proc-macro2 1.0.21",
- "quote 1.0.7",
- "standback",
- "syn 1.0.41",
 ]
 
 [[package]]
@@ -2253,24 +2106,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
-name = "ureq"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bbc0597304482f1aa82e296abe382e868c934f0e45ebfe720735990a10e8f5d"
-dependencies = [
- "base64",
- "chunked_transfer",
- "cookie",
- "lazy_static",
- "log",
- "qstring",
- "rustls",
- "url",
- "webpki",
- "webpki-roots 0.20.0",
-]
-
-[[package]]
 name = "url"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2436,15 +2271,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "webpki-roots"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f20dea7535251981a9670857150d571846545088359b28e4951d350bdaf179f"
-dependencies = [
- "webpki",
-]
-
-[[package]]
 name = "winapi"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2506,5 +2332,5 @@ dependencies = [
  "log",
  "mac",
  "markup5ever",
- "time 0.1.44",
+ "time",
 ]

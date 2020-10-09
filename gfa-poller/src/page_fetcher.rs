@@ -1,11 +1,8 @@
 use std::io::Read;
-use futures::{stream, StreamExt, future, Future};
-use futures_util::future::{TryFutureExt};
-use std::task::Poll;
+use futures::{future};
 use std::str::FromStr;
 use std::fmt;
 use regex::Regex;
-use ureq::get;
 use reqwest::{Client, Body};
 use select::{document, predicate};
 
@@ -31,19 +28,26 @@ pub async fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
     let total_events = find_total_items(&main_page)?;
     let paging_path = find_paging_path(&main_page)?;
     let urls = calculate_urls(&paging_path, total_events);
-    println!("URLS: {}", urls.len());
-    let pages = future::join_all(
+    let results = future::join_all(
         urls.into_iter()
             .map(|url| {
                 let client = &client;
                 async move {
-                    let resp = client.get(&url).send().await?;
-                    resp.bytes().await
+                    fetch_page(client, url).await
                 }
             })
     ).await;
     let mut pages: Vec<Vec<u8>> = Vec::new();
-    pages.push(main_page);
+    for result in results {
+        match result {
+            Ok(page) => {
+                pages.push(page);
+            },
+            Err(e) => return Err(PageFetcherError{
+                message: format!("At least one request failed: {}", e)
+            })
+        }; 
+    } 
     Ok(pages)
 }
 
@@ -194,6 +198,6 @@ mod tests {
     #[tokio::test]
     async fn temp() {
         let res = obtain_pages().await.unwrap();
-        println!("{}", res[0].len());
+        println!("{}", res.len());
     }
 }
