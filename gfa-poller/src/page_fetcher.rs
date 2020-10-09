@@ -1,5 +1,5 @@
 use std::io::Read;
-use futures::{future, Future};
+use futures::{stream, StreamExt, future, Future};
 use futures_util::future::{TryFutureExt};
 use std::task::Poll;
 use std::str::FromStr;
@@ -26,22 +26,35 @@ pub async fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
         .use_rustls_tls()
         .build()
         .unwrap();
-    let main_url = &format!("{}/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen", BASE_URL);
+    let main_url = format!("{}/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen", BASE_URL);
     let main_page = fetch_page(&client, main_url).await?; 
-    // let total_events = find_total_items(&main_page)?;
-    // let paging_path = find_paging_path(&main_page)?;
-    // let urls = calculate_urls(&paging_path, total_events);
+    let total_events = find_total_items(&main_page)?;
+    let paging_path = find_paging_path(&main_page)?;
+    let urls = calculate_urls(&paging_path, total_events);
+    println!("URLS: {}", urls.len());
+    let pages = stream::iter(urls)
+        .map(|url| {
+            let client = &client;
+            async move {
+                let resp = client.get(&url).send().await?;
+                resp.bytes().await
+            }
+        })
+        .buffer_unordered(6)
+        .for_each(|b| async {
+            match b {
+                Ok(b) => println!("Got {} bytes", b.len()),
+                Err(e) => eprintln!("Got an error: {}", e)
+            }
+        })
+        .await;
     let mut pages: Vec<Vec<u8>> = Vec::new();
-    // for url in urls {
-        // let page = fetch_page(&url)?;
-        // pages.push(page);
-    // }
     pages.push(main_page);
     Ok(pages)
 }
 
-async fn fetch_page(client: &Client, url: &String) -> Result<Vec<u8>, PageFetcherError> {
-    let response = match client.get(url).send().await {
+async fn fetch_page(client: &Client, url: String) -> Result<Vec<u8>, PageFetcherError> {
+    let response = match client.get(&url).send().await {
         Ok(res) => res,
         Err(_e) => return Err(PageFetcherError{
             message: format!("Request to {} failed", url)
