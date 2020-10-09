@@ -32,22 +32,16 @@ pub async fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
     let paging_path = find_paging_path(&main_page)?;
     let urls = calculate_urls(&paging_path, total_events);
     println!("URLS: {}", urls.len());
-    let pages = stream::iter(urls)
-        .map(|url| {
-            let client = &client;
-            async move {
-                let resp = client.get(&url).send().await?;
-                resp.bytes().await
-            }
-        })
-        .buffer_unordered(6)
-        .for_each(|b| async {
-            match b {
-                Ok(b) => println!("Got {} bytes", b.len()),
-                Err(e) => eprintln!("Got an error: {}", e)
-            }
-        })
-        .await;
+    let pages = future::join_all(
+        urls.into_iter()
+            .map(|url| {
+                let client = &client;
+                async move {
+                    let resp = client.get(&url).send().await?;
+                    resp.bytes().await
+                }
+            })
+    ).await;
     let mut pages: Vec<Vec<u8>> = Vec::new();
     pages.push(main_page);
     Ok(pages)
