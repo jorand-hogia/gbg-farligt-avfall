@@ -14,8 +14,7 @@ struct EmptyEvent {}
 #[derive(Serialize)]
 struct EmptyOutput {}
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let _log = SimpleLogger::new()
         .with_level(LevelFilter::Info)
         .init();
