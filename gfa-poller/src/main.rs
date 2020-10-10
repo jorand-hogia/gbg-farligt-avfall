@@ -8,6 +8,7 @@ use serde_json::Value;
 
 mod page_fetcher;
 mod page_parser;
+mod events_repo;
 mod models;
 
 #[derive(Deserialize)]
@@ -55,8 +56,13 @@ async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
         all_events.append(&mut events);
     }
 
-    for event in all_events {
-        println!("{}", event);
-    }
+    let result = match events_repo::store(events_table, all_events) {
+        Ok(res) => res,
+        Err(e) => {
+            error!("{}", e);
+            return Ok(e.to_string());
+        }
+    };
+
     Ok("OK".to_string())
 }
