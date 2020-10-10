@@ -1,8 +1,9 @@
-use lambda::handler_fn;
+use lambda::{handler_fn, Context};
 use simple_logger::{SimpleLogger};
 use futures::executor::block_on;
 use log::{self, error, LevelFilter};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 mod page_fetcher;
 mod page_parser;
@@ -25,7 +26,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn handle_request(_event: String, _c: lambda::Context) -> Result<String, Error> {
+async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
     let pages_to_scrape = block_on(page_fetcher::obtain_pages());
     let pages_to_scrape = match pages_to_scrape {
         Ok(pages) => pages,
