@@ -20,4 +20,5 @@ https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
 Not needed! The deploy pipeline will trigger on commits to master.
 
 ## TODO
- - ?
+ - Add test to pipeline
+ - Use github actions too for pre-merge checks?
