@@ -1,7 +1,7 @@
 use lambda::{handler_fn, Context};
 use simple_logger::{SimpleLogger};
 use futures::executor::block_on;
-use log::{self, error, LevelFilter};
+use log::{self, error, info, LevelFilter};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -27,6 +27,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
+    info!("About to load pages");
     let pages_to_scrape = block_on(page_fetcher::obtain_pages());
     let pages_to_scrape = match pages_to_scrape {
         Ok(pages) => pages,
@@ -35,6 +36,7 @@ async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
             return Ok(e.to_string());
         }
     };
+    info!("Finished loading all pages");
     let mut all_events: Vec::<page_parser::PickUpEvent> = Vec::new();
     for page in pages_to_scrape {
         let mut events = match page_parser::parse_page(page) {
