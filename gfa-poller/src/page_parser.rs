@@ -5,21 +5,7 @@ use chrono_tz::Europe::Stockholm;
 use regex::{Regex};
 use select::{document, predicate};
 use lazy_static::lazy_static;
-
-#[derive(fmt::Debug)]
-pub struct PickUpEvent {
-    street: String,
-    district: String,
-    description: Option<String>,
-    time_start: String,
-    time_end: String, 
-}
-
-impl fmt::Display for PickUpEvent {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} - {} ({}): {} to {}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
-    }
-}
+use crate::models::PickUpEvent;
 
 #[derive(fmt::Debug)]
 pub struct PageParserError {
