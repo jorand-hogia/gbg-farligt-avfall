@@ -14,4 +14,3 @@ impl fmt::Display for PickUpEvent {
         write!(f, "{} - {} ({}): {} to {}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
     }
 }
-
