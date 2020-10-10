@@ -1,5 +1,4 @@
-use std::error::Error;
-use lambda_runtime::{error::HandlerError, lambda, Context};
+use lambda::handler_fn;
 use simple_logger::{SimpleLogger};
 use futures::executor::block_on;
 use log::{self, error, LevelFilter};
@@ -14,21 +13,25 @@ struct EmptyEvent {}
 #[derive(Serialize)]
 struct EmptyOutput {}
 
-fn main() -> Result<(), Box<dyn Error>> {
+type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+#[tokio::main]
+async fn main() -> Result<(), Error> {
     let _log = SimpleLogger::new()
         .with_level(LevelFilter::Info)
         .init();
-    lambda!(handle_request);
+    let handler = handler_fn(handle_request);
+    lambda::run(handler).await?;
     Ok(())
 }
 
-fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerError> {
+async fn handle_request(_event: String, _c: lambda::Context) -> Result<String, Error> {
     let pages_to_scrape = block_on(page_fetcher::obtain_pages());
     let pages_to_scrape = match pages_to_scrape {
         Ok(pages) => pages,
         Err(e) => {
             error!("{}", e);
-            return Ok(EmptyOutput{});
+            return Ok(e.to_string());
         }
     };
     let mut all_events: Vec::<page_parser::PickUpEvent> = Vec::new();
@@ -39,7 +42,7 @@ fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerErr
                 for error in errors {
                     error!("{}", error);
                 }
-                return Ok(EmptyOutput{});
+                return Ok("Failed while parsing pages".to_string());
             }
         };
         all_events.append(&mut events);
@@ -47,5 +50,5 @@ fn handle_request(_e: EmptyEvent, _c: Context) -> Result<EmptyOutput, HandlerErr
     for event in all_events {
         println!("{}", event);
     }
-    Ok(EmptyOutput{})
+    Ok("OK".to_string())
 }
