@@ -20,5 +20,4 @@ https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
 Not needed! The deploy pipeline will trigger on commits to master.
 
 ## TODO
-- Do page parsing in parallell
-- Only compile regex once
+ - ?

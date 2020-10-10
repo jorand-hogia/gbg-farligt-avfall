@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc, TimeZone, Datelike};
 use chrono_tz::Europe::Stockholm;
 use regex::{Regex};
 use select::{document, predicate};
+use lazy_static::lazy_static;
 
 #[derive(fmt::Debug)]
 pub struct PickUpEvent {
@@ -114,11 +115,13 @@ fn format_district(raw: String) -> String {
 }
 
 fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PageParserError> {
+    lazy_static! {
+        // Should match either "vid ica gunnilse och återvinningsstationen. onsdag 16 september 17.35-17.55" or "onsdag 16 september 17.35-17.55"
+        // Index of second group indicates where to split description and time data.
+        static ref DESC_TIMES_RE: Regex = Regex::new(r"([\w\s]+\. |^)(måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag)").unwrap();
+    }
     let raw = raw.trim().to_lowercase();
-    // Should match either "vid ica gunnilse och återvinningsstationen. onsdag 16 september 17.35-17.55" or "onsdag 16 september 17.35-17.55"
-    // Index of second group indicates where to split description and time data.
-    let re = Regex::new(r"([\w\s]+\. |^)(måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag)").unwrap();
-    let captures = match re.captures(&raw) {
+    let captures = match DESC_TIMES_RE.captures(&raw) {
         Some(caps) => caps,
         None => return Err(PageParserError{
             message: format!("No match found while splitting description and times: {}", raw)
@@ -139,11 +142,13 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
 }
 
 fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)>, PageParserError> {
+    lazy_static! {
+        static ref DATETIME_RE: Regex = Regex::new(r"\w+ (?P<day>\d{1,2}) (?P<month>\w+) (?P<start>\d{2}\.\d{2})\s{0,1}-\s{0,1}(?P<end>\d{2}\.\d{2})").unwrap();:w
+    }
     let mut datetimes: Vec::<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)> = Vec::new();
     for dt in raw.split_terminator("och") {
         let dt = append_zeros_in_timestamp(dt); 
-        let re = Regex::new(r"\w+ (?P<day>\d{1,2}) (?P<month>\w+) (?P<start>\d{2}\.\d{2})\s{0,1}-\s{0,1}(?P<end>\d{2}\.\d{2})").unwrap();
-        let captures = match re.captures(&dt) {
+        let captures = match DATETIME_RE.captures(&dt) {
             Some(caps) => caps,
             None => return Err(PageParserError{
                 message: format!("Could not parse timestamp: {}", dt)
@@ -195,15 +200,19 @@ fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>
 }
 
 fn append_zeros_in_timestamp(raw: &str) -> String {
+    lazy_static! {
+        static ref BAD_TIMESTAMP_RE: Regex = Regex::new(r"[^\.](?P<bad_hour>\d{2})-").unwrap();
+    }
     let dt = raw.trim();
-    let re = Regex::new(r"[^\.](?P<bad_hour>\d{2})-").unwrap();
-    let dt = re.replace(dt, " $bad_hour.00-");
+    let dt = BAD_TIMESTAMP_RE.replace(dt, " $bad_hour.00-");
     String::from(dt)
 }
 
 fn zero_pad_day_number(raw: &str) -> String {
-    let re = Regex::new(r"^(?P<day_number>\d{1})$").unwrap();
-    let dt = re.replace(raw, "0$day_number");
+    lazy_static! {
+        static ref DAY_NUMBER_ZERO_PAD: Regex = Regex::new(r"^(?P<day_number>\d{1})$").unwrap();
+    }
+    let dt = DAY_NUMBER_ZERO_PAD.replace(raw, "0$day_number");
     String::from(dt)
 }
 

@@ -309,6 +309,7 @@ dependencies = [
  "futures",
  "futures-util",
  "lambda",
+ "lazy_static",
  "log",
  "regex 1.3.9",
  "reqwest",

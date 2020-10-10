@@ -5,6 +5,7 @@ use std::fmt;
 use regex::Regex;
 use reqwest::{Client, Body};
 use select::{document, predicate};
+use lazy_static::lazy_static;
 
 const BASE_URL: &str = "https://goteborg.se";
 
@@ -102,6 +103,9 @@ fn find_paging_path(page: &Vec<u8>) -> Result<String, PageFetcherError> {
 }
 
 fn find_total_items(page: &Vec<u8>) -> Result<u16, PageFetcherError> {
+    lazy_static! {
+        static ref TOTAL_RE: Regex = Regex::new(r".*Hittade\s+(\d+)").unwrap();
+    }
     let doc = match document::Document::from_read(page.as_slice()) {
         Ok(doc) => doc,
         Err(_e) => return Err(PageFetcherError{
@@ -116,9 +120,8 @@ fn find_total_items(page: &Vec<u8>) -> Result<u16, PageFetcherError> {
                 message: format!("Could not find class c-result-bar on page")
             })
         };
-    let re = Regex::new(r".*Hittade\s+(\d+)").unwrap();
     let node = node.inner_html();
-    let captures = match re.captures(&node) {
+    let captures = match TOTAL_RE.captures(&node) {
         Some(cap) => cap,
         None => return Err(PageFetcherError{
             message: format!("Could not find pattern 'Hittade TOTAL' on page")
@@ -139,12 +142,14 @@ fn find_total_items(page: &Vec<u8>) -> Result<u16, PageFetcherError> {
 }
 
 fn calculate_urls(base_path: &String, total: u16) -> Vec::<String> {
+    lazy_static! {
+        static ref PAGINATION_RE: Regex = Regex::new(r"Epagination!\d+==/").unwrap();
+    }
     let num_urls = (total as f32 / 30.0).ceil() as u16;
-    let re = Regex::new(r"Epagination!\d+==/").unwrap();
     let mut urls: Vec::<String> = Vec::new();
     for i in 0..num_urls {
         let new_pagination = format!("Epagination!{}==/", i * 30);
-        urls.push(format!("{}{}", BASE_URL, re.replace(base_path, &new_pagination[..]).to_string()));
+        urls.push(format!("{}{}", BASE_URL, PAGINATION_RE.replace(base_path, &new_pagination[..]).to_string()));
     }
     return urls; 
 }
