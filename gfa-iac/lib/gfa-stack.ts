@@ -1,6 +1,6 @@
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
-import { App, Stack, StackProps } from '@aws-cdk/core';
+import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
       
 export class GbgFarligtAvfallStack extends Stack {
   public readonly lambdaCode: lambda.CfnParametersCode;
@@ -17,6 +17,7 @@ export class GbgFarligtAvfallStack extends Stack {
       code: this.lambdaCode,
       handler: 'doesnt.matter',
       runtime: lambda.Runtime.PROVIDED,
+      timeout: Duration.seconds(3),
       environment: {
         EVENTS_TABLE: gfaEvents.tableName,
       }
