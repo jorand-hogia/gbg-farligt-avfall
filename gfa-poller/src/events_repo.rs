@@ -23,8 +23,8 @@ pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) ->
                 s: Some(event.date()),
                 ..Default::default()
             });
-            attributes.insert("district-and-street".to_string(), AttributeValue{
-                s: Some(event.district_and_street()),
+            attributes.insert("location-id".to_string(), AttributeValue{
+                s: Some(event.location_id()),
                 ..Default::default()
             });
             attributes.insert("district".to_string(), AttributeValue{
