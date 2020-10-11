@@ -21,5 +21,7 @@ futures = "0.3.6"
 futures-util = "0.3.6"
 tokio = { version = "0.2.22", features = ["full"] }
 lazy_static = "1.4.0"
+rusoto_dynamodb = { version = "0.45.0", default_features = false, features=["rustls"] }
+rusoto_core = { version = "0.45.0", default_features = false, features=["rustls"] }
 
 [dev-dependencies]
