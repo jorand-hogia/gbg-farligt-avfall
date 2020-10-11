@@ -7,17 +7,18 @@ pub struct PickUpEvent {
     street: String,
     district: String,
     description: Option<String>,
-    time_start: String,
-    time_end: String,
+    time_start: DateTime<Utc>,
+    time_end: DateTime<Utc>,
 }
 
 impl fmt::Display for PickUpEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} - {} ({}): {} to {}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
+        write!(f, "{} - {} ({}): {} to {}\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start.to_rfc3339(), self.time_end.to_rfc3339())
     }
 }
 
 impl PickUpEvent {
+
     pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Result<Self, Box<Error>> {
         let time_start = DateTime::parse_from_rfc3339(&time_start)?
             .with_timezone(&Utc);
@@ -27,10 +28,14 @@ impl PickUpEvent {
             street,
             district,
             description,
-            time_start: time_start.to_rfc3339(),
-            time_end: time_end.to_rfc3339()
+            time_start: time_start,
+            time_end: time_end
         })
     }
+    
+    pub fn date(self: &Self) -> String {
+        self.time_start.format("%Y-%m-%d").to_string()
+    } 
 }
 
 #[cfg(test)]
@@ -47,5 +52,11 @@ mod tests {
     fn should_fail_on_invalid_time() {
         let event = PickUpEvent::new("Sunnerviksgatan 38".to_string(), "Västra Hisingen".to_string(), Some("jättestensskolan".to_string()), "2020-09-23TKASS_TID".to_string(), "KASST_DATUMT18:45:00+02:00".to_string());
         assert_eq!(true, event.is_err());
+    }
+
+    #[test]
+    fn should_get_date() {
+        let event = PickUpEvent::new("Sunnerviksgatan 38".to_string(), "Västra Hisingen".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
+        assert_eq!("2020-09-23".to_string(), event.date());
     }
 }
