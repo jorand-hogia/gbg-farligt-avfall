@@ -77,13 +77,13 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError
             }
         };
         for t in times {
-            events.push(PickUpEvent{
-                street: String::from(&street),
-                district: String::from(&district),
-                description: description.clone(),
-                time_start: t.0.to_rfc3339(),
-                time_end: t.1.to_rfc3339(),
-            })
+            events.push(PickUpEvent::new(
+                String::from(&street),
+                String::from(&district),
+                description.clone(),
+                t.0.to_rfc3339(),
+                t.1.to_rfc3339(),
+            ));
         }
     }
     if errors.len() > 0 {
