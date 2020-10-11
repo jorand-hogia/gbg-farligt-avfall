@@ -12,7 +12,7 @@ export class GbgFarligtAvfallStack extends Stack {
 
     const gfaEvents = new dynamodb.Table(this, 'gfa-events', {
       partitionKey: { name: 'event-date', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'district-and-street', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'location-id', type: dynamodb.AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
 

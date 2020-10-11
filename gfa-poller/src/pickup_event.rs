@@ -57,8 +57,11 @@ impl PickUpEvent {
         self.time_end.to_rfc3339()
     }
 
-    pub fn district_and_street(self: &Self) -> String {
-        format!("{}/{}", self.district, self.street)
+    pub fn location_id(self: &Self) -> String {
+        format!("{}_{}",
+            self.district.to_lowercase().trim().replace(" ", ""),
+            self.street.to_lowercase().trim().replace(" ", "")
+        )
     }
 }
 
@@ -82,5 +85,11 @@ mod tests {
     fn should_get_date() {
         let event = PickUpEvent::new("Sunnerviksgatan 38".to_string(), "Västra Hisingen".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
         assert_eq!("2020-09-23".to_string(), event.date());
+    }
+
+    #[test]
+    fn should_generate_location_id() {
+        let event = PickUpEvent::new("  Doktor Fries torg, Doktor Bondesons Gata ".to_string(), "Centrum".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
+        assert_eq!("centrum_doktorfriestorg,doktorbondesonsgata", event.location_id());
     }
 }
