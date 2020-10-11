@@ -1,11 +1,12 @@
 use std::fmt;
+use std::error::Error;
 use std::result::Result;
 use chrono::{DateTime, Utc, TimeZone, Datelike};
 use chrono_tz::Europe::Stockholm;
 use regex::{Regex};
 use select::{document, predicate};
 use lazy_static::lazy_static;
-use crate::models::PickUpEvent;
+use crate::pickup_event::PickUpEvent;
 
 #[derive(fmt::Debug)]
 pub struct PageParserError {
@@ -14,6 +15,11 @@ pub struct PageParserError {
 impl fmt::Display for PageParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.message)
+    }
+}
+impl Error for PageParserError {
+    fn description(&self) -> &str {
+        &self.message
     }
 }
 
@@ -77,13 +83,16 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError
             }
         };
         for t in times {
-            events.push(PickUpEvent::new(
-                String::from(&street),
-                String::from(&district),
-                description.clone(),
-                t.0.to_rfc3339(),
-                t.1.to_rfc3339(),
-            ));
+            let event = match PickUpEvent::new(String::from(&street), String::from(&district), description.clone(), t.0.to_rfc3339(), t.1.to_rfc3339()) {
+                Ok(event) => event,
+                Err(e) => {
+                    errors.push(PageParserError{
+                        message: format!("Could not initialize PickupEvent: {}", e)
+                    });
+                    continue;
+                }
+            };
+            events.push(event);
         }
     }
     if errors.len() > 0 {

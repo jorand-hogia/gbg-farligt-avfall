@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::models::PickUpEvent;
+use crate::pickup_event::PickUpEvent;
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient};
 use rusoto_core::{Region};
 
@@ -36,7 +36,7 @@ mod tests {
             endpoint: "http://testing.test".to_string()
         };
         store("some-table".to_string(), region, vec![
-            PickUpEvent::new("some-street".to_string(), "some-district".to_string(), None, "2020".to_string(), "2020".to_string())
+            PickUpEvent::new("some-street".to_string(), "some-district".to_string(), None, "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap()
         ]);
     }
 }

@@ -11,7 +11,7 @@ use rusoto_core::{Region};
 mod page_fetcher;
 mod page_parser;
 mod events_repo;
-mod models;
+mod pickup_event;
 
 #[derive(Deserialize)]
 struct EmptyEvent {}
@@ -46,7 +46,7 @@ async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
         }
     };
     debug!("Finished loading all pages");
-    let mut all_events: Vec::<models::PickUpEvent> = Vec::new();
+    let mut all_events: Vec::<pickup_event::PickUpEvent> = Vec::new();
     for page in pages_to_scrape {
         let mut events = match page_parser::parse_page(page) {
             Ok(events) => events,
