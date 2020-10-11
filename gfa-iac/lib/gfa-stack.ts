@@ -7,12 +7,12 @@ export class GbgFarligtAvfallStack extends Stack {
       
   constructor(app: App, id: string, props?: StackProps) {
     super(app, id, props);
-      
+    this.lambdaCode = lambda.Code.fromCfnParameters();
+
     const gfaEvents = new dynamodb.Table(this, 'gfa-events', {
       partitionKey: { name: 'event-date', type: dynamodb.AttributeType.STRING }
     });
 
-    this.lambdaCode = lambda.Code.fromCfnParameters();
     const gfaPoller = new lambda.Function(this, 'gfa-poller', {
       code: this.lambdaCode,
       handler: 'doesnt.matter',
