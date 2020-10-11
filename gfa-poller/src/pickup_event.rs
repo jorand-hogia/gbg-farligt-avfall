@@ -56,6 +56,10 @@ impl PickUpEvent {
     pub fn end_time(self: &Self) -> String {
         self.time_end.to_rfc3339()
     }
+
+    pub fn district_and_street(self: &Self) -> String {
+        format!("{}/{}", self.district, self.street)
+    }
 }
 
 #[cfg(test)]
