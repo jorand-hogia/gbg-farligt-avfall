@@ -19,7 +19,7 @@ impl fmt::Display for PickUpEvent {
 
 impl PickUpEvent {
 
-    pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Result<Self, Box<Error>> {
+    pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Result<Self, Box<dyn Error>> {
         let time_start = DateTime::parse_from_rfc3339(&time_start)?
             .with_timezone(&Utc);
         let time_end = DateTime::parse_from_rfc3339(&time_end)?
@@ -36,6 +36,26 @@ impl PickUpEvent {
     pub fn date(self: &Self) -> String {
         self.time_start.format("%Y-%m-%d").to_string()
     } 
+
+    pub fn district(self: &Self) -> String {
+        self.district.clone()
+    }
+
+    pub fn street(self: &Self) -> String {
+        self.street.clone()
+    }
+
+    pub fn description(self: &Self) -> Option<String> {
+        self.description.clone()
+    }
+
+    pub fn start_time(self: &Self) -> String {
+        self.time_start.to_rfc3339()
+    }
+    
+    pub fn end_time(self: &Self) -> String {
+        self.time_end.to_rfc3339()
+    }
 }
 
 #[cfg(test)]

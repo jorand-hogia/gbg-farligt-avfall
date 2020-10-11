@@ -61,7 +61,7 @@ async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
     }
     debug!("Finished parsing pages");
 
-    let result = match events_repo::store(events_table, region, all_events) {
+    let _result = match events_repo::store(events_table, region, all_events).await {
         Ok(res) => res,
         Err(e) => {
             error!("{}", e);
