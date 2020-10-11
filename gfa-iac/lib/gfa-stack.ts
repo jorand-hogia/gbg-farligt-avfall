@@ -10,14 +10,15 @@ export class GbgFarligtAvfallStack extends Stack {
     this.lambdaCode = lambda.Code.fromCfnParameters();
 
     const gfaEvents = new dynamodb.Table(this, 'gfa-events', {
-      partitionKey: { name: 'event-date', type: dynamodb.AttributeType.STRING }
+      partitionKey: { name: 'event-date', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'district-and-street', type: dynamodb.AttributeType.STRING }
     });
 
     const gfaPoller = new lambda.Function(this, 'gfa-poller', {
       code: this.lambdaCode,
       handler: 'doesnt.matter',
       runtime: lambda.Runtime.PROVIDED,
-      timeout: Duration.seconds(3),
+      timeout: Duration.seconds(10),
       environment: {
         EVENTS_TABLE: gfaEvents.tableName,
       }

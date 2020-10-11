@@ -23,6 +23,10 @@ pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) ->
                 s: Some(event.date()),
                 ..Default::default()
             });
+            attributes.insert("district-and-street".to_string(), AttributeValue{
+                s: Some(event.district_and_street()),
+                ..Default::default()
+            });
             attributes.insert("district".to_string(), AttributeValue{
                 s: Some(event.district()),
                 ..Default::default()
@@ -56,18 +60,25 @@ pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) ->
             }
         })
         .collect();
-    let mut request_items: HashMap<String, Vec<WriteRequest>> = HashMap::new();
-    request_items.insert(table, write_requests);
-    let write_request = BatchWriteItemInput{
-        request_items,
-        ..Default::default()
-    };
-    match client.batch_write_item(write_request).await {
-        Ok(_res) => return Ok(()), 
-        Err(e) => return Err(EventsRepoError{
-            message: format!("{}", e)
-        })
-    };
+    let mut batch_write_requests: Vec<BatchWriteItemInput> = Vec::new();
+    for chunk in write_requests.chunks(25) {
+        let chunk = chunk.to_vec();
+        let mut request_items: HashMap<String, Vec<WriteRequest>> = HashMap::new();
+        request_items.insert(table.clone(), chunk);
+        batch_write_requests.push(BatchWriteItemInput{
+            request_items,
+            ..Default::default()
+        });
+    }
+    for batch_write_request in batch_write_requests {
+        match client.batch_write_item(batch_write_request).await {
+            Err(e) => return Err(EventsRepoError{
+                message: format!("{}", e)
+            }),
+            _ => {}
+        };
+    }
+    Ok(())
     // Filter out elements in the past?
     // Filter out elements for long in the future? Six months? Since I use current year when parsing, and list is only updated twice a year
 
