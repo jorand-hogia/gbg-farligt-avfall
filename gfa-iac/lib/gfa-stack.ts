@@ -1,7 +1,7 @@
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
-      
+
 export class GbgFarligtAvfallStack extends Stack {
   public readonly lambdaCode: lambda.CfnParametersCode;
       
@@ -21,8 +21,9 @@ export class GbgFarligtAvfallStack extends Stack {
       timeout: Duration.seconds(10),
       environment: {
         EVENTS_TABLE: gfaEvents.tableName,
-      }
+      },
     });
+    gfaEvents.grantWriteData(gfaPoller);
 
   }
 }
