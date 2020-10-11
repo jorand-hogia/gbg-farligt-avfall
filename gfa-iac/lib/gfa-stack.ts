@@ -1,6 +1,7 @@
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
+import { BillingMode } from '@aws-cdk/aws-dynamodb';
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly lambdaCode: lambda.CfnParametersCode;
@@ -11,7 +12,8 @@ export class GbgFarligtAvfallStack extends Stack {
 
     const gfaEvents = new dynamodb.Table(this, 'gfa-events', {
       partitionKey: { name: 'event-date', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'district-and-street', type: dynamodb.AttributeType.STRING }
+      sortKey: { name: 'district-and-street', type: dynamodb.AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST,
     });
 
     const gfaPoller = new lambda.Function(this, 'gfa-poller', {
