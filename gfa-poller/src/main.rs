@@ -32,6 +32,10 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
+    let db_arn = env::var("DB_ARN").unwrap();
+    let db_credentials = env::var("DB_CREDENTIALS").unwrap();
+    let db_name = env::var("DB_NAME").unwrap();
+    println!("{}\n{}\n{}", db_arn, db_credentials, db_name);
     let events_table = env::var("EVENTS_TABLE").unwrap();
     let region = env::var("AWS_REGION").unwrap();
     let region = Region::from_str(&region).unwrap(); 
