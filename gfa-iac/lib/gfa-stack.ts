@@ -21,11 +21,7 @@ export class GbgFarligtAvfallStack extends Stack {
       handler: 'doesnt.matter',
       runtime: lambda.Runtime.PROVIDED,
       timeout: Duration.seconds(10),
-      environment: {
-        EVENTS_TABLE: gfaEvents.tableName,
-      },
     });
-    gfaEvents.grantWriteData(gfaPoller);
 
   }
 }
