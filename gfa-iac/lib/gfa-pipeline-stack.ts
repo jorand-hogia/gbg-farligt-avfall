@@ -58,13 +58,13 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               'cd gfa-backend',
               '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
               '(cd gfa-scraper && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)',
-              'cp ./target/x86_64-unknown-linux-musl/release/gfa-poller ./gfa-scraper/bootstrap'
+              'cp target/x86_64-unknown-linux-musl/release/gfa-scraper gfa-scraper/bootstrap'
             ]    
           },
         },
         artifacts: {
-          'base-directory': 'gfa-backend',
-          files: './gfa-scraper/bootstrap'
+          'base-directory': 'gfa-backend/gfa-scraper',
+          files: './bootstrap'
         },
       }),
       environment: {
