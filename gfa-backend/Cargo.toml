@@ -1,0 +1,2 @@
+[workspace]
+members = ["gfa-scraper", "gfa-events", "gfa-common"]

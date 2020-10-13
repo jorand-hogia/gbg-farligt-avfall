@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="sv" class="no-js">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <script>
+        document.documentElement.className = document.documentElement.className.replace(/(\s|^)no-js(\s|$)/, '$1js$2');
+    </script>
+    
+
+<script>
+    var url = '/jserrorreceiver/';
+    
+        window.onerror = function (message, filename, lineNumber, column, error) {
+            sendErrorToLog(error);
+        };
+
+        function sendErrorToLog (error) {
+            var row = error.lineNumber || '';
+            var column = error.columnNumber || '';
+            var message = error.message || '';
+            var stack = error.stack || '';
+            var fileName = error.fileName || '';
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send('url=' + window.location.href + '&logLevel=error&message=' + encodeURIComponent(message) + '&file=' + encodeURIComponent(fileName) + '&stack=' + encodeURIComponent(stack) + '&row=' + encodeURIComponent(row) + '&column=' + encodeURIComponent(column) + '&userAgent=' + encodeURIComponent(navigator.userAgent));
+        }
+    
+        var sendToLog = function (logLevel, message) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send('url=' + window.location.href + '&logLevel=' + logLevel + '&message=' + encodeURIComponent(message) + '&userAgent=' + encodeURIComponent(navigator.userAgent));
+        }
+    
+        // define a new console
+        var console = (function(oldCons){
+            return {
+                log: function(text){
+                    if (oldCons) {
+                        oldCons.log(text);
+                    }
+                    sendToLog('debug', text);
+                },
+                info: function (text) {
+                    if (oldCons) {
+                        oldCons.info(text);
+                    }
+                    sendToLog('info', text);
+                },
+                warn: function (text) {
+                    if (oldCons) {
+                        oldCons.warn(text);
+                    }
+                    sendToLog('warn', text);
+                },
+                error: function (error) {
+                    if (oldCons) {
+                        oldCons.error(error);
+                    }
+                    sendErrorToLog(error);
+                }
+            };
+        }(window.console));
+    
+        //Then redefine the old console
+        window.console = console;
+</script><meta name="google-site-verification" content="uvRqep_Tp220wkmaqGXxI1RLW89ds5CtCss5x3sicc8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <link rel="stylesheet" href="/wps/contenthandler/!ut/p/digest!cjbMzMF7cWkBQXTBVhUKKA/sp/mashup:ra:collection?soffset=0&amp;eoffset=12&amp;themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fcss&amp;lm=1599710745556&amp;entry=wp_toolbar_common__0.0%3Ahead_css&amp;entry=gbg_ui_framework_plugin__3.12.0%3Ahead_css&amp;entry=gbg_ui_framework__3.12.0%3Ahead_css&amp;entry=gbg_gui_goteborg_plugin__3.8.0%3Ahead_css&amp;entry=gbg-gui-goteborg__3.8.0%3Ahead_css&amp;entry=wp_dialog_css__0.0%3Ahead_css&amp;entry=wp_toolbar_common_actionbar__0.0%3Ahead_css&amp;entry=wp_simple_contextmenu_css__0.0%3Ahead_css&amp;entry=wp_toolbar_actionbar__0.0%3Ahead_css&amp;entry=gbg_theme__2.8.0%3Ahead_css&amp;entry=gbg_toolbarModifications__1.0%3Ahead_css&amp;entry=wp_toolbar_projectmenu__0.0%3Ahead_css" type="text/css"/><link rel="alternate" id="head_css_deferred" href="/wps/contenthandler/!ut/p/digest!cjbMzMF7cWkBQXTBVhUKKA/sp/mashup:ra:collection?soffset=0&amp;eoffset=8&amp;themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fcss&amp;lm=1591243866490&amp;entry=wp_contextmenu_css__0.0%3Ahead_css&amp;entry=wp_federated_documents_picker__0.0%3Ahead_css&amp;entry=wp_dnd_css__0.0%3Ahead_css&amp;entry=gbg_theme_edit__0.0%3Ahead_css&amp;entry=wp_status_bar__0.0%3Ahead_css&amp;entry=wcm_inplaceEdit__0.0%3Ahead_css&amp;entry=wp_content_targeting_cam__0.0%3Ahead_css&amp;deferred=true"/><script type="text/javascript">var djConfig={"baseUrl":"/wps/portal_dojo/v1.9/dojo/","locale":"sv","isDebug":false,"debugAtAllCosts":false,"parseOnLoad":false,"afterOnLoad":false,"has":{"dojo-bidi":true},"modulePaths":{"com":"/wps/themeModules/js/com","ibm":"/wps/themeModules/js/ibm","pagebuilder":"/wps/themeModules/modules/pagebuilder/js","portalclient":"/wps/themeModules/modules/portalclient/js","asa":"/wps/themeModules/modules/asa/js","contentmapping":"/wps/themeModules/modules/contentmapping/js","federation":"/wps/themeModules/modules/federation/js"}};djConfig.locale=djConfig.locale.replace(/_/g, "-").replace(/iw/, "he").toLowerCase();(function(){if (typeof(wpModules) == 'undefined') wpModules = {}; if (typeof(wpModules.state) == 'undefined') wpModules.state = {}; if (typeof(wpModules.state.page) == 'undefined') wpModules.state.page = {};wpModules.state.page._initial=[{"nsuri":"http://www.ibm.com/xmlns/prod/websphere/portal/publicparams","name":"selection","value":["Z6_42G01J41KON4B0AJMDNB1G2GH6"]},{"nsuri":"http://www.ibm.com/xmlns/prod/websphere/portal/publicparams","name":"labelMappings","value":["Z6_00000000000000A0BR2B300GO2","Z6_42G01J41KON4B0AJMDNB1G2GH6","Z6_000000000000000000000000A0","Z6_42G01J41KON4B0AJMDNB1G2GH6","Z6_42G01J41KON4B0AJMDNB1G2GH6","Z6_000000000000000000000000A0"]}];wpModules.state.page.selectionPath=['Z6_000000000000000000000000A0','Z6_00000000000000A0BR2B300GO2','Z6_P1JQ8B1A0OG9F0ITKPFNKLG5E5','Z6_42G01J41KGV2F0ALK2K1SN1UL5','Z6_P1JQ8B1A0OG9F0ITKPFNKLOUK6','Z6_42G01J41KOVI50QSI56FK40174','Z6_42G01J41KON4B0AJMDNB1G2GH6'];wpModules.state.page.supportsEditMode=true;wpModules.state.page.supportsToolbar=true;wpModules.state.page.path='/wps/portal';wpModules.state.page.protectedPath='/wps/myportal';wpModules.state.page.publicPath='/wps/portal';})();</script><script type="text/javascript" src="/wps/contenthandler/!ut/p/digest!3JKaotSk_gMd0aUfF0xN-w/mashup/ra:collection?themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fjavascript&amp;lm=1536756546000&amp;entry=wp_client_main__0.0%3Ahead_js&amp;entry=wp_client_ext__0.0%3Ahead_js&amp;entry=wp_client_logging__0.0%3Ahead_js&amp;entry=wp_client_tracing__0.0%3Ahead_js&amp;entry=wp_modules__0.0%3Ahead_js&amp;entry=wp_photon_dom__0.0%3Ahead_js&amp;entry=wp_toolbar_common__0.0%3Ahead_js&amp;entry=jquery_1_12_2__0.0%3Ahead_js&amp;entry=wp_dialog_util__0.0%3Ahead_js&amp;entry=wp_dialog_draggable__0.0%3Ahead_js&amp;entry=wp_dialog_main__0.0%3Ahead_js&amp;entry=wp_a11y__0.0%3Ahead_js&amp;entry=wp_state_page__0.0%3Ahead_js&amp;entry=wp_theme_utils__0.0%3Ahead_js&amp;entry=wp_toolbar_viewframe_validator__0.0%3Ahead_js"></script><link rel="alternate" id="head_js_deferred" href="/wps/contenthandler/!ut/p/digest!3JKaotSk_gMd0aUfF0xN-w/mashup/ra:collection?themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fjavascript&amp;lm=1591243861856&amp;entry=dojo_19__0.0%3Ahead_js&amp;entry=dojo_app_19__0.0%3Ahead_js&amp;entry=dojo_fx_19__0.0%3Ahead_js&amp;entry=dojo_dom_19__0.0%3Ahead_js&amp;entry=dojo_dnd_basic_19__0.0%3Ahead_js&amp;entry=dojo_data_19__0.0%3Ahead_js&amp;entry=dojo_selector_lite_19__0.0%3Ahead_js&amp;entry=dijit_19__0.0%3Ahead_js&amp;entry=dojo_dnd_ext_19__0.0%3Ahead_js&amp;entry=dijit_layout_basic_19__0.0%3Ahead_js&amp;entry=dojox_layout_basic_19__0.0%3Ahead_js&amp;entry=dijit_menu_19__0.0%3Ahead_js&amp;entry=dojo_fmt_19__0.0%3Ahead_js&amp;entry=dijit_tree_19__0.0%3Ahead_js&amp;entry=wp_dnd_namespace__0.0%3Ahead_js&amp;entry=wp_dnd_source__0.0%3Ahead_js&amp;entry=dijit_layout_ext_19__0.0%3Ahead_js&amp;entry=dijit_form_19__0.0%3Ahead_js&amp;entry=wp_client_selector__0.0%3Ahead_js&amp;entry=wp_client_dnd__0.0%3Ahead_js&amp;entry=wp_contextmenu_js__0.0%3Ahead_js&amp;entry=wp_dnd_target__0.0%3Ahead_js&amp;entry=wp_dnd_util__0.0%3Ahead_js&amp;entry=gbg_theme_edit__0.0%3Ahead_js&amp;entry=wcm_inplaceEdit__0.0%3Ahead_js&amp;deferred=true"/><link id="AJ1JGB3BMyC" rel="alternate" href="https://goteborg.se/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/"><script type="text/javascript">(function() {
+	var element = document.getElementById("AJ1JGB3BMyC");
+	if (element) {
+		wpModules.theme.WindowUtils.baseURL.resolve(element.href);
+	}
+}());</script>
+<title>Här stannar farligt avfall-bilen  - Göteborgs Stad</title>
+
+	<link id="com.ibm.lotus.NavStateUrl" rel="alternate"
+		href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dJQSEvUUt3QS80TmxFL1o2XzQyRzAxSjQxS09ONEIwQUpNRE5CMUcyR0g2/" />
+	
+	<link rel="bookmark" title='Här stannar farligt avfall-bilen'
+		href='/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dJQSEvUUt3QS80TmxFL1o2XzQyRzAxSjQxS09ONEIwQUpNRE5CMUcyR0g2/'
+		hreflang="sv" />
+
+<link href="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/themes/GbgTheme/images/favicon.ico" rel="shortcut icon" type="image/ico" />
+
+
+		<meta name="siteimprove-url" content="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen" />
+	<!-- og-tags -->
+	
+<meta property="og:title" content="H&auml;r stannar farligt avfall-bilen" />
+<meta property="og:description" content="(Uppdaterad 19 augusti 2020) Till v&aring;ra farligt avfallbilar kan hush&aring;llen i G&ouml;teborg l&auml;mna sitt farliga avfall och mindre el- och elektronikprodukter. Bilarna k&ouml;r en tur p&aring; v&aring;ren och en p&aring; h&ouml;sten och stannar vid stoppen som redovisas p&aring; sidan. Du kan &auml;ven l&auml;mna &aring;teranv&auml;ndbara saker till Bj&ouml;rk&aring;frihets insamlingsbil. Schemat uppdateras s&aring; snart turerna &auml;r fastst&auml;llda, i allm&auml;nhet i slutet av januari, respektive augusti." />
+<meta property="og:image" content="https://goteborg.se/wps/contenthandler/dav/fs-type1/common-resources/gbg/img/logo-share.png" />
+
+
+<script type="text/javascript">
+<!--
+    var themeImagesPath = 'images/theme';
+    
+-->
+</script>
+
+			<meta name="contentowner" content="N560" />
+		
+			<meta name="contenttype" content="malsida-hitta" />
+		
+
+        <script>
+            dataLayer = [
+                {'environment':'prod'}
+            ];
+        </script>
+
+        <!-- Google Tag Manager -->
+        <script>
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-M4SZLMC');
+        </script>
+        <!-- End Google Tag Manager --></head>
+<body class="lotusui30dojo">
+    <!--[if lt IE 8]>
+    <div class="ie lt-ie8 lt-ie9 lt-ie10"><![endif]-->
+    <!--[if IE 8]>
+    <div class="ie ie8 lt-ie9 lt-ie10"><![endif]-->
+    <!--[if IE 9]>
+    <div class="ie ie9 lt-ie10"><![endif]-->
+    <!--[if !IE]> -->
+    <div><!-- <![endif]-->
+        <!--googleoff: all-->
+        <div class="wpthemeFrame">
+            <header>
+                <!-- Google Tag Manager (noscript) -->
+        <noscript>
+            <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M4SZLMC" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+        </noscript>
+        <!-- End Google Tag Manager (noscript) --><div class="c-skip">
+                    <a class="c-skip__link" href="#main">Till innehåll</a>
+                </div>
+                
+<div class="c-cookie-message" aria-label="Cookie message" data-closeable="true">
+    <div class="c-cookie-message__inner">
+        <div class="c-cookie-message__content">
+            <p>Vi använder kakor (cookies) för att webbplatsen ska fungera på ett bra sätt för dig. Genom att fortsätta ditt besök godkänner du att vi använder kakor.<br><a href="/wps/portal?uri=gbglnk%3agbg.page.75d946ba-fb92-4403-91e5-7027227960fd">Kakor vi använder och hur du kan hantera dem.</a></p>
+        </div>
+    </div>
+</div>
+
+<div class="page-area page-area--header" data-track="[{'selector': '.c-supplemental-nav a', 'category': 'Hjälplänkar - sidhuvud', 'action': 'Klick'}, {'selector': '.c-supplemental-nav button', 'category': 'Hjälplänkar - sidhuvud', 'action': 'Klick'}, {'selector': '.logo a', 'category': 'Logotyp - sidhuvud', 'action': 'Klick'}]">
+    <div class="page-area__inner">
+        
+
+<div class="logo">
+    
+        <a href="/wps/portal/start">
+            <!--[if lt IE 9]><img src="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/logo.png" alt="Göteborgs stad" /><![endif]-->
+            <!--[if IE 9]><img src="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/logo-gbg.svg" alt="Göteborgs stad" /><![endif]-->
+            <!--[if !IE]> --><img src="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/logo-gbg.svg" alt="Göteborgs stad"/><!-- <![endif]-->
+        </a>
+    
+</div>
+
+<form class="c-form-search" id="search-form" action="/wps/portal/sokresultat" role="search" data-icon-url="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/ui-framework/sprite.symbol.svg">
+    <label for="searchtext" class="structural">Sök</label>
+    <div class="c-form-search__field c-autocomplete" data-settings="{'source':'/wps/gbgTheme/search/acBackend.jsp?url=https://goteborg.se/final_querycompletion.txt&method=std&limit=100','autoSubmit':true}">
+        <input type="search" name="q" id="searchtext" placeholder="Sök"/>
+        <button type="submit" class="c-button c-form-search__button">
+            <span class="structural">Sök</span>
+            <svg aria-hidden="true" class="c-icon" focusable="false">
+                <use xlink:href="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/ui-framework/sprite.symbol.svg#search"></use>
+            </svg>
+        </button>
+    </div>
+</form> 
+
+<div class="c-supplemental-nav" id="supplemental-nav" data-order="0 tablet:0 desktop:0" data-icon-url="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/ui-framework/sprite.symbol.svg">
+    
+
+<div class="c-supplemental-nav__area c-supplemental-nav__area--userbar">
+	<div class="c-supplemental-nav__inner">
+		<div class="c-user-bar">
+			<div class="c-user-bar__row">
+				<div class="c-user-bar__column c-user-bar__column--right">
+					
+
+<div class="c-profile">
+	<div class="c-profile__content">
+		<div class="c-profile__my-pages">
+			
+						<a class="c-profile__link c-profile__link--signin" href='/wps/myportal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen'>Logga in</a>
+					
+		</div>
+	</div>
+</div>
+				</div>
+				<div class="c-user-bar__column c-user-bar__column--left">
+					<ul class="c-user-bar__list">
+						
+
+<li class="c-user-bar__item">
+	<div class="c-user-bar__info-block t-small-hidden">
+		<span>
+			<a class="page-link" data-href="https://goteborg.se/wps/portal?uri=gbglnk%3agbg.page.4e450ecf-15eb-46f5-8cf3-25be7b8c3581" data-dropdown-content="dropdown-content-page-link">
+				<svg focusable="false" class="c-icon" aria-hidden="true">
+					<use xlink:href="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/ui-framework/sprite.symbol.svg#link" ></use>
+				</svg>Länk till sidan
+			</a>
+		</span>
+	</div>
+	<div class="dropdown-content-container">
+		<div class="dropdown-content dropdown-hidden" id="dropdown-content-page-link"></div>
+	</div>
+</li>
+
+
+					</ul>
+				</div>
+			</div>
+
+			
+		</div>
+	</div>
+</div>
+
+<div class="c-supplemental-nav__area">
+    <div class="c-supplemental-nav__inner">
+        <ul class="c-supplemental-nav__list">
+            <li class="c-supplemental-nav__item t-large-hidden">
+                <a href="/wps/portal?uri=gbglnk:gbg.page.958c1144-4ba5-4a68-ada6-46b0484aa9c4" class="c-supplemental-nav__link">Kontakta Göteborgs Stad</a>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="/wps/portal?uri=gbglnk:gbg.page.9ccad588-2dab-4568-8af4-1cf61004912d" class="c-supplemental-nav__link">
+                    <svg class="c-icon" focusable="false" aria-hidden="true">
+                        <use xlink:href="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources/gbg/img/ui-framework/sprite.symbol.svg#hands"></use>
+                    </svg> Teckenspråk
+                </a>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="/wps/portal/suomeksi" class="c-supplemental-nav__link">Suomeksi</a>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="#" class="c-supplemental-nav__link dropdown" data-dropdown-content="dropdown-content-languages">Other languages</a>
+                <div class="dropdown-content-container">
+                    <div class="dropdown-content dropdown-hidden" id="dropdown-content-languages">
+                        <div class="google-translate">
+                            <strong>Google Translate</strong>
+                            <p>Google Translate enables an automatic translation of the text on this website. Neither the City of Gothenburg nor any entity within the city´s administration can be held liable for the correctness of the translation.</p>
+                            <div id="google_translate_element"></div>
+                        </div>
+                        <div class="languages">
+                            <strong>Finska/Suomeksi</strong>
+                            <p>En del av innehållet på goteborg.se är översatt till <a href="/wps/portal?uri=gbglnk%3agbg.page.20121203-131250">finska/suomeksi</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="/wps/portal?uri=gbglnk%3a20164291127164" class="c-supplemental-nav__link">E-tjänster och blanketter</a>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="/wps/portal?uri=gbglnk%3apress" class="c-supplemental-nav__link">Press och media</a>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="/wps/portal?uri=gbglnk%3agbg.jamfor-service" class="c-supplemental-nav__link">Jämför service</a>
+            </li>
+            <li class="c-supplemental-nav__item">
+                <a href="/wps/portal?uri=gbglnk%3aGBG.For" class="c-supplemental-nav__link">Företagare</a>
+            </li>
+        </ul>
+    </div>
+</div>
+</div>
+
+
+    </div>
+</div></header>
+
+            <div class="o-layout">
+                <div class="o-layout__head">
+ 
+<div data-name="message" class="c-message c-message--warning t-space-top-m t-space-bottom-m" data-closeable="makeCloseable">
+	<div class="c-message__content">
+		<h2 class="c-message__title">Samlad information om coronaviruset</h2>
+		<span class="c-message__meta">Senast uppdaterad: 14 september 2020 klockan 12:07  |   Publicerad: 23 mars 2020 klockan 08:26</span>
+		<p>Här hittar du information om hur Göteborgs Stads verksamheter påverkas.</p>
+		 
+ 
+		 <a href="https://goteborg.se/covid19">Göteborgs Stads information med anledning av covid-19</a>
+ 
+	</div>
+</div>
+ 	</div>
+
+	
+	<div class="o-layout__head">
+		<nav class="c-breadcrumb">
+			
+								<span class="t-visually-hidden">Du är här:</span>
+								
+									<a class="c-breadcrumb__level" href="/wps/portal/">
+								
+									<span class="t-visually-hidden">Startsidan</span>
+									<svg aria-hidden="true" class="c-icon c-breadcrumb__icon">
+										<use xlink:href="/wps/contenthandler/dav/fs-type1/common-resources/gbg/img/ui-framework/sprite.symbol.svg#home"></use>
+									</svg>
+								</a>
+							
+										<span class="c-breadcrumb__divider"> / </span> <a class="c-breadcrumb__level" href="/wps/portal/start/avfall-och-atervinning">Avfall och återvinning</a>
+									
+										<span class="c-breadcrumb__divider"> / </span> <a class="c-breadcrumb__level" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall">Här lämnar hushåll avfall</a>
+									
+										<span class="c-breadcrumb__divider"> / </span> <a class="c-breadcrumb__level" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen">Farligt avfallbilen</a>
+									
+									<span class="c-breadcrumb__divider"> / </span> <strong class="c-breadcrumb__current">Här stannar farligt avfall-bilen</strong>
+								
+		</nav>
+	</div>
+
+<!-- TEMA END -->
+                <!-- LAYOUT TEMPLATE START -->
+                <div id="layout-container">
+                    <div id="main" class="page-area">
+                        <div style="display:none" id="portletState">{}</div><div id="layoutContainers" class="wpthemeLayoutContainers wpthemeLayoutContainersHidden">
+                            <!--Start innehåll-->
+                            <!--googleon: all-->
+                            <div class="hiddenWidgetsDiv">
+	<!-- widgets in this container are hidden in the UI by default -->
+	<div class='component-container wpthemeFull ibmDndRow hiddenWidgetsContainer id-Z7_42G01J41KON4B0AJMDNB1G2GH3' name='ibmHiddenWidgets' ></div><div style="clear:both"></div>
+</div>
+
+<div class="c-sheet c-sheet--white" role="main">
+	<div class="c-sheet__inner">
+		<div class='component-container wpthemeCol ibmDndColumn id-Z7_42G01J41KON4B0AJMDNB1G2GH7' name='zone1' ><div class='component-control id-Z7_42G01J41KON4B0AJMDNB1G2G94' >	<!--googleon: all-->
+	<div class="o-grid" data-js="hideIntro">
+    <div class="o-grid__column" data-size="4/4">
+        <div class="c-heading">
+            <div class="c-heading-header">
+                <h1 class="c-heading__title">
+                    Här stannar farligt avfall-bilen
+                </h1>
+            </div>
+        </div>
+    </div>
+</div><!--googleoff: all-->
+</div></div><div class='component-container wpthemeCol ibmDndColumn id-Z7_42G01J41KON4B0AJMDNB1G2GP6' name='zone3' ><div class='component-control id-Z7_42G01J41KON4B0AJMDNB1G2G91' >	<!--googleon: all-->
+	<div class="o-grid" data-js="hideIntro">
+    <div class="o-grid__column" data-size="4/4 8/8@m 12/12@l">
+        
+        <div class="readspeaker-readarea">
+            <div class="c-text c-text--intro">
+                <p>
+                    
+                    (Uppdaterad 19 augusti 2020) Till våra farligt avfallbilar kan hushållen i Göteborg lämna sitt farliga avfall och mindre el- och elektronikprodukter. Bilarna kör en tur på våren och en på hösten och stannar vid stoppen som redovisas på sidan. Du kan även lämna återanvändbara saker till Björkåfrihets insamlingsbil. Schemat uppdateras så snart turerna är fastställda, i allmänhet i slutet av januari, respektive augusti.
+                    
+                </p>
+            </div>
+        </div>
+    </div>
+</div><!--googleoff: all-->
+</div><div class='component-control id-Z7_42G01J41KON4B0AJMDNB1G2G93' >	<!--googleon: all-->
+	
+<div class="o-grid">
+    <div class="o-grid__column" data-size="4/4 8/8@m 8/12@l">
+        
+        <div class="readspeaker-readarea">
+            <div class="c-message" aria-label="Message">
+                <div class="c-message__content">
+                    <h2 class="c-message__title">
+                        Återbruksbilen från Björkåfrihet följer inte FA-bilen i höst
+                    </h2>
+                    <span class="c-message__meta">
+                        19 augusti 2020
+                    </span>
+                    <p>
+  Tyvärr kan inte Björkåfrihets återbruksbil följa farligt avfallbilen för att ta emot återanvändbara saker när turerna startar, men håll utkik här, så meddelar vi om och när återbruksbilen gör FA-bilen sällskap igen.</p>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--googleoff: all-->
+</div><div class='component-control id-Z7_42G01J41KON4B0AJMDNB1G2GP0' >	<!--googleon: all-->
+	
+
+
+
+<div class="o-grid" data-js="hideIntro">
+    <div class="o-grid__column" data-size="4/4 8/8@m 8/12@l">
+        <div class="readspeaker-readarea">
+            <div class="c-text s-user-text">
+                <p dir="ltr">Farligt avfallbilarna kör enligt schema höst- och vårturer. Stoppens placering är inte exakta: trafiksituationen&nbsp;och byggarbeten kan påverka var bilen stannar. Vårens turer börjar vanligtvis i april och sträcker sig till juni. Bilarna kör sedan igen i september fram till november. </p>
+<p dir="ltr">Återanvändbara saker kan du lämna till <a href="http://emmausbjorka.se/" >Björkåfrihets</a> insamlingsbil, som följer våra FA-bilar.</p>
+<p dir="ltr">Här hittar du FA-bilens tidtabeller som pdf:er:</p>
+<p dir="ltr"><a href="/wps/wcm/connect/89da1f0a-e397-4fe1-b40f-38d9d3e6c635/Farligt+avfallbilens+stopp+i+hela+G%C3%B6teborg+h%C3%B6st+2020.pdf?MOD=AJPERES"  class="PDF-fil">Farligt avfallbilens stopp i hela Göteborg hösten 2020</a></p>
+<p dir="ltr"><a href="/wps/wcm/connect/c03b0f95-cca1-4558-a818-01875bc07d65/Farligt+avfallbilens+stopp+p%C3%A5+Hisingen+h%C3%B6sten+2020.pdf?MOD=AJPERES"  class="PDF-fil">Farligt avfallbilens stopp på Hisingen hösten 2020</a></p>
+<p dir="ltr"><a href="/wps/wcm/connect/bf24e109-c7b5-4065-b745-40627762b217/Farligt+avfallbilens+stopp+i+O%CC%88rgryte+och+H%C3%A4rlanda+h%C3%B6sten+2020.pdf?MOD=AJPERES"  class="PDF-fil">Farligt avfallbilens stopp i Örgryte och Härlanda hösten 2020</a><br /></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--googleoff: all-->
+</div><div class='component-control id-Z7_42G01J41KON4B0AJMDNB1G2GP2' >	<!--googleon: all-->
+	
+<script type="text/javascript">var pageLinkParams =
+    '&servicetype=Farligt avfall-bilens hållplatser';
+</script>
+
+
+
+    <script type="text/javascript">
+    
+</script>
+
+<form xmlns:gbg="http://teik.goteborg.se/components" action="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEformFilter!selectService==/" method="get">
+        <div class="o-grid">
+            
+		<div class="o-grid__column" data-size="4/4 3/9@m 3/12@l">       
+    
+    <section data-name="region" class="c-region c-region--secondary" data-expandable="small"><div class="c-region__header"><h2 class="c-region__title">Filtrera</h2></div><div class="c-region__content"><div class="c-form-control">
+                    <label for="filterArea">Stadsdel
+                    </label>
+                    <select name="filterArea" id="filterArea">
+                        <option value="" selected>Alla
+                            stadsdelar
+                        </option>
+                        
+                            <option value="Angered">Angered</option>
+                        
+                            <option value="Askim-Frölunda-Högsbo">Askim-Frölunda-Högsbo</option>
+                        
+                            <option value="Centrum">Centrum</option>
+                        
+                            <option value="Lundby">Lundby</option>
+                        
+                            <option value="Majorna-Linné">Majorna-Linné</option>
+                        
+                            <option value="Norra Hisingen">Norra Hisingen</option>
+                        
+                            <option value="Västra Göteborg">Västra Göteborg</option>
+                        
+                            <option value="Västra Hisingen">Västra Hisingen</option>
+                        
+                            <option value="Örgryte-Härlanda">Örgryte-Härlanda</option>
+                        
+                            <option value="Östra Göteborg">Östra Göteborg</option>
+                        
+                    </select>
+                </div><div class="c-form-control" data-id="submit-button-1234">
+                <input type="submit" value="Filtrera" class="c-button c-button--primary">
+            </div></div></section>
+
+    
+</div>	
+
+            <div class="o-grid__column" data-size="4/4 6/9@m 9/12@l">
+                <div class="o-group-distributor c-result-bar">
+                    <div class="o-group-distributor__group t-space-bottom-m t-space-bottom-none@m">
+                        <div>Hittade 177 st</div>
+                    </div>
+                    <div class="o-group-distributor__group o-group-distributor__group--full@s o-group-distributor__group--align-right@m-l">
+                        <form action="?">
+                            <fieldset class="t-space-bottom-none">
+                                <legend class="t-visually-hidden">Visa som:</legend>
+                                <div class="c-segmented-control">
+                                    <div class="c-segmented-control__item">
+                                        
+                                            <input type="radio" name="displayType" id="lista" value="lista" class="t-visually-hidden js-autosubmit" checked>
+                                        
+                                        <label for="lista">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="c-icon" aria-hidden="true" style="isolation:isolate" width="96" height="96" focusable="false" viewBox="0 0 96 96"><path d="M4 16c0-3.2 1.3-6.2 3.5-8.5C9.8 5.3 12.8 4 16 4s6.2 1.3 8.5 3.5C26.7 9.8 28 12.8 28 16s-1.3 6.2-3.5 8.5C22.2 26.7 19.2 28 16 28s-6.2-1.3-8.5-3.5C5.3 22.2 4 19.2 4 16zm8 0c0-1.1.4-2.1 1.2-2.8.7-.8 1.7-1.2 2.8-1.2 1.1 0 2.1.4 2.8 1.2.8.7 1.2 1.7 1.2 2.8 0 1.1-.4 2.1-1.2 2.8-.7.8-1.7 1.2-2.8 1.2-1.1 0-2.1-.4-2.8-1.2-.8-.7-1.2-1.7-1.2-2.8zM4 48c0-3.2 1.3-6.2 3.5-8.5C9.8 37.3 12.8 36 16 36s6.2 1.3 8.5 3.5c2.2 2.3 3.5 5.3 3.5 8.5s-1.3 6.2-3.5 8.5C22.2 58.7 19.2 60 16 60s-6.2-1.3-8.5-3.5C5.3 54.2 4 51.2 4 48zm8 0c0-1.1.4-2.1 1.2-2.8.7-.8 1.7-1.2 2.8-1.2 1.1 0 2.1.4 2.8 1.2.8.7 1.2 1.7 1.2 2.8 0 1.1-.4 2.1-1.2 2.8-.7.8-1.7 1.2-2.8 1.2-1.1 0-2.1-.4-2.8-1.2-.8-.7-1.2-1.7-1.2-2.8zM4 80c0-3.2 1.3-6.2 3.5-8.5C9.8 69.3 12.8 68 16 68s6.2 1.3 8.5 3.5c2.2 2.3 3.5 5.3 3.5 8.5s-1.3 6.2-3.5 8.5C22.2 90.7 19.2 92 16 92s-6.2-1.3-8.5-3.5C5.3 86.2 4 83.2 4 80zm8 0c0-1.1.4-2.1 1.2-2.8.7-.8 1.7-1.2 2.8-1.2 1.1 0 2.1.4 2.8 1.2.8.7 1.2 1.7 1.2 2.8 0 1.1-.4 2.1-1.2 2.8-.7.8-1.7 1.2-2.8 1.2-1.1 0-2.1-.4-2.8-1.2-.8-.7-1.2-1.7-1.2-2.8zm36-60c-1.1 0-2.1-.4-2.8-1.2-.8-.7-1.2-1.7-1.2-2.8 0-1.1.4-2.1 1.2-2.8.7-.8 1.7-1.2 2.8-1.2h32c1.1 0 2.1.4 2.8 1.2.8.7 1.2 1.7 1.2 2.8 0 1.1-.4 2.1-1.2 2.8-.7.8-1.7 1.2-2.8 1.2H48zm0 32c-1.1 0-2.1-.4-2.8-1.2-.8-.7-1.2-1.7-1.2-2.8 0-1.1.4-2.1 1.2-2.8.7-.8 1.7-1.2 2.8-1.2h32c1.1 0 2.1.4 2.8 1.2.8.7 1.2 1.7 1.2 2.8 0 1.1-.4 2.1-1.2 2.8-.7.8-1.7 1.2-2.8 1.2H48zm0 32c-1.1 0-2.1-.4-2.8-1.2-.8-.7-1.2-1.7-1.2-2.8 0-1.1.4-2.1 1.2-2.8.7-.8 1.7-1.2 2.8-1.2h32c1.1 0 2.1.4 2.8 1.2.8.7 1.2 1.7 1.2 2.8 0 1.1-.4 2.1-1.2 2.8-.7.8-1.7 1.2-2.8 1.2H48z" fill-rule="evenodd"/></svg>
+                                            <span class="c-segmented-control__item-text">Lista</span>
+                                        </label>
+                                    </div>
+                                    <div class="c-segmented-control__item">
+                                        
+                                            <input type="radio" name="displayType" id="karta" value="karta" class="t-visually-hidden js-autosubmit">
+                                        
+                                        <label for="karta">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="c-icon" aria-hidden="true" width="96" height="96" focusable="false" viewBox="0 0 96 96"><path d="M9 41c0-10.3 4.1-20.3 11.4-27.6C27.7 6.1 37.7 2 48 2s20.3 4.1 27.6 11.4C82.9 20.7 87 30.7 87 41c0 4-.8 8-2.4 11.6-2.5 5.6-5.6 10.8-9.3 15.6-3 3.8-6.2 7.4-9.6 10.9-5.6 5.6-11.5 11-17.7 16.1-5.9-4.9-11.6-10-17-15.4-3.3-3.3-6.5-6.8-9.4-10.5-4-5-7.4-10.4-10-16.3C9.9 49.3 9 45.2 9 41zm8 0c0-8.2 3.3-16.1 9.1-21.9C31.9 13.3 39.8 10 48 10s16.1 3.3 21.9 9.1C75.7 24.9 79 32.8 79 41c0 2.9-.6 5.8-1.8 8.4-2.1 5-4.9 9.6-8.2 13.9-2.8 3.5-5.8 6.9-8.9 10.1-3.9 3.9-7.9 7.7-12.1 11.3-3.9-3.4-7.7-6.9-11.4-10.6-3.1-3.1-6-6.3-8.8-9.8-3.5-4.4-6.5-9.3-8.9-14.6C17.6 47 17 44 17 41zm15-3c0-4.2 1.7-8.3 4.7-11.3S43.8 22 48 22c4.2 0 8.3 1.7 11.3 4.7S64 33.8 64 38c0 4.2-1.7 8.3-4.7 11.3S52.2 54 48 54c-4.2 0-8.3-1.7-11.3-4.7S32 42.2 32 38zm8 0c0-2.1.8-4.2 2.3-5.7 1.5-1.5 3.6-2.3 5.7-2.3s4.2.8 5.7 2.3c1.5 1.5 2.3 3.6 2.3 5.7s-.8 4.2-2.3 5.7C52.2 45.2 50.1 46 48 46s-4.2-.8-5.7-2.3C40.8 42.2 40 40.1 40 38z" fill-rule="evenodd"/></svg>
+                                            <span class="c-segmented-control__item-text">Karta</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+                
+                    <ul data-name="list" class="c-list c-list--large c-list--divider"><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5889==/" class="c-snippet__link">
+                                    Angereds Centrum, Hjulplogsgatan</a></h2><div class="c-snippet__meta">Kommunal, Angered</div><div class="c-snippet__section">
+                                        Grönsaksaffären. Torsdag 17 september 17-17.20 och torsdag 29 oktober 17-17.20.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5890==/" class="c-snippet__link">
+                                    Antenngatan</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Måndag 28 september 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6027==/" class="c-snippet__link">
+                                    Arvesgärde 9</a></h2><div class="c-snippet__meta">Kommunal, Norra Hisingen</div><div class="c-snippet__section">
+                                        Måndag 5 oktober 18-18.45. 
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5891==/" class="c-snippet__link">
+                                    Askims Domarringsväg 97</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Måndag 28 september 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6028==/" class="c-snippet__link">
+                                    Askims torg, Långlyckevägen</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Måndag 21 september 19-19.45. 
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6014==/" class="c-snippet__link">
+                                    Astronomgatan 25</a></h2><div class="c-snippet__meta">Kommunal, Östra Göteborg</div><div class="c-snippet__section">
+                                        Vid vändplatsen. Onsdag 16 september 17.35-17.55 och Onsdag 28 oktober 17.35-17.55.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5893==/" class="c-snippet__link">
+                                    Atmosfärsgatan</a></h2><div class="c-snippet__meta">Kommunal, Östra Göteborg</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Onsdag 16 september 18.45-19.05.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5894==/" class="c-snippet__link">
+                                    Axel Dahlströms torg</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Tisdag 6 oktober 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5895==/" class="c-snippet__link">
+                                    Badvädersgatan</a></h2><div class="c-snippet__meta">Kommunal, Västra Hisingen</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Torsdag 24 september 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5896==/" class="c-snippet__link">
+                                    Bagaregårdsgatan/Landerigatan</a></h2><div class="c-snippet__meta">Kommunal, Örgryte-Härlanda</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Torsdag 8 oktober 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6029==/" class="c-snippet__link">
+                                    Bankebergsgatan/Kennedygatan</a></h2><div class="c-snippet__meta">Kommunal, Majorna-Linné</div><div class="c-snippet__section">
+                                        Onsdag 7 oktober 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5897==/" class="c-snippet__link">
+                                    Beväringsgatan 9</a></h2><div class="c-snippet__meta">Kommunal, Östra Göteborg</div><div class="c-snippet__section">
+                                        På parkeringen. Torsdag 17 september 18.45-19.05 och torsdag 29 oktober 18.45-19.05.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5898==/" class="c-snippet__link">
+                                    Bildradiogatan 57-61</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Vid miljöhuset. Måndag 14 september 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5899==/" class="c-snippet__link">
+                                    Billdals Bokväg 1</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Lindåsskolan. Tisdag 8 september 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6031==/" class="c-snippet__link">
+                                    Bjurslätts Torg</a></h2><div class="c-snippet__meta">Kommunal, Lundby</div><div class="c-snippet__section">
+                                        Måndag 7 september 17-17.45 och Torsdag 15 oktober 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5973==/" class="c-snippet__link">
+                                    Björkhöjdsgatan 1</a></h2><div class="c-snippet__meta">Kommunal, Västra Göteborg</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Tisdag 13 oktober 18-18.45. 
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5958==/" class="c-snippet__link">
+                                    Blankversgatan 1</a></h2><div class="c-snippet__meta">Kommunal, Norra Hisingen</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Måndag 12 oktober 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5900==/" class="c-snippet__link">
+                                    Blidvädersgatan 2</a></h2><div class="c-snippet__meta">Kommunal, Västra Hisingen</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Måndag 7 september 18-18.45 och torsdag 22 oktober 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6032==/" class="c-snippet__link">
+                                    Blåvalsgatan/Späckhuggaregatan</a></h2><div class="c-snippet__meta">Kommunal, Majorna-Linné</div><div class="c-snippet__section">
+                                        Måndag 31 augusti 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6063==/" class="c-snippet__link">
+                                    Bogärdesgatan/Råstensgatan</a></h2><div class="c-snippet__meta">Kommunal, Örgryte-Härlanda</div><div class="c-snippet__section">
+                                        Tisdag 20 oktober 19-19.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!6015==/" class="c-snippet__link">
+                                    Brahegatan 11</a></h2><div class="c-snippet__meta">Kommunal, Östra Göteborg</div><div class="c-snippet__section">
+                                        Medborgarhuset. Tisdag 29 september 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5902==/" class="c-snippet__link">
+                                    Bredfjällsgatan</a></h2><div class="c-snippet__meta">Kommunal, Angered</div><div class="c-snippet__section">
+                                        Mariakyrkan. Tisdag 15 september 18.10-18.30 och Tisdag 27 oktober 18.10-18.30.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5991==/" class="c-snippet__link">
+                                    Bromeliusgatan</a></h2><div class="c-snippet__meta">Kommunal, Örgryte-Härlanda</div><div class="c-snippet__section">
+                                        I närheten av den gamla återvinningsstationen, där det pågår ett bygge. Torsdag 10 september 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5925==/" class="c-snippet__link">
+                                    Brottkärrsmotet</a></h2><div class="c-snippet__meta">Kommunal, Askim-Frölunda-Högsbo</div><div class="c-snippet__section">
+                                        Vid apoteket. Tisdag 8 september 19-19.45 och måndag 26 oktober 19-19.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5959==/" class="c-snippet__link">
+                                    Brunnsbotorget</a></h2><div class="c-snippet__meta">Kommunal, Norra Hisingen</div><div class="c-snippet__section">
+                                        På parkeringen. Måndag 12 oktober 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5953==/" class="c-snippet__link">
+                                    Brunnsgatan</a></h2><div class="c-snippet__meta">Kommunal, Majorna-Linné</div><div class="c-snippet__section">
+                                        Vid Hemköp Annedal. Onsdag 2 september 19.15-20.00 och torsdag 15 oktober 17-17.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5904==/" class="c-snippet__link">
+                                    Båtsmansdalsgatan</a></h2><div class="c-snippet__meta">Kommunal, Angered</div><div class="c-snippet__section">
+                                        På parkeringen. Tisdag 15 september 17.35-17.55 och tisdag 27 oktober 17.35-17.55.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5938==/" class="c-snippet__link">
+                                    Bältgatan</a></h2><div class="c-snippet__meta">Kommunal, Centrum</div><div class="c-snippet__section">
+                                        Samskolans  parkering. Onsdag 2 september 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5884==/" class="c-snippet__link">
+                                    Bärnstensgatan</a></h2><div class="c-snippet__meta">Kommunal, Västra Göteborg</div><div class="c-snippet__section">
+                                        Vid OKQ8. Tisdag 13 oktober 18-18.45.
+
+                                    </div></div></li><li><div data-name="snippet" class="c-snippet"><h2 class="c-snippet__title"><a xmlns:svg="http://www.w3.org/2000/svg" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MEserviceUrl!5992==/" class="c-snippet__link">
+                                    Bögatan/Anders Zornsgatan</a></h2><div class="c-snippet__meta">Kommunal, Örgryte-Härlanda</div><div class="c-snippet__section">
+                                        Vid återvinningsstationen. Tisdag 20 oktober 18-18.45.
+
+                                    </div></div></li></ul>
+
+                    
+                        <div data-name="pagination" class="c-pagination" role="navigation" aria-label="Paginering"><ul class="c-pagination__list"><li class="c-pagination__item c-pagination__page c-pagination__page--is-active"><a class="c-pagination__link" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!0==/" aria-label="Sida 1" aria-current="page">1</a></li><li class="c-pagination__item c-pagination__page"><a class="c-pagination__link" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!30==/" aria-label="Sida 2">2</a></li><li class="c-pagination__item c-pagination__page"><a class="c-pagination__link" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!60==/" aria-label="Sida 3">3</a></li><li class="c-pagination__item c-pagination__page"><a class="c-pagination__link" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!90==/" aria-label="Sida 4">4</a></li><li class="c-pagination__item c-pagination__page"><a class="c-pagination__link" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!120==/" aria-label="Sida 5">5</a></li><li class="c-pagination__item c-pagination__page"><a class="c-pagination__link" href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!150==/" aria-label="Sida 6">6</a></li><li class="c-pagination__item c-pagination__next"><a href="/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I0vyA0NDXVUVAQAXsfE3Q!!/dz/d5/L2dBISEvZ0FBIS9nQSEh/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!30==/" aria-label="Nästa sida" class="c-button c-button--primary"><span>Nästa</span><svg xmlns="http://www.w3.org/2000/svg" class="c-icon t-space-left-m" aria-hidden="true" width="512" height="512" viewBox="0 0 512 512" focusable="false"><path d="m323.3 255.4l-200.9-186.2c-14.7-14.7-14.7-34.3 0-49s34.3-14.7 49 0l225.4 210.7c14.7 14.7 14.7 34.3 0 49l-225.4 210.7c-14.7 14.7-34.3 14.7-49 0 -14.7-14.7-14.7-34.3 0-49l200.9-186.2z"/></svg></a></li></ul></div>
+                    
+            </div>
+        </div>
+    </form><!--googleoff: all-->
+</div></div></div>
+</div>
+
+<div class="c-sheet c-sheet--white">
+	<div class="c-sheet__inner">
+		<div class='component-container wpthemeCol ibmDndColumn id-Z7_42G01J41KON4B0AJMDNB1G2GP3' name='zone4' ></div><div class='component-container wpthemeCol ibmDndColumn id-Z7_42G01J41KON4B0AJMDNB1G2G54' name='zone5' ></div><div class='component-container wpthemeCol ibmDndColumn id-Z7_42G01J41K8IV70QG7KD3GK2OB0' name='zone6' ></div></div>
+<!--googleoff: all-->
+                            <!--End innehåll-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer class="c-footer">
+                <h1 class="t-visually-hidden">Sidfot</h1>
+                <div class="c-footer__head">
+                    <div class="c-footer__inner">
+                        <div class="o-grid">
+                            <div class="o-grid__column" data-size="4/4 4/12@m">
+                                <h2>Kontakta oss</h2>
+                                <ul class="c-list c-list--small">
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3agbg.page.958c1144-4ba5-4a68-ada6-46b0484aa9c4">Kontakta Göteborgs Stad</a>
+                                    </li>
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3agbg.page.20120828-110230">Felanmälan - gator, torg, parker</a>
+                                    </li>
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3agbg.page.20120815-085245">Lämna synpunkter</a>
+                                    </li>
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3a20196914213876">Följ oss i sociala medier</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="o-grid__column" data-size="4/4 4/12@m">
+                                <h2>Om webbplatsen</h2>
+                                <ul class="c-list c-list--small">
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3agbg.page.2d37e341-6789-4b14-995b-d85be887664a">Om webbplatsen</a>
+                                    </li>
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3agbg.page.292053fa-ec02-40a9-bc58-26261b6fe0d5">Behandling av personuppgifter</a>
+                                    </li>
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3a2020257421884">Tillgänglighetsredogörelse</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="o-grid__column" data-size="4/4 4/12@m">
+                                <h2>Hitta snabbt</h2>
+                                <ul class="c-list c-list--small">
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3a20150126-135606">Vattenläckor, elavbrott och andra störningar</a>
+                                    </li>
+                                    <li>
+                                        <a href="/wps/portal?uri=gbglnk%3a20120912-1056">Sök nämndhandlingar</a>
+                                    </li>
+                                    <li>
+                                        <a href="http://politiker.goteborg.se/">Hitta politiker</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://intranat.goteborg.se/personalingangen/">Personalingången</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+                <div class="c-footer__main">
+                    <div class="c-footer__inner">
+                        <div class="o-grid">
+                            <div class="o-grid__column" data-size="4/4">
+                                <div>
+                                    <h2 class="t-visually-hidden">Avsändare</h2>
+                                    <img src="/wps/contenthandler/dav/fs-type1/common-resources/gbg/img/logo-gbg.svg" alt="Göteborgs stad" class="c-footer__logo">
+                                    <p><strong><a href="/wps/portal/start">goteborg.se</a></strong> är Göteborgs Stads officiella webbplats.</p>
+                                    <p>Göteborgs Stads kontaktcenter: <br /><a href="tel:+46313650000"><span class="t-visually-hidden">Telefonnummer till Göteborgs Stads kontaktcenter: </span>031-365 00 00</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+        <div id="wpthemeComplementaryContent"></div>
+    </div>
+    <script type="text/javascript" src="/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/mashup/ra:collection?themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fjavascript&amp;lm=1600584894554&amp;entry=wp_portal__0.0%3Aconfig_config_static&amp;entry=wcm_config__0.0%3Aconfig_config_static&amp;entry=wcm_inplaceEdit__0.0%3Aconfig_config_static"></script><script type="text/javascript">i$.merge({"ibmCfg":{"themeConfig":{"themeUniqueName":"se.goteborg.gbgTheme","themeRootURI":"/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/themes/GbgTheme","themeWebAppBaseURI":"/wps/gbgTheme/themes/html/GbgTheme","themeWebDAVBaseURI":"dav:fs-type1/themes/GbgTheme/","modulesWebAppBaseURI":"/wps/themeModules","commonResourcesRootURI":"/wps/contenthandler/!ut/p/digest!XzWpHd4WWNGJyUWtkUvndg/dav/fs-type1/common-resources","isRTL":false,"isPageRenderModeCSA":false,"portletOverridePageTitle":"Här stannar farligt avfall-bilen","currentContentNodeOID":"Z6_42G01J41KON4B0AJMDNB1G2GH6","loadingImage":"css/images/loading.gif","dndSourceDefinitions":[{"id":"ibmDndColumn","object":"com.ibm.pb.dnd.layout.LayoutColumnSource","orientation":"vertical"},{"id":"ibmDndRow","object":"com.ibm.pb.dnd.layout.LayoutRowSource","orientation":"horizontal"}],"categorySources":["system/WebContentCategory.json,label:shelf_socialCategory"],"styleSources":[],"layoutSources":[]},"portalConfig":{"locale":"sv","portalURI":"/wps/portal","contentHandlerURI":"/wps/contenthandler/!ut/p/digest!8PMEVEMiBRDLGmz-C1-eRw/","pocURI":"/wps/portal/!ut/p/z0/0wcA1NLTeQ!!/","isVirtualPortal":false,"canImpersonate":false,"themeRootURI":"/wps/gbgTheme/themes/html/GbgTheme","parentPageID":"Z6_42G01J41KOVI50QSI56FK40174","currentPageOID":"Z6_42G01J41KON4B0AJMDNB1G2GH6","canAnonymousUserViewCurrentPage":true,"bootstrapState":"&lt;?xml version=&#034;1.0&#034; encoding=&#034;UTF-8&#034;?&gt;&lt;root xmlns=&#034;http://www.ibm.com/xmlns/prod/websphere/portal/v6.1/portal-state&#034;&gt;&lt;state type=&#034;navigational&#034;&gt;&lt;selection selection-node=&#034;Z6_42G01J41KON4B0AJMDNB1G2GH6&#034;&gt;&lt;mapping src=&#034;Z6_00000000000000A0BR2B300GO2&#034; dst=&#034;Z6_42G01J41KON4B0AJMDNB1G2GH6&#034;/&gt;&lt;mapping src=&#034;Z6_000000000000000000000000A0&#034; dst=&#034;Z6_42G01J41KON4B0AJMDNB1G2GH6&#034;/&gt;&lt;mapping src=&#034;Z6_42G01J41KON4B0AJMDNB1G2GH6&#034; dst=&#034;Z6_000000000000000000000000A0&#034;/&gt;&lt;/selection&gt;&lt;/state&gt;&lt;/root&gt;","isUserLoggedIn":false,"currentUser":"anonymous portal user","currentUserOID":"","aggregatedStyle":null,"isCurrentPageEditable":true,"wcmPageMetadata":{"contentRoot":null,"sharingScope":null},"projectUUID":null},"userName":""},"com_ibm_theme_capabilities":{"wp_dynamicContentSpots_85":"0.0","wp_dialog_draggable":"0.0","wp_hiddenpages":"0.0","wp_simple_contextmenu_ext":"0.0","wp_simple_contextmenu_js":"0.0","gbg_page_roles":"0.0","wp_theme_utils":"0.0","wp_toolbar_host_view":"0.0","wp_hiddencontent":"0.0","gbg-gui-goteborg":"3.8.0","wp_portal":"0.0","gbg-metabar":"0.0","photon.dom":"1.0","wp_photon_dom":"0.0","wp_client_tracing":"0.0","gbg_google_tag_manager":"1.0","modules":"0.1","gbg_theme_rep_values":"1.0","wp_state_page_modes":"0.0","gbg_theme":"2.8.0","gbg_toolbarModifications":"1.0","gbg_breadcrumbs":"0.0","wp_toolbar_common_actionbar":"0.0","gbg_ui_framework_plugin":"3.12.0","gbg_goteborg_header":"0.0","wp_client_main":"0.0","wp_toolbar_viewframe_validator":"0.0","wp_toolbar_actionbar":"0.0","simple-contextmenu":"1.1","wp_dialog_css":"0.0","jquery":"1.12.2","wp_client_logging":"0.0","wp_state_page":"0.0","wp_toolbar_common":"0.0","gbg_ui_framework":"3.12.0","wp_toolbar_projectmenu":"0.0","jquery_1_12_2":"0.0","gbg_messages":"0.0","wp_dialog_main":"0.0","wp_simple_contextmenu_main":"0.0","gbg_gui_goteborg_plugin":"3.8.0","gbg_theme_menus":"1.0","gbg_userbar":"0.0","wp_custom_page_style":"0.0","wp_client_ext":"0.0","wp_simple_contextmenu_css":"0.0","wp_toolbar85":"0.0","wp_modules":"0.0","toolbar":"8.5","wp_dialog_util":"0.0","wp_toolbar_utils":"0.0","a11y":"1.0","wp_a11y":"0.0","wp_simple_contextmenu_templates":"0.0","gbg_cookie_message":"1.0"},"com_ibm_device_class":[]});ibmCfg.portalConfig.bootstrapState=(ibmCfg.portalConfig.bootstrapState||"").replace(/&lt;/gm, '<').replace(/&gt;/gm, '>').replace(/&amp;/gm, '&').replace(/&#039;/gm, "'").replace(/&#034;/gm, '"');
+i$.merge({gbgCfg: {themesConfig: {gbgThemeModule_contextRoot : "/wps/gbgTheme",gbgThemeModule_urlAjaxContactCard : "/wps/proxy/http/www4.goteborg.se/prod/sk/serviceguide.nsf/agGetServiceInformation?OpenAgent",gbgThemeModule_googleTranslateUrl: "new String(\u0027https://translate.google.com/translate?sl=sv&u=\u0027) + escape(window.location.href)",gbgThemeModule_urlSearchAutocomplete: "/wps/gbgTheme/search/acBackend.jsp?url=https://goteborg.se/final_querycompletion.txt&method=std&limit=100"}}});i$.merge({"ibmCfg":{"portalConfig":{"isShowHiddenPages":false}}});</script><script type="text/javascript" src="/wps/contenthandler/!ut/p/digest!3JKaotSk_gMd0aUfF0xN-w/mashup/ra:collection?themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fjavascript&amp;lm=1599710745606&amp;entry=gbg_theme__2.8.0%3Aconfig_js&amp;entry=gbg_ui_framework_plugin__3.12.0%3Aconfig_js&amp;entry=gbg_ui_framework__3.12.0%3Aconfig_js&amp;entry=gbg_gui_goteborg_plugin__3.8.0%3Aconfig_js&amp;entry=gbg-gui-goteborg__3.8.0%3Aconfig_js&amp;entry=wp_toolbar_utils__0.0%3Aconfig_js&amp;entry=wp_dialog_main__0.0%3Aconfig_js&amp;entry=gbg_theme_menus__1.0%3Aconfig_js&amp;entry=wp_state_page_modes__0.0%3Aconfig_js&amp;entry=wp_simple_contextmenu_ext__0.0%3Aconfig_js&amp;entry=wp_simple_contextmenu_js__0.0%3Aconfig_js&amp;entry=wp_toolbar_actionbar__0.0%3Aconfig_js&amp;entry=gbg_toolbarModifications__1.0%3Aconfig_js&amp;entry=wp_toolbar_projectmenu__0.0%3Aconfig_js"></script><a rel="alternate" id="config_js_deferred" href="/wps/contenthandler/!ut/p/digest!3JKaotSk_gMd0aUfF0xN-w/mashup/ra:collection?themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fjavascript&amp;lm=1600584894000&amp;entry=wp_liveobject_framework_core__0.0%3Aconfig_js&amp;entry=wp_toolbar_menuactions__0.0%3Aconfig_js&amp;entry=wp_dnd_main__0.0%3Aconfig_js&amp;entry=wp_movecontrols__0.0%3Aconfig_js&amp;entry=gbg_wp_toolbar_controlactions__0.0%3Aconfig_js&amp;entry=wp_portal_ui_utils__0.0%3Aconfig_js&amp;entry=wp_contextmenu_js__0.0%3Aconfig_js&amp;entry=wp_status_bar__0.0%3Aconfig_js&amp;entry=wp_contextmenu_config_lof__0.0%3Aconfig_js&amp;entry=wp_federated_documents_picker__0.0%3Aconfig_js&amp;entry=wp_toolbar_controlactions__0.0%3Aconfig_js&amp;entry=wp_content_targeting_cam__0.0%3Aconfig_js&amp;deferred=true" style="display:none"></a><div id="simpleMenuTemplate" class="wpthemeMenuLeft">
+    <div class="wpthemeMenuBorder">
+        <div class="wpthemeMenuNotchBorder"></div>
+        <!-- define the menu item template inside the "ul" element.  only "css-class", "description", and "title" are handled by the theme's sample javascript. -->
+        <ul class="wpthemeMenuDropDown wpthemeTemplateMenu" role="menu">
+            <li class="${css-class}" role="menuitem" tabindex="-1">
+                <span class="wpthemeMenuText">${title}</span>${badge}
+            </li>
+        </ul>
+    </div>
+    <!-- Template for loading -->
+    <div class="wpthemeMenuLoading wpthemeMenuLoadingText wpthemeTemplateLoading">${loading}</div>
+    <!-- Template for submenu -->
+    <div class="wpthemeAnchorSubmenu wpthemeTemplateSubmenu">
+        <div class="wpthemeMenuBorder wpthemeMenuSubmenu">
+            <ul id="${submenu-id}" class="wpthemeMenuDropDown" role="menu">
+                <li role="menuitem" tabindex="-1"></li>
+            </ul>
+        </div>
+    </div>
+</div><a rel="alternate" id="config_markup_deferred" href="/wps/contenthandler/!ut/p/digest!f_QPfFFthtvMd2jzOYz2mA/mashup/ra:collection?themeID=ZJ_89E4H2C0K81180A4N3VNEO00E1&amp;locale=sv&amp;locale=en&amp;mime-type=text%2Fplain&amp;entry=wp_dnd_main__0.0%3Aconfig_markup&amp;entry=wp_contextmenu_templates__0.0%3Aconfig_markup&amp;deferred=true" style="display:none"></a><script type="text/javascript">
+        /*<![CDATA[*/
+        (function() {
+            var sz = document.createElement('script'); sz.type = 'text/javascript'; sz.async = true;
+            sz.src = '//siteimproveanalytics.com/js/siteanalyze_7338.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(sz, s);
+        })();
+        /*]]>*/
+    </script>
+</body>
+</html>
