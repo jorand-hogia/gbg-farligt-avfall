@@ -1,5 +1,4 @@
 import * as codebuild from '@aws-cdk/aws-codebuild';
-import * as codecommit from '@aws-cdk/aws-codecommit';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as lambda from '@aws-cdk/aws-lambda';
@@ -44,7 +43,7 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
       },
     });
-    const pollerBuild = new codebuild.PipelineProject(this, 'PollerBuild', {
+    const scraperBuild = new codebuild.PipelineProject(this, 'ScraperBuild', {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
@@ -56,16 +55,16 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
           },
           build: {
             commands: [
-              'cd gfa-poller',
+              'cd gfa-backend',
               '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
-              '$HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl',
-              'cp target/x86_64-unknown-linux-musl/release/gfa-poller ./bootstrap'
+              '(cd gfa-scraper && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)',
+              'cp ./target/x86_64-unknown-linux-musl/release/gfa-poller ./gfa-scraper/bootstrap'
             ]    
           },
         },
         artifacts: {
-          'base-directory': 'gfa-poller',
-          files: './bootstrap'
+          'base-directory': 'gfa-backend',
+          files: './gfa-scraper/bootstrap'
         },
       }),
       environment: {
@@ -75,7 +74,7 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
-    const lambdaBuildOutput = new codepipeline.Artifact('LambdaBuildOutput');
+    const scraperBuildOutput = new codepipeline.Artifact('LambdaBuildOutput');
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
         {
@@ -95,10 +94,10 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
           stageName: 'Build',
           actions: [
             new codepipeline_actions.CodeBuildAction({
-              actionName: 'Poller_Build',
-              project: pollerBuild,
+              actionName: 'Scraper_Build',
+              project: scraperBuild,
               input: sourceOutput,
-              outputs: [lambdaBuildOutput],
+              outputs: [scraperBuildOutput],
             }),
             new codepipeline_actions.CodeBuildAction({
               actionName: 'CDK_Build',
@@ -112,14 +111,14 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
           stageName: 'Deploy',
           actions: [
             new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-              actionName: 'Lambda_CFN_Deploy',
+              actionName: 'Gfa_Deploy',
               templatePath: cdkBuildOutput.atPath('GbgFarligtAvfallStack.template.json'),
               stackName: 'GbgFarligtAvfallStack',
               adminPermissions: true,
               parameterOverrides: {
-                ...props.lambdaCode.assign(lambdaBuildOutput.s3Location),
+                ...props.lambdaCode.assign(scraperBuildOutput.s3Location),
               },
-              extraInputs: [lambdaBuildOutput],
+              extraInputs: [scraperBuildOutput],
             }),
           ],
         },

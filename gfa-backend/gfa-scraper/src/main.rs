@@ -1,23 +1,29 @@
 use lambda::{handler_fn, Context};
 use simple_logger::{SimpleLogger};
 use log::{self, error, debug, LevelFilter};
-use std::env;
 use futures::executor::block_on;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use core::str::FromStr;
-use rusoto_core::{Region};
+use serde_json::{json, Value};
+use std::fmt;
+use std::error;
+use gfa_common::pickup_event::PickUpEvent;
 
 mod page_fetcher;
 mod page_parser;
-mod events_repo;
-mod pickup_event;
 
-#[derive(Deserialize)]
-struct EmptyEvent {}
-
-#[derive(Serialize)]
-struct EmptyOutput {}
+#[derive(fmt::Debug)]
+pub struct GfaScraperError {
+    pub message: String,
+}
+impl fmt::Display for GfaScraperError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl error::Error for GfaScraperError {
+    fn description(&self) -> &str {
+        &self.message
+    }
+}
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -31,22 +37,20 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
-    let events_table = env::var("EVENTS_TABLE").unwrap();
-    let region = env::var("AWS_REGION").unwrap();
-    let region = Region::from_str(&region).unwrap(); 
-
+async fn handle_request(_event: Value, _c: Context) -> Result<Value, Error> {
     debug!("About to load pages");
     let pages_to_scrape = block_on(page_fetcher::obtain_pages());
     let pages_to_scrape = match pages_to_scrape {
         Ok(pages) => pages,
         Err(e) => {
             error!("{}", e);
-            return Ok(e.to_string());
+            return Err(Box::new(GfaScraperError{
+                message: format!("Failed while fetching pages: {}", e)
+            })) 
         }
     };
     debug!("Finished loading all pages");
-    let mut all_events: Vec::<pickup_event::PickUpEvent> = Vec::new();
+    let mut all_events: Vec::<PickUpEvent> = Vec::new();
     for page in pages_to_scrape {
         let mut events = match page_parser::parse_page(page) {
             Ok(events) => events,
@@ -54,20 +58,13 @@ async fn handle_request(_event: Value, _c: Context) -> Result<String, Error> {
                 for error in errors {
                     error!("{}", error);
                 }
-                return Ok("Failed while parsing pages".to_string());
+                return Err(Box::new(GfaScraperError{
+                    message: format!("Failed while parsing pages")
+                })) 
             }
         };
         all_events.append(&mut events);
     }
     debug!("Finished parsing pages");
-
-    let _result = match events_repo::store(events_table, region, all_events).await {
-        Ok(res) => res,
-        Err(e) => {
-            error!("{}", e);
-            return Ok(e.to_string());
-        }
-    };
-
-    Ok("OK".to_string())
+    Ok(json!(all_events))
 }

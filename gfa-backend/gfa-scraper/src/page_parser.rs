@@ -6,7 +6,7 @@ use chrono_tz::Europe::Stockholm;
 use regex::{Regex};
 use select::{document, predicate};
 use lazy_static::lazy_static;
-use crate::pickup_event::PickUpEvent;
+use gfa_common::pickup_event::PickUpEvent;
 
 #[derive(fmt::Debug)]
 pub struct PageParserError {

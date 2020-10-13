@@ -1,5 +1,5 @@
 [package]
-name = "gfa-poller"
+name = "gfa-scraper"
 version = "0.1.0"
 authors = ["Rickard Andersson <dunklas@gmail.com>"]
 edition = "2018"
@@ -21,7 +21,8 @@ futures = "0.3.6"
 futures-util = "0.3.6"
 tokio = { version = "0.2.22", features = ["full"] }
 lazy_static = "1.4.0"
-rusoto_dynamodb = { version = "0.45.0", default_features = false, features=["rustls"] }
-rusoto_core = { version = "0.45.0", default_features = false, features=["rustls"] }
+
+[dependencies.gfa-common]
+path = "../gfa-common"
 
 [dev-dependencies]
