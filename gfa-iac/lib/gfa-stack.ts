@@ -16,7 +16,7 @@ export class GbgFarligtAvfallStack extends Stack {
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
 
-    const gfaPoller = new lambda.Function(this, 'gfa-poller', {
+    const gfaScraper = new lambda.Function(this, 'gfa-scraper', {
       code: this.lambdaCode,
       handler: 'doesnt.matter',
       runtime: lambda.Runtime.PROVIDED,
