@@ -1,34 +1,48 @@
-import * as lambda from '@aws-cdk/aws-lambda';
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
+import { Code, Function, Runtime, CfnParametersCode } from '@aws-cdk/aws-lambda';
+import { LambdaInvoke } from '@aws-cdk/aws-stepfunctions-tasks';
+import { StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
-import { BillingMode } from '@aws-cdk/aws-dynamodb';
+import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 
 export class GbgFarligtAvfallStack extends Stack {
-  public readonly scraperCode: lambda.CfnParametersCode;
-  public readonly eventsCode: lambda.CfnParametersCode;
+  public readonly scraperCode: CfnParametersCode;
+  public readonly eventsCode: CfnParametersCode;
       
   constructor(app: App, id: string, props?: StackProps) {
     super(app, id, props);
-    this.scraperCode = lambda.Code.fromCfnParameters();
-    this.eventsCode = lambda.Code.fromCfnParameters();
+    this.scraperCode = Code.fromCfnParameters();
+    this.eventsCode = Code.fromCfnParameters();
 
-    const gfaEventsDb = new dynamodb.Table(this, 'gfa-events-db', {
-      partitionKey: { name: 'event-date', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'location-id', type: dynamodb.AttributeType.STRING },
+    const eventsDb = new Table(this, 'gfa-events-db', {
+      partitionKey: { name: 'event-date', type: AttributeType.STRING },
+      sortKey: { name: 'location-id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
 
-    const gfaScraper = new lambda.Function(this, 'gfa-scraper', {
+    const scraper = new Function(this, 'gfa-scraper', {
       code: this.scraperCode,
       handler: 'doesnt.matter',
-      runtime: lambda.Runtime.PROVIDED,
+      runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10),
     });
-    const gfaEvents = new lambda.Function(this, 'gfa-events', {
+    const scrapeTask = new LambdaInvoke(this, 'gfa-task-scrape', {
+      lambdaFunction: scraper
+    });
+
+    const saveEvents = new Function(this, 'gfa-save-events', {
       code: this. eventsCode,
       handler: 'doesnt.matter',
-      runtime: lambda.Runtime.PROVIDED,
+      runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10)
+    });
+    const saveEventsTask = new LambdaInvoke(this, 'gfa-task-save-events', {
+      lambdaFunction: saveEvents
+    });
+
+    const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
+      definition: scrapeTask
+        .next(saveEventsTask),
+      timeout: Duration.minutes(5)
     });
 
   }
