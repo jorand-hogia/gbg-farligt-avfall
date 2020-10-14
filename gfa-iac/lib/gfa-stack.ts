@@ -26,7 +26,8 @@ export class GbgFarligtAvfallStack extends Stack {
       timeout: Duration.seconds(10),
     });
     const scrapeTask = new LambdaInvoke(this, 'gfa-task-scrape', {
-      lambdaFunction: scraper
+      lambdaFunction: scraper,
+      outputPath: '$.Payload'
     });
 
     const saveEvents = new Function(this, 'gfa-save-events', {
