@@ -5,7 +5,8 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import { App, SecretValue, Stack, StackProps } from '@aws-cdk/core';
 
 export interface PipelineStackProps extends StackProps {
-  readonly lambdaCode: lambda.CfnParametersCode;
+  readonly scraperCode: lambda.CfnParametersCode;
+  readonly eventsCode: lambda.CfnParametersCode;
   readonly repoName: string
   readonly repoOwner: string
   readonly githubToken: string
@@ -71,10 +72,40 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
       },
     });
+    const eventsBuild = new codebuild.PipelineProject(this, 'EventsBuild', {
+      buildSpec: codebuild.BuildSpec.fromObject({
+        version: '0.2',
+        phases: {
+          install: {
+            commands: [
+              'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
+              'apt update && apt install -y musl-tools'
+            ]
+          },
+          build: {
+            commands: [
+              'cd gfa-backend',
+              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
+              '(cd gfa-events && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)',
+              'cp target/x86_64-unknown-linux-musl/release/gfa-events gfa-events/bootstrap'
+            ]    
+          },
+        },
+        artifacts: {
+          'base-directory': 'gfa-backend/gfa-events',
+          files: './bootstrap'
+        },
+      }),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
+      },
+    });
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
-    const scraperBuildOutput = new codepipeline.Artifact('LambdaBuildOutput');
+    const scraperBuildOutput = new codepipeline.Artifact('ScraperBuildOutput');
+    const eventsBuildOutput = new codepipeline.Artifact('EventsBuildOutput');
+
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
         {
@@ -100,6 +131,12 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               outputs: [scraperBuildOutput],
             }),
             new codepipeline_actions.CodeBuildAction({
+              actionName: 'Events_Build',
+              project: eventsBuild,
+              input: sourceOutput,
+              outputs: [eventsBuildOutput]
+            }),
+            new codepipeline_actions.CodeBuildAction({
               actionName: 'CDK_Build',
               project: cdkBuild,
               input: sourceOutput,
@@ -116,9 +153,10 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               stackName: 'GbgFarligtAvfallStack',
               adminPermissions: true,
               parameterOverrides: {
-                ...props.lambdaCode.assign(scraperBuildOutput.s3Location),
+                ...props.scraperCode.assign(scraperBuildOutput.s3Location),
+                ...props.eventsCode.assign(eventsBuildOutput.s3Location)
               },
-              extraInputs: [scraperBuildOutput],
+              extraInputs: [scraperBuildOutput, eventsBuildOutput],
             }),
           ],
         },
