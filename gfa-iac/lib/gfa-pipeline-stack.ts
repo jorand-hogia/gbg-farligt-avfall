@@ -16,6 +16,35 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
   constructor(app: App, id: string, props: PipelineStackProps) {
     super(app, id, props);
 
+    const rustLambdaBuild = (buildName: string, path: string) => new codebuild.PipelineProject(this, buildName, {
+      buildSpec: codebuild.BuildSpec.fromObject({
+        version: '0.2',
+        phases: {
+          install: {
+            commands: [
+              'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
+              'apt update && apt install -y musl-tools'
+            ]
+          },
+          build: {
+            commands: [
+              'cd gfa-backend',
+              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
+              `(cd ${path} && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)`,
+              `cp target/x86_64-unknown-linux-musl/release/${path} ${path}/bootstrap`
+            ]    
+          },
+        },
+        artifacts: {
+          'base-directory': `gfa-backend/${path}`,
+          files: './bootstrap'
+        },
+      }),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
+      },
+    });
+
     const cdkBuild = new codebuild.PipelineProject(this, 'CdkBuild', {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -44,62 +73,8 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
       },
     });
-    const scraperBuild = new codebuild.PipelineProject(this, 'ScraperBuild', {
-      buildSpec: codebuild.BuildSpec.fromObject({
-        version: '0.2',
-        phases: {
-          install: {
-            commands: [
-              'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
-              'apt update && apt install -y musl-tools'
-            ]
-          },
-          build: {
-            commands: [
-              'cd gfa-backend',
-              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
-              '(cd gfa-scraper && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)',
-              'cp target/x86_64-unknown-linux-musl/release/gfa-scraper gfa-scraper/bootstrap'
-            ]    
-          },
-        },
-        artifacts: {
-          'base-directory': 'gfa-backend/gfa-scraper',
-          files: './bootstrap'
-        },
-      }),
-      environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
-      },
-    });
-    const eventsBuild = new codebuild.PipelineProject(this, 'EventsBuild', {
-      buildSpec: codebuild.BuildSpec.fromObject({
-        version: '0.2',
-        phases: {
-          install: {
-            commands: [
-              'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
-              'apt update && apt install -y musl-tools'
-            ]
-          },
-          build: {
-            commands: [
-              'cd gfa-backend',
-              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
-              '(cd gfa-events && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)',
-              'cp target/x86_64-unknown-linux-musl/release/gfa-events gfa-events/bootstrap'
-            ]    
-          },
-        },
-        artifacts: {
-          'base-directory': 'gfa-backend/gfa-events',
-          files: './bootstrap'
-        },
-      }),
-      environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
-      },
-    });
+    const scraperBuild = rustLambdaBuild('ScraperBuild', 'gfa-scraper');
+    const eventsBuild = rustLambdaBuild('EventsBuild', 'gfa-events');
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
