@@ -6,12 +6,12 @@ import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly scraperCode: CfnParametersCode;
-  public readonly eventsCode: CfnParametersCode;
+  public readonly saveEventsCode: CfnParametersCode;
       
   constructor(app: App, id: string, props?: StackProps) {
     super(app, id, props);
     this.scraperCode = Code.fromCfnParameters();
-    this.eventsCode = Code.fromCfnParameters();
+    this.saveEventsCode = Code.fromCfnParameters();
 
     const eventsDb = new Table(this, 'gfa-events-db', {
       partitionKey: { name: 'event-date', type: AttributeType.STRING },
@@ -31,7 +31,7 @@ export class GbgFarligtAvfallStack extends Stack {
     });
 
     const saveEvents = new Function(this, 'gfa-save-events', {
-      code: this. eventsCode,
+      code: this. saveEventsCode,
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10)
