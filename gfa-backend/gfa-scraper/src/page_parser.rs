@@ -11,10 +11,18 @@ use gfa_common::pickup_event::PickUpEvent;
 #[derive(fmt::Debug)]
 pub struct PageParserError {
     pub message: String,
+    pub causes: Vec<Box<dyn Error>>
 }
 impl fmt::Display for PageParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
+        write!(f, "{}\n", self.message)?;
+        if self.causes.len() > 0 {
+            write!(f, "Causes:\n")?;
+            for cause in &self.causes {
+                write!(f, "{}\n", cause)?;
+            }
+        } 
+        write!(f, "Total causes: {}", self.causes.len())
     }
 }
 impl Error for PageParserError {
@@ -22,27 +30,34 @@ impl Error for PageParserError {
         &self.message
     }
 }
+impl PageParserError {
+    fn new(message: String) -> PageParserError {
+        PageParserError{
+            message,
+            causes: Vec::new(),
+        }
+    }
+    fn new_with_causes(message: String, causes: Vec<Box<dyn Error>>) -> PageParserError {
+        PageParserError{
+            message,
+            causes
+        }
+    }
+}
 
-pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError>> {
-    let mut errors: Vec::<PageParserError> = Vec::new();
+pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
     let doc = match document::Document::from_read(page.as_slice()) {
         Ok(doc) => doc,
-        Err(_e) => {
-            errors.push(PageParserError{
-                message: format!("Could not parse HTML document")
-            });
-            return Err(errors);
-        }
+        Err(_e) => return Err(PageParserError::new(format!("Could not format HTML document")))
     };
     let mut events: Vec::<PickUpEvent> = Vec::new();
+    let mut errors: Vec::<Box<dyn Error>> = Vec::new();
     for node in doc.find(predicate::Class("c-snippet")) {
         let street = match node.find(predicate::Class("c-snippet__title"))
             .into_selection().children().first() {
                 Some(element) => format_street(element.text()), 
                 None => {
-                    errors.push(PageParserError{
-                        message: format!("No element with class c-snippet__title found")
-                    });
+                    errors.push(Box::new(PageParserError::new(format!("No element with class c-snippet__title found"))));
                     continue;
                 }
             };
@@ -50,9 +65,7 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError
             .into_selection().first() {
                 Some(element) => format_district(element.text()),
                 None => {
-                    errors.push(PageParserError{
-                        message: format!("No element with class c-snippet__meta found")
-                    });
+                    errors.push(Box::new(PageParserError::new(format!("No element with class c-snippet__meta found"))));
                     continue;
                 }
             };
@@ -60,16 +73,14 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError
             .into_selection().first() {
                 Some(element) => element.text(),
                 None => {
-                    errors.push(PageParserError{
-                        message: format!("No element with class c-snippet__selection found")
-                    });
+                    errors.push(Box::new(PageParserError::new(format!("No element with class c-snippet__selection found"))));
                     continue;
                 }
             };
         let (description, raw_times) = match split_desc_and_times(other_stuff) {
             Ok(description_and_times) => description_and_times,
             Err(e) => {
-                errors.push(e);
+                errors.push(Box::new(e));
                 continue;
             }
         };
@@ -86,9 +97,7 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError
             let event = match PickUpEvent::new(String::from(&street), String::from(&district), description.clone(), t.0.to_rfc3339(), t.1.to_rfc3339()) {
                 Ok(event) => event,
                 Err(e) => {
-                    errors.push(PageParserError{
-                        message: format!("Could not initialize PickupEvent: {}", e)
-                    });
+                    errors.push(Box::new(PageParserError::new(format!("Could not initialize PickupEvent: {}", e))));
                     continue;
                 }
             };
@@ -96,7 +105,7 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, Vec<PageParserError
         }
     }
     if errors.len() > 0 {
-        return Err(errors);
+        return Err(PageParserError::new_with_causes(format!("Error(s) when parsing page"), errors));
     }
     return Ok(events);
 } 
@@ -118,15 +127,11 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
     let raw = raw.trim().to_lowercase();
     let captures = match DESC_TIMES_RE.captures(&raw) {
         Some(caps) => caps,
-        None => return Err(PageParserError{
-            message: format!("No match found while splitting description and times: {}", raw)
-        })
+        None => return Err(PageParserError::new(format!("No match found while splitting description and times: {}", raw)))?
     };
     let index = match captures.get(2) {
         Some(group) => group.start(),
-        None => return Err(PageParserError{
-            message: format!("Second capturing group (swedish day name) not found while splitting description and times: {}", raw)
-        })
+        None => return Err(PageParserError::new(format!("Second capturing group (swedish day name) not found while splitting description and times: {}", raw)))?
     };
     let description = match index == 0 {
         true => None,
@@ -136,7 +141,7 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
     Ok((description, raw_times))
 }
 
-fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)>, PageParserError> {
+fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>, DateTime<chrono_tz::Tz>)>, Box<dyn Error>> {
     lazy_static! {
         static ref DATETIME_RE: Regex = Regex::new(r"\w+ (?P<day>\d{1,2}) (?P<month>\w+) (?P<start>\d{2}\.\d{2})\s{0,1}-\s{0,1}(?P<end>\d{2}\.\d{2})").unwrap();
     }
@@ -145,50 +150,30 @@ fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>
         let dt = append_zeros_in_timestamp(dt); 
         let captures = match DATETIME_RE.captures(&dt) {
             Some(caps) => caps,
-            None => return Err(PageParserError{
-                message: format!("Could not parse timestamp: {}", dt)
-            })
+            None => return Err(PageParserError::new(format!("Could not parse timestamp: {}", dt)))?
         };
         let day = match captures.name("day") {
             Some(day) => day.as_str(),
-            None => return Err(PageParserError{
-                message: format!("Missing day in timestamp: {}", dt)
-            })
+            None => return Err(PageParserError::new(format!("Missing day in timestamp: {}", dt)))?
         };
         let day = zero_pad_day_number(day);
         let month = match captures.name("month") {
             Some(month) => month.as_str(),
-            None => return Err(PageParserError{
-                message: format!("Missing month in timestamp: {}", dt)
-            })
+            None => return Err(PageParserError::new(format!("Missing month in timestamp: {}", dt)))?
         };
         let month = month_to_english(month)?;
         let start_time = match captures.name("start") {
             Some(start) => start.as_str(),
-            None => return Err(PageParserError{
-                message: format!("Missing start time in timestamp: {}", dt)
-            })
+            None => return Err(PageParserError::new(format!("Missing start time in timestamp: {}", dt)))?
         };
         let end_time = match captures.name("end") {
             Some(end) => end.as_str(),
-            None => return Err(PageParserError{
-                message: format!("Missing end time in timestamp: {}", dt)
-            })
+            None => return Err(PageParserError::new(format!("Missing end time in timestamp: {}", dt)))?
         };
         let start = format!("{}-{}-{} {}", year, month, day, start_time);
         let end = format!("{}-{}-{} {}", year, month, day, end_time);
-        let start = match Stockholm.datetime_from_str(&start, "%Y-%B-%d %H.%M") {
-            Ok(res) => res,
-            Err(_e) => return Err(PageParserError{
-                message: format!("Could not parse timestamp: {}", start)
-            })
-        };
-        let end = match Stockholm.datetime_from_str(&end, "%Y-%B-%d %H.%M") {
-            Ok(res) => res,
-            Err(_e) => return Err(PageParserError{
-                message: format!("Could not parse timestamp: {}", end)
-            })
-        };
+        let start = Stockholm.datetime_from_str(&start, "%Y-%B-%d %H.%M")?;
+        let end = Stockholm.datetime_from_str(&end, "%Y-%B-%d %H.%M")?;
         datetimes.push((start, end));
     }
     Ok(datetimes)
@@ -227,9 +212,7 @@ fn month_to_english(swe_month: &str) -> Result<String, PageParserError> {
         "oktober" => Ok(String::from("october")),
         "november" => Ok(swe_month.to_string()),
         "december" => Ok(swe_month.to_string()),
-        _ => return Err(PageParserError{
-            message: format!("Invalid month name: {}", swe_month)
-        })
+        _ => return Err(PageParserError::new(format!("Invalid month name: {}", swe_month)))?
     }
 }
 
@@ -375,6 +358,6 @@ mod tests {
         let file = read_file("body_with_very_bad_content.html");
         let events = parse_page(file);
         assert_eq!(true, events.is_err());
-        assert_eq!(2, events.unwrap_err().len())
+        assert_eq!(2, events.unwrap_err().causes.len())
     }
 }
