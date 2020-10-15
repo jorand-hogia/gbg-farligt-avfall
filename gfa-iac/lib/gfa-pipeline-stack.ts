@@ -6,7 +6,7 @@ import { App, SecretValue, Stack, StackProps } from '@aws-cdk/core';
 
 export interface PipelineStackProps extends StackProps {
   readonly scraperCode: lambda.CfnParametersCode;
-  readonly eventsCode: lambda.CfnParametersCode;
+  readonly saveEventsCode: lambda.CfnParametersCode;
   readonly repoName: string
   readonly repoOwner: string
   readonly githubToken: string
@@ -74,12 +74,12 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
       },
     });
     const scraperBuild = rustLambdaBuild('ScraperBuild', 'gfa-scraper');
-    const eventsBuild = rustLambdaBuild('EventsBuild', 'gfa-events');
+    const saveEventsBuild = rustLambdaBuild('EventsBuild', 'gfa-save-events');
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
     const scraperBuildOutput = new codepipeline.Artifact('ScraperBuildOutput');
-    const eventsBuildOutput = new codepipeline.Artifact('EventsBuildOutput');
+    const saveEventsBuildOutput = new codepipeline.Artifact('EventsBuildOutput');
 
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
@@ -107,9 +107,9 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
             }),
             new codepipeline_actions.CodeBuildAction({
               actionName: 'Events_Build',
-              project: eventsBuild,
+              project: saveEventsBuild,
               input: sourceOutput,
-              outputs: [eventsBuildOutput]
+              outputs: [saveEventsBuildOutput]
             }),
             new codepipeline_actions.CodeBuildAction({
               actionName: 'CDK_Build',
@@ -129,9 +129,9 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               adminPermissions: true,
               parameterOverrides: {
                 ...props.scraperCode.assign(scraperBuildOutput.s3Location),
-                ...props.eventsCode.assign(eventsBuildOutput.s3Location)
+                ...props.saveEventsCode.assign(saveEventsBuildOutput.s3Location)
               },
-              extraInputs: [scraperBuildOutput, eventsBuildOutput],
+              extraInputs: [scraperBuildOutput, saveEventsBuildOutput],
             }),
           ],
         },

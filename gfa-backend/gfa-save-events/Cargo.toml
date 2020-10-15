@@ -1,5 +1,5 @@
 [package]
-name = "gfa-events"
+name = "gfa-save-events"
 version = "0.1.0"
 authors = ["Rickard Andersson <dunklas@gmail.com>"]
 edition = "2018"
