@@ -54,10 +54,8 @@ async fn handle_request(_event: Value, _c: Context) -> Result<Value, Error> {
     for page in pages_to_scrape {
         let mut events = match page_parser::parse_page(page) {
             Ok(events) => events,
-            Err(errors) => {
-                for error in errors {
-                    error!("{}", error);
-                }
+            Err(error) => {
+                error!("{}", error);
                 return Err(Box::new(GfaScraperError{
                     message: format!("Failed while parsing pages")
                 })) 
