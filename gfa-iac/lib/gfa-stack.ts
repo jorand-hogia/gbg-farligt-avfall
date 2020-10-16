@@ -1,17 +1,19 @@
 import { Code, Function, Runtime, CfnParametersCode } from '@aws-cdk/aws-lambda';
 import { LambdaInvoke } from '@aws-cdk/aws-stepfunctions-tasks';
-import { StateMachine } from '@aws-cdk/aws-stepfunctions';
+import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly scraperCode: CfnParametersCode;
   public readonly saveEventsCode: CfnParametersCode;
+  public readonly preProcessStopsCode: CfnParametersCode;
       
   constructor(app: App, id: string, props?: StackProps) {
     super(app, id, props);
     this.scraperCode = Code.fromCfnParameters();
     this.saveEventsCode = Code.fromCfnParameters();
+    this.preProcessStopsCode = Code.fromCfnParameters();
 
     const eventsDb = new Table(this, 'gfa-events-db', {
       partitionKey: { name: 'event-date', type: AttributeType.STRING },
@@ -31,7 +33,7 @@ export class GbgFarligtAvfallStack extends Stack {
     });
 
     const saveEvents = new Function(this, 'gfa-save-events', {
-      code: this. saveEventsCode,
+      code: this.saveEventsCode,
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10)
@@ -40,9 +42,22 @@ export class GbgFarligtAvfallStack extends Stack {
       lambdaFunction: saveEvents
     });
 
+    const preProcessStops = new Function(this, 'gfa-pre-process-stops', {
+      code: this.preProcessStopsCode,
+      handler: 'doesnt.matter',
+      runtime: Runtime.PROVIDED,
+      timeout: Duration.seconds(10)
+    });
+    const preProcessStopsTask = new LambdaInvoke(this, 'gfa-task-pre-process-stops', {
+      lambdaFunction: preProcessStops
+    });
+
     const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
       definition: scrapeTask
-        .next(saveEventsTask),
+        .next(new Parallel(this, 'process-scrape-results', {})
+          .branch(saveEventsTask)
+          .branch(preProcessStopsTask)
+        ),
       timeout: Duration.minutes(5)
     });
 

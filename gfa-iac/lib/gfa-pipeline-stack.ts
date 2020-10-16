@@ -7,6 +7,7 @@ import { App, SecretValue, Stack, StackProps } from '@aws-cdk/core';
 export interface PipelineStackProps extends StackProps {
   readonly scraperCode: lambda.CfnParametersCode;
   readonly saveEventsCode: lambda.CfnParametersCode;
+  readonly preProcessStopsCode: lambda.CfnParametersCode;
   readonly repoName: string
   readonly repoOwner: string
   readonly githubToken: string
@@ -75,11 +76,13 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
     });
     const scraperBuild = rustLambdaBuild('ScraperBuild', 'gfa-scraper');
     const saveEventsBuild = rustLambdaBuild('EventsBuild', 'gfa-save-events');
+    const preProcessStopsBuild = rustLambdaBuild("PreProcessStopsBuild", 'gfa-preprocess-stops');
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
     const scraperBuildOutput = new codepipeline.Artifact('ScraperBuildOutput');
     const saveEventsBuildOutput = new codepipeline.Artifact('EventsBuildOutput');
+    const preProcessStopsBuildOutput = new codepipeline.Artifact('PreProcessStopsBuildOutput');
 
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
@@ -112,6 +115,12 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               outputs: [saveEventsBuildOutput]
             }),
             new codepipeline_actions.CodeBuildAction({
+              actionName: 'PreProcessStops_Build',
+              project: preProcessStopsBuild,
+              input: sourceOutput,
+              outputs: [preProcessStopsBuildOutput]
+            }),
+            new codepipeline_actions.CodeBuildAction({
               actionName: 'CDK_Build',
               project: cdkBuild,
               input: sourceOutput,
@@ -129,9 +138,10 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               adminPermissions: true,
               parameterOverrides: {
                 ...props.scraperCode.assign(scraperBuildOutput.s3Location),
-                ...props.saveEventsCode.assign(saveEventsBuildOutput.s3Location)
+                ...props.saveEventsCode.assign(saveEventsBuildOutput.s3Location),
+                ...props.preProcessStopsCode.assign(preProcessStopsBuildOutput.s3Location),
               },
-              extraInputs: [scraperBuildOutput, saveEventsBuildOutput],
+              extraInputs: [scraperBuildOutput, saveEventsBuildOutput, preProcessStopsBuildOutput],
             }),
           ],
         },
