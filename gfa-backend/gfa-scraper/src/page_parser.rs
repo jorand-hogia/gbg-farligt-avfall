@@ -94,13 +94,7 @@ pub fn parse_page(page: Vec<u8>) -> Result<Vec<PickUpEvent>, PageParserError> {
             }
         };
         for t in times {
-            let event = match PickUpEvent::new(String::from(&street), String::from(&district), description.clone(), t.0.to_rfc3339(), t.1.to_rfc3339()) {
-                Ok(event) => event,
-                Err(e) => {
-                    errors.push(Box::new(PageParserError::new(format!("Could not initialize PickupEvent: {}", e))));
-                    continue;
-                }
-            };
+            let event = PickUpEvent::new(String::from(&street), String::from(&district), description.clone(), t.0.to_rfc3339(), t.1.to_rfc3339());
             events.push(event);
         }
     }

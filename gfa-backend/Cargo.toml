@@ -1,2 +1,2 @@
 [workspace]
-members = ["gfa-scraper", "gfa-save-events", "gfa-common"]
+members = ["gfa-scraper", "gfa-save-events", "gfa-preprocess-stops", "gfa-common"]

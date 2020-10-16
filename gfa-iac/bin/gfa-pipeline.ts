@@ -17,6 +17,7 @@ const gfaStack = new GbgFarligtAvfallStack(app, 'GbgFarligtAvfallStack')
 new GbgFarligtAvfallPipelineStack(app, 'GbgFarligtAvfallPipelineStack', {
     scraperCode: gfaStack.scraperCode,
     saveEventsCode: gfaStack.saveEventsCode,
+    preProcessStopsCode: gfaStack.preProcessStopsCode,
     repoOwner: 'Dunklas', // TODO: Parameterize!
     repoName: 'gbg-farligt-avfall', // TODO: Parameterize!
     githubToken: process.env.GITHUB_TOKEN || ''
