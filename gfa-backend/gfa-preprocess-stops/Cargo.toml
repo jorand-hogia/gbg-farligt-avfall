@@ -1,0 +1,18 @@
+[package]
+name = "gfa-preprocess-stops"
+version = "0.1.0"
+authors = ["Rickard Andersson <dunklas@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lambda = { git = "https://github.com/awslabs/aws-lambda-rust-runtime", branch = "master" }
+tokio = { version = "0.2.22", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4.8"
+simple_logger = "1.6.0"
+
+[dependencies.gfa-common]
+path = "../gfa-common"

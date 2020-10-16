@@ -1,9 +1,10 @@
 use std::fmt;
-use std::error::Error;
-use serde::Serialize;
+use std::cmp::Ordering;
+use serde::{Serialize, Deserialize};
 
 #[derive(fmt::Debug)]
 #[derive(Serialize)]
+#[derive(Deserialize)]
 pub struct PickUpEvent {
     pub location_id: String,
     pub street: String,
@@ -19,9 +20,28 @@ impl fmt::Display for PickUpEvent {
     }
 }
 
+impl Ord for PickUpEvent {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.location_id.cmp(&other.location_id)
+    }
+}
+
+impl PartialEq for PickUpEvent {
+    fn eq(&self, other: &Self) -> bool {
+        self.location_id == other.location_id
+    }
+}
+impl Eq for PickUpEvent {}
+
+impl PartialOrd for PickUpEvent {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl PickUpEvent {
-    pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Result<Self, Box<dyn Error>> {
-        Ok(PickUpEvent{
+    pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Self {
+        PickUpEvent{
             location_id: format!("{}_{}",
                 district.to_lowercase().trim().replace(" ", ""),
                 street.to_lowercase().trim().replace(" ", "")
@@ -31,7 +51,7 @@ impl PickUpEvent {
             description,
             time_start,
             time_end
-        })
+        }
     }
 }
 
