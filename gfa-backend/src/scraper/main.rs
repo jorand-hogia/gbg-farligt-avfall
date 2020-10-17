@@ -5,7 +5,7 @@ use futures::executor::block_on;
 use serde_json::{json, Value};
 use std::fmt;
 use std::error;
-use gfa_common::pickup_event::PickUpEvent;
+use common::pickup_event::PickUpEvent;
 
 mod page_fetcher;
 mod page_parser;

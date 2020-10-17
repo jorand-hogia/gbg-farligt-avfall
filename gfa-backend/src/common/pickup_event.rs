@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn should_generate_location_id() {
-        let event = PickUpEvent::new("  Doktor Fries torg, Doktor Bondesons Gata ".to_string(), "Centrum".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
+        let event = PickUpEvent::new("  Doktor Fries torg, Doktor Bondesons Gata ".to_string(), "Centrum".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string());
         assert_eq!("centrum_doktorfriestorg,doktorbondesonsgata", event.location_id);
     }
 }

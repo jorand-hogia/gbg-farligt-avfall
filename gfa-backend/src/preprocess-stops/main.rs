@@ -2,8 +2,8 @@ use lambda::{handler_fn, Context};
 use serde_json::{Value};
 use simple_logger::{SimpleLogger};
 use log::{self, info, LevelFilter};
-use gfa_common::pickup_event::PickUpEvent;
-use gfa_common::pickup_stop::PickUpStop;
+use common::pickup_event::PickUpEvent;
+use common::pickup_stop::PickUpStop;
 
 mod stop_parser;
 

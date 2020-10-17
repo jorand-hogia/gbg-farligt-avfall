@@ -160,7 +160,7 @@ mod tests {
     use std::fs::{File, metadata};
 
     fn read_file(path: &str) -> Vec<u8> {
-        let path = &format!("{}/src/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path);
+        let path = &format!("{}/src/scraper/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path);
         let mut file = File::open(path).unwrap();
         let md = metadata(&path).unwrap(); 
         let mut buffer = vec![0; md.len() as usize];
