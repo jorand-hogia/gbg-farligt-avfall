@@ -31,29 +31,31 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
             commands: [
               'cd gfa-backend',
               '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
-              `($HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)`,
-              `cp target/x86_64-unknown-linux-musl/release/scraper scraper/bootstrap`,
-              `cp target/x86_64-unknown-linux-musl/release/save-events save-events/bootstrap`,
-              `cp target/x86_64-unknown-linux-musl/release/preprocess-stops preprocess-stops/bootstrap`,
+              `$HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl`,
+              'pwd',
+              'ls -ll',
+              `cp target/x86_64-unknown-linux-musl/release/scraper src/scraper/bootstrap`,
+              `cp target/x86_64-unknown-linux-musl/release/save-events src/save-events/bootstrap`,
+              `cp target/x86_64-unknown-linux-musl/release/preprocess-stops src/preprocess-stops/bootstrap`,
             ]    
           },
         },
         artifacts: {
           'secondary-artifacts': {
-            'scraper': {
-              'base-directory': 'gfa-backend/scraper',
+            'ScraperOutput': {
+              'base-directory': 'gfa-backend/src/scraper',
               'files': [
                 './bootstrap'
               ]
             },
-            'save-events': {
-              'base-directory': 'gfa-backend/save-events',
+            'SaveEventsOutput': {
+              'base-directory': 'gfa-backend/src/save-events',
               'files': [
                 './bootstrap'
               ]
             },
-            'preprocess-stops': {
-              'base-directory': 'gfa-backend/preprocess-stops',
+            'PreProcessStopsOutput': {
+              'base-directory': 'gfa-backend/src/preprocess-stops',
               'files': [
                 './bootstrap'
               ]
@@ -97,9 +99,9 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
-    const scraperBuildOutput = new codepipeline.Artifact('ScraperBuildOutput');
-    const saveEventsBuildOutput = new codepipeline.Artifact('SaveEventsBuildOutput');
-    const preProcessStopsBuildOutput = new codepipeline.Artifact('PreProcessStopsBuildOutput');
+    const scraperBuildOutput = new codepipeline.Artifact('ScraperOutput');
+    const saveEventsBuildOutput = new codepipeline.Artifact('SaveEventsOutput');
+    const preProcessStopsBuildOutput = new codepipeline.Artifact('PreProcessStopsOutput');
 
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
