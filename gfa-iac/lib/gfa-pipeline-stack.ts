@@ -17,7 +17,7 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
   constructor(app: App, id: string, props: PipelineStackProps) {
     super(app, id, props);
 
-    const rustLambdaBuild = (buildName: string, path: string) => new codebuild.PipelineProject(this, buildName, {
+    const lambdaBuild = new codebuild.Project(this, 'LambdaBuild', {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
@@ -31,19 +31,39 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
             commands: [
               'cd gfa-backend',
               '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
-              `(cd ${path} && $HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)`,
-              `cp target/x86_64-unknown-linux-musl/release/${path} ${path}/bootstrap`
+              `($HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl)`,
+              `cp target/x86_64-unknown-linux-musl/release/scraper scraper/bootstrap`,
+              `cp target/x86_64-unknown-linux-musl/release/save-events save-events/bootstrap`,
+              `cp target/x86_64-unknown-linux-musl/release/preprocess-stops preprocess-stops/bootstrap`,
             ]    
           },
         },
         artifacts: {
-          'base-directory': `gfa-backend/${path}`,
-          files: './bootstrap'
+          'secondary-artifacts': {
+            'scraper': {
+              'base-directory': 'gfa-backend/scraper',
+              'files': [
+                './bootstrap'
+              ]
+            },
+            'save-events': {
+              'base-directory': 'gfa-backend/save-events',
+              'files': [
+                './bootstrap'
+              ]
+            },
+            'preprocess-stops': {
+              'base-directory': 'gfa-backend/preprocess-stops',
+              'files': [
+                './bootstrap'
+              ]
+            }
+          }
         },
       }),
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
-      },
+      }
     });
 
     const cdkBuild = new codebuild.PipelineProject(this, 'CdkBuild', {
@@ -74,14 +94,11 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
       },
     });
-    const scraperBuild = rustLambdaBuild('ScraperBuild', 'gfa-scraper');
-    const saveEventsBuild = rustLambdaBuild('EventsBuild', 'gfa-save-events');
-    const preProcessStopsBuild = rustLambdaBuild("PreProcessStopsBuild", 'gfa-preprocess-stops');
 
     const sourceOutput = new codepipeline.Artifact();
     const cdkBuildOutput = new codepipeline.Artifact('CdkBuildOutput');
     const scraperBuildOutput = new codepipeline.Artifact('ScraperBuildOutput');
-    const saveEventsBuildOutput = new codepipeline.Artifact('EventsBuildOutput');
+    const saveEventsBuildOutput = new codepipeline.Artifact('SaveEventsBuildOutput');
     const preProcessStopsBuildOutput = new codepipeline.Artifact('PreProcessStopsBuildOutput');
 
     new codepipeline.Pipeline(this, 'Pipeline', {
@@ -103,22 +120,10 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
           stageName: 'Build',
           actions: [
             new codepipeline_actions.CodeBuildAction({
-              actionName: 'Scraper_Build',
-              project: scraperBuild,
+              actionName: 'LambdaBuild',
+              project: lambdaBuild,
               input: sourceOutput,
-              outputs: [scraperBuildOutput],
-            }),
-            new codepipeline_actions.CodeBuildAction({
-              actionName: 'Events_Build',
-              project: saveEventsBuild,
-              input: sourceOutput,
-              outputs: [saveEventsBuildOutput]
-            }),
-            new codepipeline_actions.CodeBuildAction({
-              actionName: 'PreProcessStops_Build',
-              project: preProcessStopsBuild,
-              input: sourceOutput,
-              outputs: [preProcessStopsBuildOutput]
+              outputs: [scraperBuildOutput, saveEventsBuildOutput, preProcessStopsBuildOutput],
             }),
             new codepipeline_actions.CodeBuildAction({
               actionName: 'CDK_Build',

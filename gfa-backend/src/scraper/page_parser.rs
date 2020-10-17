@@ -6,7 +6,7 @@ use chrono_tz::Europe::Stockholm;
 use regex::{Regex};
 use select::{document, predicate};
 use lazy_static::lazy_static;
-use gfa_common::pickup_event::PickUpEvent;
+use common::pickup_event::PickUpEvent;
 
 #[derive(fmt::Debug)]
 pub struct PageParserError {
@@ -217,7 +217,7 @@ mod tests {
     use std::io::Read;
 
     fn read_file(path: &str) -> Vec<u8> {
-        let path = &format!("{}/src/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path);
+        let path = &format!("{}/src/scraper/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path);
         let mut file = File::open(path).unwrap();
         let md = metadata(&path).unwrap(); 
         let mut buffer = vec![0; md.len() as usize];

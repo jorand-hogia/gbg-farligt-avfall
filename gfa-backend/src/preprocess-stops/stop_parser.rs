@@ -1,5 +1,5 @@
-use gfa_common::pickup_event::PickUpEvent;
-use gfa_common::pickup_stop::PickUpStop;
+use common::pickup_event::PickUpEvent;
+use common::pickup_stop::PickUpStop;
 
 pub fn parse_unique_stops(mut events: Vec<PickUpEvent>) -> Vec<PickUpStop> {
     events.sort_by(|a, b| a.partial_cmp(b).unwrap());
