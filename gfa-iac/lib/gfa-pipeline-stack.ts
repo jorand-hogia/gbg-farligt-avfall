@@ -24,26 +24,24 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
           install: {
             commands: [
               'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y',
-              'apt update && apt install -y musl-tools'
-            ]
-          },
-          test: {
-            commands: [
-              '(cd gfa-backend && cargo test --release)'
+              'apt update && apt install -y musl-tools',
+              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
             ]
           },
           build: {
             commands: [
               'cd gfa-backend',
-              '$HOME/.cargo/bin/rustup target add x86_64-unknown-linux-musl',
+              '$HOME/.cargo/bin/cargo test --release',
               `$HOME/.cargo/bin/cargo build --release --target x86_64-unknown-linux-musl`,
-              'pwd',
-              'ls -ll',
+            ]
+          },
+          post_build: {
+            commands: [
               `cp target/x86_64-unknown-linux-musl/release/scraper src/scraper/bootstrap`,
               `cp target/x86_64-unknown-linux-musl/release/save-events src/save-events/bootstrap`,
               `cp target/x86_64-unknown-linux-musl/release/preprocess-stops src/preprocess-stops/bootstrap`,
-            ]    
-          },
+            ]
+          }
         },
         artifacts: {
           'secondary-artifacts': {
