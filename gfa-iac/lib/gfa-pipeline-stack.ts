@@ -27,6 +27,11 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
               'apt update && apt install -y musl-tools'
             ]
           },
+          test: {
+            commands: [
+              '(cd gfa-backend && cargo test --release)'
+            ]
+          },
           build: {
             commands: [
               'cd gfa-backend',
