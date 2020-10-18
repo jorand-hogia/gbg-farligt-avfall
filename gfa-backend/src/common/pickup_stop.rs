@@ -46,8 +46,18 @@ impl PickUpStop {
             coordinate: None
         }
     }
+    
+    pub fn from(stop: &PickUpStop, coordinate: Option<Coordinate>) -> PickUpStop {
+        PickUpStop{
+            location_id: stop.location_id.clone(),
+            street: stop.street.clone(),
+            district: stop.district.clone(),
+            description: stop.description.clone(),
+            coordinate: coordinate
+        }
+    }
 
-    pub fn set_coordinate(mut self, coordinate: Coordinate) {
-        self.coordinate = Some(coordinate);
+    pub fn set_coordinate(mut self, coordinate: Option<Coordinate>) {
+        self.coordinate = coordinate;
     }
 }

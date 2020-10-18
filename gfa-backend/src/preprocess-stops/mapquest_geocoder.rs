@@ -1,8 +1,8 @@
-use std::error::Error;
 use std::fmt;
 use std::collections::HashMap;
 use reqwest::blocking::{Client};
 use serde_json::{Value, json, from_str};
+use serde::{Deserialize};
 use common::coordinate::Coordinate;
 use crate::geocoder::GeoCoder;
 
@@ -12,7 +12,14 @@ pub struct MapQuestGeoCoder {}
 pub struct MapQuestGeoCoderError {
     message: String 
 }
-impl Error for MapQuestGeoCoderError {
+impl MapQuestGeoCoderError {
+    fn new(message: &str) -> MapQuestGeoCoderError {
+        MapQuestGeoCoderError{
+            message: format!("{}", message)
+        }
+    }
+}
+impl std::error::Error for MapQuestGeoCoderError {
     fn description(&self) -> &str {
         &self.message
     }
@@ -23,9 +30,38 @@ impl fmt::Display for MapQuestGeoCoderError {
     }
 }
 
+#[derive(Deserialize)]
+struct ApiResponse {
+    results: Vec<ApiResult>
+}
+
+#[derive(Deserialize)]
+struct ApiResult {
+    providedLocation: ApiProvidedLocation,
+    locations: Vec<ApiLocation>
+}
+
+#[derive(Deserialize)]
+struct ApiProvidedLocation {
+    location: String
+}
+
+#[derive(Deserialize)]
+struct ApiLocation {
+    latLng: ApiLatLng
+}
+
+#[derive(Deserialize)]
+struct ApiLatLng {
+    lat: f64,
+    lng: f64
+}
+
+type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
 impl GeoCoder for MapQuestGeoCoder {
 
-    fn forward_geocode(api_key: String, id_by_address: HashMap<String, String>) -> Result<HashMap<String, Coordinate>, Box<dyn Error>> {
+    fn forward_geocode(api_key: String, id_by_address: HashMap<String, String>) -> Result<HashMap<String, Option<Coordinate>>, Error> {
         let client = Client::builder()
             .use_rustls_tls()
             .build()
@@ -33,21 +69,25 @@ impl GeoCoder for MapQuestGeoCoder {
         let addresses: Vec<&String> = id_by_address
             .keys()
             .collect();
+        let mut coordinate_by_id: HashMap<String, Option<Coordinate>> = HashMap::new();
         for chunk in addresses.chunks(100) {
             let chunk = chunk.to_vec();
             let location_params = location_params(chunk);
             let response_raw = client.get("http://open.mapquestapi.com/geocoding/v1/batch")
-                .query(&[("key", "2FSWyWz0ouHBnucVBWA80zsPb6K5wfwc")])
+                .query(&[("key", &api_key)])
                 .query(&location_params)
                 .send()?
                 .text()?;
-            println!("{}", response_raw);
+            let coordinates_by_address = response_to_coordinates(response_raw)?;
+            for (address, coordinate) in coordinates_by_address.iter() {
+                let identifier = id_by_address.get(address).unwrap();
+                coordinate_by_id.insert(identifier.clone(), coordinate.clone());
+            }
         }
-        Ok(HashMap::new())
+        Ok(coordinate_by_id)
     }
 }
 
-// /batch?key=KEY&location=Denver,CO&location=Boulder,CO
 fn location_params(address_by_id: Vec<&String>) -> Vec<(String, String)> {
     address_by_id.into_iter()
         .map(|address_by_id| {
@@ -56,53 +96,33 @@ fn location_params(address_by_id: Vec<&String>) -> Vec<(String, String)> {
         .collect()
 }
 
-fn response_to_coordinates(response: String) -> Result<HashMap<String, Coordinate>, Box<dyn Error>> {
-    let json: Value = serde_json::from_str(&response).unwrap();
-    println!("{}\n\n\n\n", json);
-    let res = match json.get("results") {
-        Some(res) => res,
-        None => return Err(Box::new(MapQuestGeoCoderError{
-            message: format!("Missing key 'results' in response json")
-        }))
-    };
-    let res = match res.as_array() {
-        Some(res) => res,
-        None => return Err(Box::new(MapQuestGeoCoderError{
-            message: format!("Key 'results' in response json could not be parsed as array")
-        }))
-    };
-    for result in res {
-        let address = match result.get("providedLocation") {
-            Some(providedLocation) => providedLocation,
-            None => return Err(Box::new(MapQuestGeoCoderError{
-                message: format!("Result contained no 'providedLocation")
-            }))
-        };
-        let address = match address.get("location") {
-            Some(address) => address,
-            None => return Err(Box::new(MapQuestGeoCoderError{
-                message: format!("Result contained no 'location'")
-            }))
-        };
-        println!("{}", address);
+fn response_to_coordinates(response: String) -> Result<HashMap<String, Option<Coordinate>>, Error> {
+    let json: Value = serde_json::from_str(&response)?;
+    let api_response: ApiResponse = serde_json::from_value(json)?;
+    let mut coordinates_by_address: HashMap<String, Option<Coordinate>> = HashMap::new();
+    for result in api_response.results {
+        let provided_address = result.providedLocation.location;
+        if result.locations.is_empty() {
+            coordinates_by_address.insert(provided_address.clone(), None);
+            continue;
+        }
+        let first_location = result.locations.first().unwrap();
+        coordinates_by_address.insert(provided_address.clone(), Some(Coordinate::new(
+            first_location.latLng.lat,
+            first_location.latLng.lng
+        )));
     }
-    Ok(HashMap::new())
+    Ok(coordinates_by_address)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
+    use assert_approx_eq::assert_approx_eq;
 
     fn read_file(path: &str) -> String {
         fs::read_to_string(format!("{}/src/preprocess-stops/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path)).unwrap()
-    }
-
-    fn temp() {
-        let mut addresses: HashMap::<String, String> = HashMap::new();
-        addresses.insert("Järntorget, Göteborg".to_string(), "some-id".to_string());
-        addresses.insert("Brunnsparken, Göteborg".to_string(), "some-id-2".to_string());
-        MapQuestGeoCoder::forward_geocode("key".to_string(), addresses);
     }
 
     #[test]
@@ -119,7 +139,17 @@ mod tests {
     fn should_convert_response() {
         let response = read_file("response.json");
         let coordinates = response_to_coordinates(response).unwrap();
+        let keys: Vec<&String> = coordinates.keys().collect();
+        for key in keys {
+            println!("{}", key);
+        }
         assert_eq!(true, coordinates.contains_key("Järntorget,Göteborg"));
-        assert_eq!(true, coordinates.contains_key("Brunnsparken"))
+        let first_coord = coordinates.get("Järntorget,Göteborg").unwrap().as_ref().unwrap();
+        assert_approx_eq!(57.700072, first_coord.latitude());
+        assert_approx_eq!(11.951992, first_coord.longitude());
+        assert_eq!(true, coordinates.contains_key("Brunnsparken,Göteborg"));
+        let second_coord = coordinates.get("Brunnsparken,Göteborg").unwrap().as_ref().unwrap();
+        assert_approx_eq!(57.706784, second_coord.latitude());
+        assert_approx_eq!(11.969905, second_coord.longitude());
     }
 }
