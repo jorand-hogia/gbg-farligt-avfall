@@ -9,6 +9,7 @@ use geocoder::GeoCoder;
 use mapquest_geocoder::MapQuestGeoCoder;
 
 mod stop_parser;
+mod gen_address;
 mod geocoder;
 mod mapquest_geocoder;
 
@@ -30,7 +31,7 @@ async fn handle_request(event: Value, _: Context) -> Result<Value, Error> {
     let unique_stops: Vec<PickUpStop> = stop_parser::parse_unique_stops(pickup_events); 
     let mut id_by_address: HashMap<String, String> = HashMap::new();
     for stop in unique_stops.iter() {
-        id_by_address.insert(format!("{},{}", stop.street.clone(), stop.district.clone()), stop.location_id.clone());
+        id_by_address.insert(gen_address::generate_address(&stop.street, &stop.district), stop.location_id.clone());
     }
     let coordinatesMap = MapQuestGeoCoder::forward_geocode("2FSWyWz0ouHBnucVBWA80zsPb6K5wfwc".to_string(), id_by_address)?;
     let mut stops_with_coordinates: Vec<PickUpStop> = Vec::new();
