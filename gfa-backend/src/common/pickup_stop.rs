@@ -1,5 +1,6 @@
 use std::fmt;
 use serde::{Serialize, Deserialize};
+use crate::coordinate::Coordinate;
 
 #[derive(fmt::Debug)]
 #[derive(Serialize)]
@@ -9,11 +10,23 @@ pub struct PickUpStop {
     pub street: String,
     pub district: String,
     pub description: Option<String>,
+    pub coordinate: Option<Coordinate>,
 }
 
 impl fmt::Display for PickUpStop {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} - {} ({})\n", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()))
+        write!(f, "{} - {} ({}) ({})\n",
+            self.district,
+            self.street,
+            match &self.description {
+                Some(description) => description.clone(),
+                None => "-".to_string()
+            },
+            match &self.coordinate {
+                Some(coordinate) => format!("{}", coordinate),
+                None => "-".to_string()
+            },
+        )
     }
 }
 
@@ -30,6 +43,21 @@ impl PickUpStop {
             street,
             district,
             description,
+            coordinate: None
         }
+    }
+    
+    pub fn from(stop: &PickUpStop, coordinate: Option<Coordinate>) -> PickUpStop {
+        PickUpStop{
+            location_id: stop.location_id.clone(),
+            street: stop.street.clone(),
+            district: stop.district.clone(),
+            description: stop.description.clone(),
+            coordinate: coordinate
+        }
+    }
+
+    pub fn set_coordinate(mut self, coordinate: Option<Coordinate>) {
+        self.coordinate = coordinate;
     }
 }

@@ -1,4 +1,3 @@
-use std::io::Read;
 use futures::{future};
 use std::str::FromStr;
 use std::fmt;
@@ -158,6 +157,7 @@ fn calculate_urls(base_path: &String, total: u16) -> Vec::<String> {
 mod tests {
     use super::*;
     use std::fs::{File, metadata};
+    use std::io::Read;
 
     fn read_file(path: &str) -> Vec<u8> {
         let path = &format!("{}/src/scraper/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path);
