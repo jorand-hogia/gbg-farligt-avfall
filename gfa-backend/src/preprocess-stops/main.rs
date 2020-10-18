@@ -24,6 +24,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
+// TODO: Handle this way more cleanly
 async fn handle_request(event: Value, _: Context) -> Result<Value, Error> {
     let pickup_events: Vec<PickUpEvent> = serde_json::from_value(event)?;
     let unique_stops: Vec<PickUpStop> = stop_parser::parse_unique_stops(pickup_events); 
