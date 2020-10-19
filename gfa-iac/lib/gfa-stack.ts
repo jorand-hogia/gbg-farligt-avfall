@@ -3,6 +3,7 @@ import { LambdaInvoke } from '@aws-cdk/aws-stepfunctions-tasks';
 import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
+import { Secret } from "@aws-cdk/aws-secretsmanager";
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly scraperCode: CfnParametersCode;
@@ -46,7 +47,12 @@ export class GbgFarligtAvfallStack extends Stack {
       code: this.preProcessStopsCode,
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
-      timeout: Duration.seconds(10)
+      timeout: Duration.seconds(10),
+      environment: {
+        GEOCODING_API_KEY: `${
+          Secret.fromSecretName(this, 'geocoding-api-key', 'mapquest-api-key')
+        }`
+      }
     });
     const preProcessStopsTask = new LambdaInvoke(this, 'gfa-task-pre-process-stops', {
       lambdaFunction: preProcessStops

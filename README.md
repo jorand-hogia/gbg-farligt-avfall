@@ -12,6 +12,9 @@ This token is used by AWS CodePipeline to trigger on new commits.
 ## Inspiration
 https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
 
+## Pre-requisites
+Secrets Manager in the account you deploy to must have a secret named `mapquest-api-key` containing an API key for [MapQuest](https://developer.mapquest.com/).
+
 ## Deploy pipeline stack
 - `cd gfa iac`
 - `cdk deploy GbgFarligtAvfallPipelineStack`
