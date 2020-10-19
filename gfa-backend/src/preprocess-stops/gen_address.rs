@@ -44,5 +44,7 @@ mod tests {
     fn should_not_modify_good_addresses() {
         let address = generate_address(&"Framnäsgatan 31A".to_string(), &"Centrum".to_string());
         assert_eq!("Framnäsgatan 31A,Centrum,Göteborg".to_string(), address);
+        let address = generate_address(&"Lövgärdets Centrum".to_string(), &"Angered".to_string());
+        assert_eq!("Lövgärdets Centrum,Angered,Göteborg", address);
     }
 }
