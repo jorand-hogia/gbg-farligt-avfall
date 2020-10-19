@@ -1,5 +1,6 @@
 use lambda::{handler_fn, Context};
 use std::collections::HashMap;
+use std::env;
 use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
 use log::{self, info, LevelFilter};
@@ -27,13 +28,14 @@ async fn main() -> Result<(), Error> {
 
 // TODO: Handle this way more cleanly
 async fn handle_request(event: Value, _: Context) -> Result<Value, Error> {
+    let geocoding_api_key = env::var("GEOCODING_API_KEY").unwrap();
     let pickup_events: Vec<PickUpEvent> = serde_json::from_value(event)?;
     let unique_stops: Vec<PickUpStop> = stop_parser::parse_unique_stops(pickup_events); 
     let mut id_by_address: HashMap<String, String> = HashMap::new();
     for stop in unique_stops.iter() {
         id_by_address.insert(gen_address::generate_address(&stop.street, &stop.district), stop.location_id.clone());
     }
-    let coordinatesMap = MapQuestGeoCoder::forward_geocode("2FSWyWz0ouHBnucVBWA80zsPb6K5wfwc".to_string(), id_by_address)?;
+    let coordinatesMap = MapQuestGeoCoder::forward_geocode(geocoding_api_key, id_by_address)?;
     let mut stops_with_coordinates: Vec<PickUpStop> = Vec::new();
     for stop in unique_stops.iter() {
         let coordinate = match coordinatesMap.get(&stop.location_id) {
