@@ -73,9 +73,11 @@ impl GeoCoder for MapQuestGeoCoder {
         for chunk in addresses.chunks(100) {
             let chunk = chunk.to_vec();
             let location_params = location_params(chunk);
-            let response_raw = client.get("http://open.mapquestapi.com/geocoding/v1/batch")
-                .query(&[("key", &api_key)])
-                .query(&location_params)
+            let request = client.get("http://mapquestapi.com/geocoding/v1/batch")
+                .query(&[("key", &api_key), ("inFormat", &"kvp".to_string()), ("outFormat", &"json".to_string()), ("thumbsMap", &"false".to_string())])
+                .query(&location_params);
+            println!("REQUEST PATH: {:?}", request);
+            let response_raw = request
                 .send()?
                 .text()?;
             let coordinates_by_address = response_to_coordinates(response_raw)?;
@@ -123,6 +125,17 @@ mod tests {
 
     fn read_file(path: &str) -> String {
         fs::read_to_string(format!("{}/src/preprocess-stops/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path)).unwrap()
+    }
+
+    fn temp() {
+        let mut id_by_address: HashMap<String, String> = HashMap::new();
+        id_by_address.insert("Brottkärrsmotet,Askim-Frölunda-Högsbo,Göteborg".to_string(), "some-id".to_string());
+        id_by_address.insert("Lövgärdets Centrum,Angered,Göteborg".to_string(), "some-id2".to_string());
+        id_by_address.insert("Välens koloniförening,Askim-Frölunda-Högsbo,Göteborg".to_string(), "some-id3".to_string());
+        let res = MapQuestGeoCoder::forward_geocode("2FSWyWz0ouHBnucVBWA80zsPb6K5wfwc".to_string(), id_by_address).unwrap();
+        for (k, v) in res.iter() {
+            println!("{}", format!("{} - {:?}", k, v));
+        }
     }
 
     #[test]
