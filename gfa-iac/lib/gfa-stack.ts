@@ -50,7 +50,7 @@ export class GbgFarligtAvfallStack extends Stack {
       timeout: Duration.seconds(10),
       environment: {
         GEOCODING_API_KEY: `${
-          Secret.fromSecretName(this, 'geocoding-api-key', 'mapquest-api-key')
+          Secret.fromSecretName(this, 'geocoding-api-key', 'mapquest-api-key').secretValue
         }`
       }
     });
