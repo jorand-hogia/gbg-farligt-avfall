@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::env;
 use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
-use log::{self, info, LevelFilter};
+use log::{self, LevelFilter};
 use common::pickup_event::PickUpEvent;
 use common::pickup_stop::PickUpStop;
 use geocoder::GeoCoder;
@@ -35,10 +35,10 @@ async fn handle_request(event: Value, _: Context) -> Result<Value, Error> {
     for stop in unique_stops.iter() {
         id_by_address.insert(gen_address::generate_address(&stop.street, &stop.district), stop.location_id.clone());
     }
-    let coordinatesMap = MapQuestGeoCoder::forward_geocode(geocoding_api_key, id_by_address)?;
+    let coordinates_map = MapQuestGeoCoder::forward_geocode(geocoding_api_key, id_by_address)?;
     let mut stops_with_coordinates: Vec<PickUpStop> = Vec::new();
     for stop in unique_stops.iter() {
-        let coordinate = match coordinatesMap.get(&stop.location_id) {
+        match coordinates_map.get(&stop.location_id) {
             Some(coordinate) => {
                 stops_with_coordinates.push(PickUpStop::from(stop, coordinate.clone()));
             },

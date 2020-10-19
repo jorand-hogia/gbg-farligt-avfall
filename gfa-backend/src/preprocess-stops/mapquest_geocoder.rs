@@ -1,34 +1,11 @@
-use std::fmt;
 use std::collections::HashMap;
 use reqwest::blocking::{Client};
-use serde_json::{Value, json, from_str};
+use serde_json::Value;
 use serde::{Deserialize};
 use common::coordinate::Coordinate;
 use crate::geocoder::GeoCoder;
 
 pub struct MapQuestGeoCoder {}
-
-#[derive(Debug)]
-pub struct MapQuestGeoCoderError {
-    message: String 
-}
-impl MapQuestGeoCoderError {
-    fn new(message: &str) -> MapQuestGeoCoderError {
-        MapQuestGeoCoderError{
-            message: format!("{}", message)
-        }
-    }
-}
-impl std::error::Error for MapQuestGeoCoderError {
-    fn description(&self) -> &str {
-        &self.message
-    }
-}
-impl fmt::Display for MapQuestGeoCoderError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}\n", self.message)
-    }
-}
 
 #[derive(Deserialize)]
 struct ApiResponse {
@@ -36,8 +13,9 @@ struct ApiResponse {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct ApiResult {
-    providedLocation: ApiProvidedLocation,
+    provided_location: ApiProvidedLocation,
     locations: Vec<ApiLocation>
 }
 
@@ -47,8 +25,9 @@ struct ApiProvidedLocation {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct ApiLocation {
-    latLng: ApiLatLng
+    lat_lng: ApiLatLng
 }
 
 #[derive(Deserialize)]
@@ -103,15 +82,15 @@ fn response_to_coordinates(response: String) -> Result<HashMap<String, Option<Co
     let api_response: ApiResponse = serde_json::from_value(json)?;
     let mut coordinates_by_address: HashMap<String, Option<Coordinate>> = HashMap::new();
     for result in api_response.results {
-        let provided_address = result.providedLocation.location;
+        let provided_address = result.provided_location.location;
         if result.locations.is_empty() {
             coordinates_by_address.insert(provided_address.clone(), None);
             continue;
         }
         let first_location = result.locations.first().unwrap();
         coordinates_by_address.insert(provided_address.clone(), Some(Coordinate::new(
-            first_location.latLng.lat,
-            first_location.latLng.lng
+            first_location.lat_lng.lat,
+            first_location.lat_lng.lng
         )));
     }
     Ok(coordinates_by_address)
@@ -125,17 +104,6 @@ mod tests {
 
     fn read_file(path: &str) -> String {
         fs::read_to_string(format!("{}/src/preprocess-stops/resources/test/{}", env!("CARGO_MANIFEST_DIR"), path)).unwrap()
-    }
-
-    fn temp() {
-        let mut id_by_address: HashMap<String, String> = HashMap::new();
-        id_by_address.insert("Brottkärrsmotet,Askim-Frölunda-Högsbo,Göteborg".to_string(), "some-id".to_string());
-        id_by_address.insert("Lövgärdets Centrum,Angered,Göteborg".to_string(), "some-id2".to_string());
-        id_by_address.insert("Välens koloniförening,Askim-Frölunda-Högsbo,Göteborg".to_string(), "some-id3".to_string());
-        let res = MapQuestGeoCoder::forward_geocode("2FSWyWz0ouHBnucVBWA80zsPb6K5wfwc".to_string(), id_by_address).unwrap();
-        for (k, v) in res.iter() {
-            println!("{}", format!("{} - {:?}", k, v));
-        }
     }
 
     #[test]
