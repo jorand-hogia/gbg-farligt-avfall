@@ -16,6 +16,10 @@ path = "src/save-events/main.rs"
 name = "preprocess-stops"
 path = "src/preprocess-stops/main.rs"
 
+[[bin]]
+name = "save-stops"
+path = "src/save-stops/main.rs"
+
 [lib]
 name = "common"
 path = "src/common/lib.rs"
