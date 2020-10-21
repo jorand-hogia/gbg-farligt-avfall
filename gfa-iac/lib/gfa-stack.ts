@@ -4,6 +4,7 @@ import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { App, Duration, PhysicalName, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 import { Secret } from "@aws-cdk/aws-secretsmanager";
+import { Bucket } from '@aws-cdk/aws-s3';
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly scraperCode: CfnParametersCode;
@@ -23,6 +24,8 @@ export class GbgFarligtAvfallStack extends Stack {
       sortKey: { name: 'location-id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
+    const stopsS3Path = 'stops.json';
+    const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
 
     const scraper = new Function(this, 'gfa-scraper', {
       code: this.scraperCode,
@@ -65,7 +68,12 @@ export class GbgFarligtAvfallStack extends Stack {
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10),
+      environment: {
+        STOPS_BUCKET: stopsBucket.bucketName,
+        STOPS_PATH: stopsS3Path,
+      }
     });
+    stopsBucket.grantWrite(saveStops, stopsS3Path);
     const saveStopsTask = new LambdaInvoke(this, 'gfa-task-save-stops', {
       lambdaFunction: saveStops,
     });

@@ -1,10 +1,30 @@
+use std::env;
+use std::str::FromStr;
+use std::fmt;
+use std::error;
 use lambda::{handler_fn, Context};
-use serde_json::{Value};
+use serde_json::{Value, to_vec};
 use simple_logger::{SimpleLogger};
-use log::{self, info, LevelFilter};
-use common::pickup_stop::PickUpStop;
+use log::{self, LevelFilter};
+use rusoto_core::{Region, ByteStream};
+use rusoto_s3::{S3, S3Client, PutObjectRequest};
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+#[derive(fmt::Debug)]
+pub struct SaveStopsError {
+    pub message: String,
+}
+impl fmt::Display for SaveStopsError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl error::Error for SaveStopsError {
+    fn description(&self) -> &str {
+        &self.message
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -17,6 +37,22 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(event: Value, _: Context) -> Result<(), Error> {
-    let pickup_events: Vec<PickUpStop> = serde_json::from_value(event)?;
-    Ok(())
+    let aws_region = env::var("AWS_REGION")?;
+    let aws_region = Region::from_str(&aws_region)?;
+    let stops_bucket = env::var("STOPS_BUCKET")?;
+    let stops_path = env::var("STOPS_PATH")?;
+
+    let mut request = PutObjectRequest::default();
+    request.bucket = stops_bucket;
+    request.key = stops_path;
+    let body = to_vec(&event)?;
+    request.body = Some(ByteStream::from(body));
+
+    let s3_client = S3Client::new(aws_region);
+    match s3_client.put_object(request).await {
+        Ok(_res) => return Ok(()),
+        Err(e) => return Err(Box::new(SaveStopsError{
+            message: format!("Failed to write to S3: {}", e)
+        }))
+    };
 }
