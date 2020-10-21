@@ -1,26 +1,31 @@
 import { Code, Function, Runtime, CfnParametersCode } from '@aws-cdk/aws-lambda';
 import { LambdaInvoke } from '@aws-cdk/aws-stepfunctions-tasks';
 import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
-import { App, Duration, Stack, StackProps } from '@aws-cdk/core';
+import { App, Duration, PhysicalName, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 import { Secret } from "@aws-cdk/aws-secretsmanager";
+import { Bucket } from '@aws-cdk/aws-s3';
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly scraperCode: CfnParametersCode;
   public readonly saveEventsCode: CfnParametersCode;
   public readonly preProcessStopsCode: CfnParametersCode;
+  public readonly saveStopsCode: CfnParametersCode;
       
   constructor(app: App, id: string, props?: StackProps) {
     super(app, id, props);
     this.scraperCode = Code.fromCfnParameters();
     this.saveEventsCode = Code.fromCfnParameters();
     this.preProcessStopsCode = Code.fromCfnParameters();
+    this.saveStopsCode = Code.fromCfnParameters();
 
     const eventsDb = new Table(this, 'gfa-events-db', {
       partitionKey: { name: 'event-date', type: AttributeType.STRING },
       sortKey: { name: 'location-id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
+    const stopsS3Path = 'stops.json';
+    const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
 
     const scraper = new Function(this, 'gfa-scraper', {
       code: this.scraperCode,
@@ -58,11 +63,27 @@ export class GbgFarligtAvfallStack extends Stack {
       lambdaFunction: preProcessStops
     });
 
+    const saveStops = new Function(this, 'gfa-save-stops', {
+      code: this.saveStopsCode,
+      handler: 'doesnt.matter',
+      runtime: Runtime.PROVIDED,
+      timeout: Duration.seconds(10),
+      environment: {
+        STOPS_BUCKET: stopsBucket.bucketName,
+        STOPS_PATH: stopsS3Path,
+      }
+    });
+    stopsBucket.grantWrite(saveStops, stopsS3Path);
+    const saveStopsTask = new LambdaInvoke(this, 'gfa-task-save-stops', {
+      lambdaFunction: saveStops,
+    });
+
     const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
       definition: scrapeTask
         .next(new Parallel(this, 'process-scrape-results', {})
           .branch(saveEventsTask)
           .branch(preProcessStopsTask)
+            .next(saveStopsTask)
         ),
       timeout: Duration.minutes(5)
     });

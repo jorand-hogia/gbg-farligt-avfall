@@ -8,6 +8,7 @@ export interface PipelineStackProps extends StackProps {
   readonly scraperCode: lambda.CfnParametersCode;
   readonly saveEventsCode: lambda.CfnParametersCode;
   readonly preProcessStopsCode: lambda.CfnParametersCode;
+  readonly saveStopsCode: lambda.CfnParametersCode;
   readonly repoName: string
   readonly repoOwner: string
   readonly githubToken: string
@@ -37,9 +38,10 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
           },
           post_build: {
             commands: [
-              `cp target/x86_64-unknown-linux-musl/release/scraper src/scraper/bootstrap`,
-              `cp target/x86_64-unknown-linux-musl/release/save-events src/save-events/bootstrap`,
-              `cp target/x86_64-unknown-linux-musl/release/preprocess-stops src/preprocess-stops/bootstrap`,
+              'cp target/x86_64-unknown-linux-musl/release/scraper src/scraper/bootstrap',
+              'cp target/x86_64-unknown-linux-musl/release/save-events src/save-events/bootstrap',
+              'cp target/x86_64-unknown-linux-musl/release/preprocess-stops src/preprocess-stops/bootstrap',
+              'cp target/x86_64-unknown-linux-musl/release/save-stops src/save-stops/bootstrap',
             ]
           }
         },
@@ -59,6 +61,12 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
             },
             'PreProcessStopsOutput': {
               'base-directory': 'gfa-backend/src/preprocess-stops',
+              'files': [
+                './bootstrap'
+              ]
+            },
+            'SaveStopsBuildOutput': {
+              'base-directory': 'gfa-backend/src/save-stops',
               'files': [
                 './bootstrap'
               ]
@@ -105,6 +113,7 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
     const scraperBuildOutput = new codepipeline.Artifact('ScraperOutput');
     const saveEventsBuildOutput = new codepipeline.Artifact('SaveEventsOutput');
     const preProcessStopsBuildOutput = new codepipeline.Artifact('PreProcessStopsOutput');
+    const saveStopsBuildOutput = new codepipeline.Artifact('SaveStopsBuildOutput');
 
     new codepipeline.Pipeline(this, 'Pipeline', {
       stages: [
