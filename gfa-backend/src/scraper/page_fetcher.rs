@@ -91,20 +91,6 @@ fn find_paging_path(page: &Vec<u8>) -> Result<String, PageFetcherError> {
             message: format!("Could not parse page")
         })
     };
-    let base_node = match doc.find(predicate::Name("head")).into_selection().find(predicate::Name("base")).first() {
-        Some(node) => node,
-        None => return Err(PageFetcherError{
-            message: format!("Could not find base node")
-        })
-    };
-    println!("{:?}", base_node);
-    let base_path = match base_node.attr("href") {
-        Some(path) => path,
-        None => return Err(PageFetcherError{
-            message: format!("Could not find href attribute of base node")
-        })
-    };
-    println!("Base node: {}", base_path);
 
     let node = match doc.find(predicate::Class("c-pagination__link")).into_selection().first() {
         Some(node) => node,
@@ -189,7 +175,7 @@ mod tests {
 
     // Temp disabled, maybe?
     fn should_find_paging_path() {
-        let file = read_file("new_body_with_items.html");
+        let file = read_file("body_with_items.html");
         let expected_path = String::from("/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/lZBLC4JAFEZ_jdu51xlxhnZKYBg96EF6N2Fhk9A4opbQr89aFVTU3V0451scIEiAyuxS6KwtbJmd-j8lf-vxCN3Yc8ezqRdiEE-G09CNeDTyYfMA8OUCDBc8FIjRjAP97z8v_eZ_Aej7fNr78qM_57AEAqoyXZSPJpAixEDFzrBubxgyVEoq4QvhSom-5OreLCh3QmmgOj_kdV6zc92nPLZt1QwcdLDrOqat1aec7a1x8J1ytE0LySsJlVmvk-vqYDaquQHKfKPn/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!0==/");
         assert_eq!(expected_path, find_paging_path(&file).unwrap());
     }
