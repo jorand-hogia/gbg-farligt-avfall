@@ -88,7 +88,6 @@ fn find_paging_path(page: &Vec<u8>) -> Result<String, PageFetcherError> {
             message: format!("Could not parse page")
         })
     };
-
     let node = match doc.find(predicate::Class("c-pagination__link")).into_selection().first() {
         Some(node) => node,
         None => return Err(PageFetcherError{
