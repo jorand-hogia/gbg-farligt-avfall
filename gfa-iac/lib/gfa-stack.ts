@@ -52,7 +52,7 @@ export class GbgFarligtAvfallStack extends Stack {
       code: this.preProcessStopsCode,
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
-      timeout: Duration.seconds(10),
+      timeout: Duration.seconds(30),
       environment: {
         GEOCODING_API_KEY: `${
           Secret.fromSecretName(this, 'geocoding-api-key', 'mapquest-api-key').secretValue
@@ -60,7 +60,8 @@ export class GbgFarligtAvfallStack extends Stack {
       }
     });
     const preProcessStopsTask = new LambdaInvoke(this, 'gfa-task-pre-process-stops', {
-      lambdaFunction: preProcessStops
+      lambdaFunction: preProcessStops,
+      outputPath: '$.Payload'
     });
 
     const saveStops = new Function(this, 'gfa-save-stops', {
@@ -82,8 +83,8 @@ export class GbgFarligtAvfallStack extends Stack {
       definition: scrapeTask
         .next(new Parallel(this, 'process-scrape-results', {})
           .branch(saveEventsTask)
-          .branch(preProcessStopsTask)
-            .next(saveStopsTask)
+          .branch(preProcessStopsTask
+            .next(saveStopsTask))
         ),
       timeout: Duration.minutes(5)
     });
