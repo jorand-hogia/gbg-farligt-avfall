@@ -81,9 +81,6 @@ async fn fetch_page(client: &Client, url: String) -> Result<Vec<u8>, PageFetcher
     Ok(Vec::from(body))
 }
 
-// It seems like below href attr now only returns: p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!0==/
-// I can probably solve this by appending this path to a URL found in head element, e.g.: 
-// <link id="XjjH8oej1c6" rel="alternate" href="https://goteborg.se/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/lZBNa4NAFEV_jZsu5j1nxBmyUwoWS5OSD6JvU1QmRsg4Mk4i6a-v7aqBNrR3d-Gcu7hAUAD11aVrK9_ZvjrNvaT4LeIZhnkUPq-WUYpJ_vK4TMOMZ08x7L8AvEmC6ZqnAjFbcaD_-9-X_ubfAej-fDn78lf_lcMGCGjU7tI12l8HDeUD5EBdbdjUGIYMlZJKxEKEUmIsufo8LelroVogpw_aacfObv7y6P0wLgIMcJom1lrbnjRrrAnwJ-VoRw_FLQmD2e2K9-3B7NX4AaInrKU!/">
 fn find_paging_path(page: &Vec<u8>) -> Result<String, PageFetcherError> {
     let doc = match document::Document::from_read(page.as_slice()) {
         Ok(doc) => doc,
