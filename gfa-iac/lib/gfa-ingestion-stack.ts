@@ -16,7 +16,10 @@ export interface IngestionStackProps extends NestedStackProps {
 }
 
 export class IngestionStack extends NestedStack {
-  contructor(scope: Construct, id: string, props: IngestionStackProps) {
+
+  constructor(scope: Construct, id: string, props: IngestionStackProps) {
+    super(scope, id, props);
+
     const scraper = new Function(this, 'gfa-scraper', {
       code: props.scraperCode,
       handler: 'doesnt.matter',

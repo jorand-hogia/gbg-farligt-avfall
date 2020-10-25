@@ -5,6 +5,7 @@ import { Bucket } from '@aws-cdk/aws-s3';
 import { IngestionStack, IngestionStackProps } from './gfa-ingestion-stack';
 
 export class GbgFarligtAvfallStack extends Stack {
+
   public readonly scraperCode: CfnParametersCode;
   public readonly saveEventsCode: CfnParametersCode;
   public readonly preProcessStopsCode: CfnParametersCode;
