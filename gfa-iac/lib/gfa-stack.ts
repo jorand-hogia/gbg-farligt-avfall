@@ -5,6 +5,7 @@ import { App, Duration, PhysicalName, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 import { Secret } from "@aws-cdk/aws-secretsmanager";
 import { Bucket } from '@aws-cdk/aws-s3';
+import { IngestionStack } from './gfa-ingestion-stack';
 
 export class GbgFarligtAvfallStack extends Stack {
   public readonly scraperCode: CfnParametersCode;
@@ -26,6 +27,8 @@ export class GbgFarligtAvfallStack extends Stack {
     });
     const stopsS3Path = 'stops.json';
     const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
+
+    const ingestionStack = new IngestionStack(this, 'gfa-ingestion-stack');
 
     const scraper = new Function(this, 'gfa-scraper', {
       code: this.scraperCode,
