@@ -99,7 +99,7 @@ export class GbgFarligtAvfallPipelineStack extends Stack {
         artifacts: {
           'base-directory': 'gfa-iac/dist',
           files: [
-            'GbgFarligtAvfallStack.template.json',
+            '**/*',
           ],
         },
       }),
