@@ -1,27 +1,16 @@
 # gbg-farligt-avfall
-Some description that I will write later.
+Scrapes times for when the "farligt avfall"-truck and stores them.
+End goal is to have subscriptions, and send notifications some time before the truck comes to your subscribed location.
 
 ## Requirements
-Add GITHUB_TOKEN to `gfa-iac/.env`. The value should be a personal access token with the following permissions:
+ - Add the following secrets to the github repo:
+   - AWS_ACCESS_KEY_ID
+   - AWS_SECRET_ACCESS_KEY
+   - AWS_REGION
+   - S3_ARTIFACT_BUCKET 
+ - Add an API key for [MapQuest](https://developer.mapquest.com/) to Secrets Manager (named `mapquest-api-key`) in the AWS account/region you're deploying to
 
-- **repo** - to read the repository
-- **admin:repo_hook** - to create webhook
-
-This token is used by AWS CodePipeline to trigger on new commits.
-
-## Inspiration
-https://docs.aws.amazon.com/cdk/latest/guide/codepipeline_example.html
-
-## Pre-requisites
-Secrets Manager in the account you deploy to must have a secret named `mapquest-api-key` containing an API key for [MapQuest](https://developer.mapquest.com/).
-
-## Deploy pipeline stack
-- `cd gfa iac`
-- `cdk deploy GbgFarligtAvfallPipelineStack`
-
-## Deploy main stack
-Not needed! The deploy pipeline will trigger on commits to master.
-
-## TODO
- - Add test to pipeline
- - Use github actions too for pre-merge checks?
+## First deploy
+The first time you're deploying this stack you'll need to run the following command:
+ - `cdk bootstrap aws://###AWS_ACCOUNT###/###AWS_REGION### -c artifactsBucketName=does_not_matter -c version=does_not_matter`
+This is required because the infrastructure containes a nested stack. For CDK to handle this, it needs 'bootstrap' in the AWS account (it will deploy a stagind bucket, where it will place assets, such as nested cloudformation templates). 
