@@ -1,16 +1,14 @@
 import { Construct, Duration } from '@aws-cdk/core';
-import { Function, Runtime, CfnParametersCode } from '@aws-cdk/aws-lambda';
+import { Function, Runtime, S3Code } from '@aws-cdk/aws-lambda';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { LambdaInvoke } from '@aws-cdk/aws-stepfunctions-tasks';
 import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { Secret } from "@aws-cdk/aws-secretsmanager";
-import { IBucket } from '@aws-cdk/aws-s3';
+import { IBucket, Bucket } from '@aws-cdk/aws-s3';
 
 export interface IngestionStackProps extends NestedStackProps {
-  scraperCode: CfnParametersCode,
-  saveEventsCode: CfnParametersCode,
-  preProcessStopsCode: CfnParametersCode,
-  saveStopsCode: CfnParametersCode,
+  version: string,
+  artifactsBucket: IBucket,
   stopsBucket: IBucket,
   stopsPath: string,
 }
@@ -21,7 +19,7 @@ export class IngestionStack extends NestedStack {
     super(scope, id, props);
 
     const scraper = new Function(this, 'gfa-scraper', {
-      code: props.scraperCode,
+      code: new S3Code(props.artifactsBucket, `gfa-scraper-${props.version}`),
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10),
@@ -32,7 +30,7 @@ export class IngestionStack extends NestedStack {
     });
 
     const saveEvents = new Function(this, 'gfa-save-events', {
-      code: props.saveEventsCode,
+      code: new S3Code(props.artifactsBucket, `gfa-save-events-${props.version}`),
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10)
@@ -42,7 +40,7 @@ export class IngestionStack extends NestedStack {
     });
 
     const preProcessStops = new Function(this, 'gfa-pre-process-stops', {
-      code: props.preProcessStopsCode,
+      code: new S3Code(props.artifactsBucket, `gfa-preprocess-stops-${props.version}`),
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(30),
@@ -57,7 +55,7 @@ export class IngestionStack extends NestedStack {
     });
 
     const saveStops = new Function(this, 'gfa-save-stops', {
-      code: props.saveStopsCode,
+      code: new S3Code(props.artifactsBucket, `gfa-save-stops-${props.version}`),
       handler: 'doesnt.matter',
       runtime: Runtime.PROVIDED,
       timeout: Duration.seconds(10),
