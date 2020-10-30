@@ -26,12 +26,9 @@ export class ApiStack extends NestedStack {
 
         const api = new LambdaRestApi(this, 'gfa-api', {
             handler: getStops,
-            proxy: false,
-        });
-        const resource = api.root.addResource('stops');
-        resource.addMethod('GET');
-        resource.addCorsPreflight({
-            allowOrigins: Cors.ALL_ORIGINS,
+            defaultCorsPreflightOptions: {
+                allowOrigins: Cors.ALL_ORIGINS,
+            }
         });
     }
 }

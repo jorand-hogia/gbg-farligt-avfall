@@ -2,7 +2,7 @@ use std::{env, fmt, error, str::FromStr};
 use lambda::{handler_fn, Context};
 use serde_json::{json, Value, Deserializer};
 use simple_logger::{SimpleLogger};
-use log::{self, LevelFilter};
+use log::{self, debug, LevelFilter};
 use rusoto_core::{Region};
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
 use serde::Deserialize;
@@ -28,7 +28,7 @@ impl error::Error for GetStopsError {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let _log = SimpleLogger::new()
-        .with_level(LevelFilter::Info)
+        .with_level(LevelFilter::Debug)
         .init();
     let handler = handler_fn(handle_request);
     lambda::run(handler).await?;
@@ -36,6 +36,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
+    debug!("Start get request");
     let aws_region = env::var("AWS_REGION")?;
     let aws_region = Region::from_str(&aws_region)?;
     let stops_bucket = env::var("STOPS_BUCKET")?;
@@ -45,6 +46,7 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     request.bucket = stops_bucket;
     request.key = stops_path;
 
+    debug!("About to make S3 request");
     let s3_client = S3Client::new(aws_region);
     let result = match s3_client.get_object(request).await {
         Ok(res) => res,
@@ -52,6 +54,7 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
             message: format!("Failed to read from S3: {}", e),
         })),
     };
+    debug!("Got response from S3");
     let body = match result.body {
         Some(body) => body.into_blocking_read(),
         None => {
