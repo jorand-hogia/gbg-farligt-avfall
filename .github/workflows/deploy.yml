@@ -22,9 +22,8 @@ jobs:
         uses: youyo/aws-cdk-github-actions@v1
         with:
           working_dir: 'gfa-iac'
-          cdk_subcommand: deploy
+          cdk_subcommand: "deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=$PR_NUMBER"
           actions_comment: false
-          args: "-c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=$PR_NUMBER"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
