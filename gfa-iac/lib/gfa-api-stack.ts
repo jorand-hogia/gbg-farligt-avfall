@@ -20,6 +20,7 @@ export class ApiStack extends NestedStack {
 
         const api = new LambdaRestApi(this, 'gfa-api', {
             handler: getStops,
+            proxy: false,
         });
         const resource = api.root.addResource('stops');
         resource.addMethod('GET');
