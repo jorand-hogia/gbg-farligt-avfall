@@ -29,7 +29,8 @@ jobs:
       - name: Obtain PR number
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          echo "::set-env name=PR_NUMBER::$PR_NUMBER" 
+          echo "::set-output name=number::$PR_NUMBER" 
+        id: pull_request
 
       - name: Build
         run: |
@@ -39,5 +40,5 @@ jobs:
           do
             cp "gfa-backend/target/x86_64-unknown-linux-musl/release/${executable}" bootstrap
             zip -j lambda.zip bootstrap
-            aws s3 cp lambda.zip s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$PR_NUMBER
+            aws s3 cp lambda.zip s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-${{ steps.pull_request.outputs.number }}
           done
