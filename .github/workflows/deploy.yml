@@ -13,20 +13,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2 
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      
-      - name: Install required tools
-        run: npm install -g aws-cdk
-
       - name: Obtain PR number
         run: |
           PR_NUMBER=`curl -s -H "Accept: application/vnd.github.groot-preview+json" https://api.github.com/repos/Dunklas/gbg-farligt-avfall/commits/$GITHUB_SHA/pulls | jq -r '.[0].number'`
           echo "::set-env name=PR_NUMBER::$PR_NUMBER"
 
       - name: Deploy to AWS
-        run: cdk deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=$PR_NUMBER
+        uses: youyo/aws-cdk-github-actions@v1
+        with:
+          cdk_subcommand: deploy
+          actions_comment: false
+          args: "-c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=$PR_NUMBER"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
