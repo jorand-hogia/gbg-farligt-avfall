@@ -16,7 +16,13 @@ export class ApiStack extends NestedStack {
         super(scope, id, props);
 
         const newFunction = functionCreator(props.artifactsBucket, props.version);
-        const getStops = newFunction(this, 'get-stops');
+        const getStops = newFunction(this, 'get-stops', {
+            environment: {
+                STOPS_BUCKET: props.stopsBucket.bucketName,
+                STOPS_PATH: props.stopsPath,
+            }
+        });
+        props.stopsBucket.grantRead(getStops, props.stopsPath);
 
         const api = new LambdaRestApi(this, 'gfa-api', {
             handler: getStops,

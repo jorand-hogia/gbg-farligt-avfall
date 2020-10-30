@@ -1,5 +1,4 @@
-use std::env;
-use std::str::FromStr;
+use std::{env, fmt, error, str::FromStr};
 use lambda::{handler_fn, Context};
 use serde_json::{json, Value, Deserializer};
 use simple_logger::{SimpleLogger};
@@ -10,6 +9,21 @@ use serde::Deserialize;
 use common::pickup_stop::PickUpStop;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+#[derive(fmt::Debug)]
+pub struct GetStopsError {
+    pub message: String,
+}
+impl fmt::Display for GetStopsError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl error::Error for GetStopsError {
+    fn description(&self) -> &str {
+        &self.message
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -32,7 +46,12 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     request.key = stops_path;
 
     let s3_client = S3Client::new(aws_region);
-    let result = s3_client.get_object(request).await?;
+    let result = match s3_client.get_object(request).await {
+        Ok(res) => res,
+        Err(e) => return Err(Box::new(GetStopsError{
+            message: format!("Failed to read from S3: {}", e),
+        })),
+    };
     let body = match result.body {
         Some(body) => body.into_blocking_read(),
         None => {
