@@ -1,7 +1,8 @@
-import { App, Stack, StackProps, CfnParameter } from '@aws-cdk/core';
+import { App, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 import { Bucket } from '@aws-cdk/aws-s3';
-import { IngestionStack, IngestionStackProps } from './gfa-ingestion-stack';
+import { IngestionStack } from './gfa-ingestion-stack';
+import { ApiStack } from './gfa-api-stack';
 
 interface GbgFarligtAvfallStackProps extends StackProps {
   artifactsBucketName: string,
@@ -23,13 +24,18 @@ export class GbgFarligtAvfallStack extends Stack {
     const stopsS3Path = 'stops.json';
     const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
 
-    const ingestionStackProps: IngestionStackProps = {
+    const ingestionStack = new IngestionStack(this, 'gfa-ingestion-stack', {
       version: props.version,
       artifactsBucket: artifactsBucket,
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path
-    }
-    const ingestionStack = new IngestionStack(this, 'gfa-ingestion-stack', ingestionStackProps);
+    });
 
+    const apiStack = new ApiStack(this, 'gfa-api-stack', {
+      version: props.version,
+      artifactsBucket: artifactsBucket,
+      stopsBucket: stopsBucket,
+      stopsPath: stopsS3Path,
+    });
   }
 }

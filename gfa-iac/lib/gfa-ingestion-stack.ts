@@ -3,7 +3,7 @@ import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { Secret } from "@aws-cdk/aws-secretsmanager";
 import { IBucket } from '@aws-cdk/aws-s3';
-import { functionCreator } from './function-creator';
+import { functionWithInvokeCreator } from './function-creator';
 
 export interface IngestionStackProps extends NestedStackProps {
   version: string,
@@ -17,7 +17,7 @@ export class IngestionStack extends NestedStack {
   constructor(scope: Construct, id: string, props: IngestionStackProps) {
     super(scope, id, props);
 
-    const functionWithInvokeTask = functionCreator(props.artifactsBucket, props.version);
+    const functionWithInvokeTask = functionWithInvokeCreator(props.artifactsBucket, props.version);
 
     const [scraper, invokeScraper] = functionWithInvokeTask(this, 'scraper', {
       outputPath: '$.Payload'
