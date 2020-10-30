@@ -21,6 +21,7 @@ jobs:
       - name: Deploy to AWS
         uses: youyo/aws-cdk-github-actions@v1
         with:
+          working_dir: 'gfa-iac'
           cdk_subcommand: deploy
           actions_comment: false
           args: "-c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=$PR_NUMBER"
