@@ -5,7 +5,7 @@ use simple_logger::{SimpleLogger};
 use log::{self, debug, LevelFilter};
 use rusoto_core::{Region};
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
-use serde::Deserialize;
+use tokio::io::AsyncReadExt;
 use common::pickup_stop::PickUpStop;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -56,13 +56,15 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     };
     debug!("Got response from S3");
     let body = match result.body {
-        Some(body) => body.into_blocking_read(),
+        Some(body) => body,
         None => {
             let empty: Vec::<PickUpStop> = Vec::new();
             return Ok(json!(vec!(empty)));
         }
     };
-    let mut a = Deserializer::from_reader(body);
-    let b = Vec::<PickUpStop>::deserialize(&mut a)?;
-    return Ok(json!(b));
+    debug!("Got body from S3");
+    let mut response = String::new();
+    let body = body.into_async_read()
+        .read_to_string(&mut response).await?;
+    return Ok(json!(body));
 }
