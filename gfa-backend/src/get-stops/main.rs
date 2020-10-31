@@ -1,11 +1,12 @@
-use std::{env, fmt, error, str::FromStr};
+use std::{env, fmt, error, str::FromStr, collections::HashMap};
 use lambda::{handler_fn, Context};
-use serde_json::{json, Value, Deserializer};
+use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
 use log::{self, debug, LevelFilter};
 use rusoto_core::{Region};
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
 use tokio::io::AsyncReadExt;
+use aws_lambda_events::event::apigw::ApiGatewayProxyResponse;
 use common::pickup_stop::PickUpStop;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -35,7 +36,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
+async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayProxyResponse, Error> {
     debug!("Start get request");
     let aws_region = env::var("AWS_REGION")?;
     let aws_region = Region::from_str(&aws_region)?;
@@ -59,12 +60,23 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
         Some(body) => body,
         None => {
             let empty: Vec::<PickUpStop> = Vec::new();
-            return Ok(json!(vec!(empty)));
+            return Ok(create_response(json!(vec!(empty)).to_string()));
         }
     };
     debug!("Got body from S3");
     let mut response = String::new();
-    let body = body.into_async_read()
+    body.into_async_read()
         .read_to_string(&mut response).await?;
-    return Ok(json!(body));
+    debug!("Got body: \n{}", response);
+    return Ok(create_response(response));
+}
+
+fn create_response(body: String) -> ApiGatewayProxyResponse {
+    return ApiGatewayProxyResponse{
+        status_code: 200,
+        headers: HashMap::new(),
+        multi_value_headers: HashMap::new(),
+        body: Some(body),
+        is_base64_encoded: None,
+    }
 }

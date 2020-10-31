@@ -92,6 +92,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
+name = "aws_lambda_events"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fa8d1a23d23df1036a0976b032f40860d7521c98ef65c03c385b1acd1c8fb62"
+dependencies = [
+ "base64 0.12.3",
+ "bytes",
+ "chrono",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "base-x"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,6 +175,9 @@ name = "bytes"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "cc"
@@ -492,6 +509,7 @@ name = "gfa-backend"
 version = "0.1.0"
 dependencies = [
  "assert_approx_eq",
+ "aws_lambda_events",
  "chrono",
  "chrono-tz",
  "futures",
