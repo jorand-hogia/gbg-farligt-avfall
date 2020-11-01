@@ -12,6 +12,9 @@ interface ApiStackProps extends NestedStackProps {
 }
 
 export class ApiStack extends NestedStack {
+
+    public readonly api: LambdaRestApi;
+
     constructor(scope: Construct, id: string, props: ApiStackProps) {
         super(scope, id, props);
 
@@ -24,11 +27,12 @@ export class ApiStack extends NestedStack {
         });
         props.stopsBucket.grantRead(getStops, props.stopsPath);
 
-        const api = new LambdaRestApi(this, 'gfa-api', {
+        this.api = new LambdaRestApi(this, 'gfa-api', {
             handler: getStops,
             proxy: false,
         });
-        const resource = api.root.addResource('stops');
+    
+        const resource = this.api.root.addResource('stops');
         resource.addMethod('GET');
         resource.addCorsPreflight({
             allowOrigins: Cors.ALL_ORIGINS,
