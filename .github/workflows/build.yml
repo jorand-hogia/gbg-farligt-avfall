@@ -27,6 +27,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
+      - name: Test frontend
+        run: (cd gfa-frontend && npm install && npm run test)
 
   build:
     name: Build

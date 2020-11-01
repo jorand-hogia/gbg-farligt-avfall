@@ -19,15 +19,34 @@ jobs:
           echo "::set-output name=number::$PR_NUMBER"
         id: pull_request
       
-      - name: Print PR number
-        run: echo "PR Number - ${{ steps.pull_request.outputs.number }}"
-
       - name: Deploy to AWS
         uses: youyo/aws-cdk-github-actions@v1
         with:
           working_dir: 'gfa-iac'
           cdk_subcommand: "deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }}"
           actions_comment: false
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+      
+      - name: Obtain API url
+        run: |
+          API_URL=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
+          echo "::set-output name=url::$API_URL"
+        id: api_endpoint
+
+      - name: Obtain web hosting bucket
+        run: |
+          WEB_BUCKET=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='WebBucket'].OutputValue" --output text)
+          echo "::set-output name=bucket::$WEB_BUCKET"
+        id: web_hosting
+
+      - name: Build/Deploy frontend
+        run: |
+          cd gfa-frontend 
+          API_URL=${{ steps.api_endpoint.outputs.url }} npm run build
+          aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
