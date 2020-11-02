@@ -53,7 +53,7 @@ jobs:
         id: web_hosting
 
       - name: Build frontend
-        run: (cd gfa-frontend && API_URL=${{ steps.api_endpoint.outputs.url }} npm run build)
+        run: (cd gfa-frontend && npm install && API_URL=${{ steps.api_endpoint.outputs.url }} npm run build)
 
       - name: Deploy frontend
         run: (cd gfa-frontend && aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }})
