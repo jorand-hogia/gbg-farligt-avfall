@@ -42,7 +42,7 @@ export class GbgFarligtAvfallStack extends Stack {
     const webStack = new WebStack(this, 'gfa-web-stack');
 
     new CfnOutput(this, 'WebBucket', {
-      value: webStack.webHostingBucket.bucketName,
+      value: webStack.webHostingBucketName,
     });
     new CfnOutput(this, 'ApiUrl', {
       value: apiStack.api.url,

@@ -1,26 +1,32 @@
 import { Construct, RemovalPolicy } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
-import { Bucket } from '@aws-cdk/aws-s3';
-import { CloudFrontWebDistribution, HttpVersion, PriceClass } from '@aws-cdk/aws-cloudfront';
+import { BlockPublicAccess, Bucket } from '@aws-cdk/aws-s3';
+import { CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
 
 export class WebStack extends NestedStack {
 
-    public readonly webHostingBucket: Bucket;
     public readonly webUrl: string;
+    public readonly webHostingBucketName: string;
 
     constructor(scope: Construct, id: string, props?: NestedStackProps) {
         super(scope, id, props);
 
-        this.webHostingBucket = new Bucket(this, 'gfa-web-bucket', {
+        const webHostingBucket = new Bucket(this, 'gfa-web-bucket', {
             removalPolicy: RemovalPolicy.DESTROY,
-            websiteIndexDocument: 'index.html'
+            websiteIndexDocument: 'index.html',
+            blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
         });
+        this.webHostingBucketName = webHostingBucket.bucketName;
+        
+        const accessIdentity = new OriginAccessIdentity(this, 'gfa-web-access-identity');
+        webHostingBucket.grantRead(accessIdentity);
 
         const distribution = new CloudFrontWebDistribution(this, 'gfa-web-dist', {
             originConfigs: [
                 {
                     s3OriginSource: {
-                        s3BucketSource: this.webHostingBucket,
+                        s3BucketSource: webHostingBucket,
+                        originAccessIdentity: accessIdentity,
                     },
                     behaviors: [{ isDefaultBehavior: true }],
                 }
