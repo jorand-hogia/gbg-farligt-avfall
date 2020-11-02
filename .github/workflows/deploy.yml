@@ -47,6 +47,7 @@ jobs:
 
       - name: Build/Deploy frontend
         run: |
+          npm i -g preact-cli
           cd gfa-frontend 
           API_URL=${{ steps.api_endpoint.outputs.url }} npm run build
           aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }}
