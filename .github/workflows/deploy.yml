@@ -32,6 +32,9 @@ jobs:
           working_dir: 'gfa-iac'
           cdk_subcommand: "deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }}"
           actions_comment: false
+
+      - name: Install Preact CLI
+        run: sudo npm i -g preact-cli
       
       - name: Obtain API url
         run: |
@@ -45,9 +48,8 @@ jobs:
           echo "::set-output name=bucket::$WEB_BUCKET"
         id: web_hosting
 
-      - name: Build/Deploy frontend
-        run: |
-          sudo npm i -g preact-cli
-          cd gfa-frontend 
-          API_URL=${{ steps.api_endpoint.outputs.url }} npm run build
-          aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }}
+      - name: Build frontend
+        run: (cd gfa-frontend && API_URL=${{ steps.api_endpoint.outputs.url }} npm run build)
+
+      - name: Deploy frontend
+        run: (cd gfa-frontend && aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }})
