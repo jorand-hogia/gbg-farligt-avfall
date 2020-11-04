@@ -1,7 +1,7 @@
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { IBucket } from '@aws-cdk/aws-s3';
 import { Construct } from '@aws-cdk/core';
-import { Cors, LambdaIntegration, LambdaRestApi, PassthroughBehavior, RestApi } from '@aws-cdk/aws-apigateway';
+import { Cors, LambdaIntegration, LambdaRestApi, PassthroughBehavior, RestApi, JsonSchemaType, JsonSchemaVersion } from '@aws-cdk/aws-apigateway';
 import { functionCreator } from './function-creator';
 
 interface ApiStackProps extends NestedStackProps {
@@ -35,6 +35,33 @@ export class ApiStack extends NestedStack {
                 allowHeaders: ['Content-Type', 'Accept'],
             },
         });
+
+        const responseModel = this.api.addModel('ResponseModel', {
+            contentType: 'application/json',
+            schema: {
+                schema: JsonSchemaVersion.DRAFT4,
+                title: 'stopsResponse',
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                    state: { type: JsonSchemaType.STRING },
+                    stops: { type: JsonSchemaType.ARRAY }
+                }
+            }
+        });
+
+        const errorResponseModel = this.api.addModel('ErrorResponseModel', {
+            contentType: 'application/json',
+            schema: {
+                schema: JsonSchemaVersion.DRAFT4,
+                title: 'errorResponse',
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                    state: { type: JsonSchemaType.STRING },
+                    message: { type: JsonSchemaType.STRING }
+                }
+            }
+        });
+
         const resource = this.api.root.addResource('stops');
         resource.addMethod('GET', new LambdaIntegration(getStops, {
             proxy: false,
@@ -67,6 +94,32 @@ export class ApiStack extends NestedStack {
                     },
                 },
             ],
-        }));
+        }), {
+            methodResponses: [
+                {
+                    statusCode: '200',
+                    responseParameters: {
+                        'method.response.header.Content-Type': true,
+                        'method.response.header.Access-Control-Allow-Origin': true,
+                        'method.response.header.Access-Control-Allow-Methods': true,
+                        'method.response.header.Access-Control-Allow-Headers': true,
+                    },
+                    responseModels: {
+                        'application/json': responseModel,
+                    },
+                }, {
+                    statusCode: '400',
+                    responseParameters: {
+                        'method.response.header.Content-Type': true,
+                        'method.response.header.Access-Control-Allow-Origin': true,
+                        'method.response.header.Access-Control-Allow-Methods': true,
+                        'method.response.header.Access-Control-Allow-Headers': true,
+                    },
+                    responseModels: {
+                        'application/json': errorResponseModel,
+                    },
+                },
+            ],
+        });
     }
 }
