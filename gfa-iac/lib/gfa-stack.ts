@@ -32,14 +32,14 @@ export class GbgFarligtAvfallStack extends Stack {
       stopsPath: stopsS3Path
     });
 
+    const webStack = new WebStack(this, 'gfa-web-stack');
     const apiStack = new ApiStack(this, 'gfa-api-stack', {
       version: props.version,
       artifactsBucket: artifactsBucket,
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path,
+      webOrigin: webStack.webUrl,
     });
-
-    const webStack = new WebStack(this, 'gfa-web-stack');
 
     new CfnOutput(this, 'WebBucket', {
       value: webStack.webHostingBucketName,

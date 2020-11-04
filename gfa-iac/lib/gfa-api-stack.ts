@@ -9,6 +9,7 @@ interface ApiStackProps extends NestedStackProps {
     artifactsBucket: IBucket,
     stopsBucket: IBucket,
     stopsPath: string,
+    webOrigin: string,
 }
 
 export class ApiStack extends NestedStack {
@@ -30,12 +31,13 @@ export class ApiStack extends NestedStack {
         this.api = new LambdaRestApi(this, 'gfa-api', {
             handler: getStops,
             proxy: false,
+            defaultCorsPreflightOptions: {
+                allowOrigins: [ props.webOrigin, 'http://0.0.0.0:8080'],
+                allowMethods: [ 'GET' ],
+            },
         });
     
         const resource = this.api.root.addResource('stops');
         resource.addMethod('GET');
-        resource.addCorsPreflight({
-            allowOrigins: Cors.ALL_ORIGINS,
-        })
     }
 }
