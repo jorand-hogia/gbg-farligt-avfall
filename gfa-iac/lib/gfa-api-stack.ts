@@ -37,6 +37,7 @@ export class ApiStack extends NestedStack {
         const getStopsIntegration = new LambdaIntegration(getStops, {
             proxy: true,
         });
-        this.api.root.addMethod('GET', getStopsIntegration);
+        const stopsResource = this.api.root.addResource('stops');
+        stopsResource.addMethod('GET', getStopsIntegration);
     }
 }
