@@ -56,9 +56,6 @@ jobs:
         with:
           node-version: 12
 
-      - name: Install Preact CLI
-        run: npm i -g preact-cli
-
       - name: Install dependencies
         run: npm ci
 
