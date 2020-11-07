@@ -6,21 +6,21 @@ on:
 
 jobs:
 
-  test:
-    name: Test
+  test-backend:
+    name: Test backend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
-
       - name: Unit tests
         run: (cd gfa-backend && cargo test --release)
 
+  test-infastructure:
+    name: Test infastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Synthesize CDK
         uses: youyo/aws-cdk-github-actions@v1
         with:
@@ -32,11 +32,28 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
+  test-frontend:
+    name: Test frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gfa-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: npm ci
       - name: Test frontend
-        run: (cd gfa-frontend && npm install && npm run test)
+        run: npm run test
+      - name: Build frontend
+        run: API_URL=testbuild npm run build
 
   build:
-    name: Build
+    name: Build backend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

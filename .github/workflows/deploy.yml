@@ -6,16 +6,12 @@ on:
 
 jobs:
 
-  deploy:
-    name: Deploy
+  deploy-backend:
+    name: Deploy backend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2 
-      - name: Setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -37,9 +33,27 @@ jobs:
           cdk_subcommand: "deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }}"
           actions_comment: false
 
+  deploy-frontend:
+    name: Deploy frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gfa-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2 
+
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
       - name: Install Preact CLI
         run: npm i -g preact-cli
-      
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Obtain API url
         run: |
           API_URL=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text)
@@ -53,7 +67,7 @@ jobs:
         id: web_hosting
 
       - name: Build frontend
-        run: (cd gfa-frontend && npm install && API_URL=${{ steps.api_endpoint.outputs.url }} npm run build)
+        run: API_URL=${{ steps.api_endpoint.outputs.url }} npm run build
 
       - name: Deploy frontend
-        run: (cd gfa-frontend && aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }})
+        run: aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }}
