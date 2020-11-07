@@ -14,3 +14,7 @@ End goal is to have subscriptions, and send notifications some time before the t
 The first time you're deploying this stack you'll need to run the following command:
  - `cdk bootstrap aws://###AWS_ACCOUNT###/###AWS_REGION### -c artifactsBucketName=does_not_matter -c version=does_not_matter`
 This is required because the infrastructure containes a nested stack. For CDK to handle this, it needs 'bootstrap' in the AWS account (it will deploy a stagind bucket, where it will place assets, such as nested cloudformation templates). 
+
+## Some useful commands
+Launch frontend with 'real' API:
+ - `(cd gfa-frontend && API_URL=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='WebUrl'].OutputValue") npm run dev)`
