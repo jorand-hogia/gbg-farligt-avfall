@@ -29,7 +29,7 @@ export default {
 
         const { plugin } = helpers.getPluginsByName(config, 'DefinePlugin')[0];
         Object.assign(plugin.definitions, {
-          API_URL: process.env.API_URL,
+          API_URL: JSON.stringify(process.env.API_URL),
         });
     }
 };

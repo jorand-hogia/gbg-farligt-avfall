@@ -17,4 +17,4 @@ This is required because the infrastructure containes a nested stack. For CDK to
 
 ## Some useful commands
 Launch frontend with 'real' API:
- - `(cd gfa-frontend && API_URL=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='WebUrl'].OutputValue") npm run dev)`
+ - `(cd gfa-frontend && API_URL=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text) npm run dev)`

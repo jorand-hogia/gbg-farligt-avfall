@@ -8,7 +8,7 @@ import * as style from './style.css';
 const Home: FunctionalComponent = () => {
   const [stops, setStops] = useState<Stop[]>([]);
   useEffect(() => {
-    const apiClient = new ApiClient(API_URL[0]);
+    const apiClient = new ApiClient(API_URL);
     apiClient
       .getStops()
       .then(stops => {
