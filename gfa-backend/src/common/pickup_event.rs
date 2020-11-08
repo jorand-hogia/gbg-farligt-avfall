@@ -43,8 +43,8 @@ impl PickUpEvent {
     pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Self {
         PickUpEvent{
             location_id: format!("{}_{}",
-                district.to_lowercase().trim().replace(" ", ""),
-                street.to_lowercase().trim().replace(" ", "")
+                district.to_lowercase().trim().replace(" ", "").replace("/", "-"),
+                street.to_lowercase().trim().replace(" ", "").replace("/", "-")
             ),
             street,
             district,
@@ -63,5 +63,11 @@ mod tests {
     fn should_generate_location_id() {
         let event = PickUpEvent::new("  Doktor Fries torg, Doktor Bondesons Gata ".to_string(), "Centrum".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string());
         assert_eq!("centrum_doktorfriestorg,doktorbondesonsgata", event.location_id);
+    }
+
+    #[test]
+    fn should_not_include_slash_in_id() {
+        let event = PickUpEvent::new("Utmarksgatan/Dysiksgatan".to_string(), "Lundby".to_string(), None, "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string());
+        assert_eq!("lundby_utmarksgatan-dysiksgatan", event.location_id);
     }
 }
