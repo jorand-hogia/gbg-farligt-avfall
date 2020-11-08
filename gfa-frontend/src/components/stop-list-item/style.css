@@ -4,6 +4,10 @@
   padding: 16px;
 }
 
+.stop:hover {
+  cursor: pointer;
+}
+
 .stop .title {
   height: 28px;
   font-size: 1rem;

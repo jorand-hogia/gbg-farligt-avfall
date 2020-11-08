@@ -1,7 +1,7 @@
 import { Construct, RemovalPolicy } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { BlockPublicAccess, Bucket } from '@aws-cdk/aws-s3';
-import { CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
+import { CfnDistribution, CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
 
 export class WebStack extends NestedStack {
 
@@ -34,6 +34,13 @@ export class WebStack extends NestedStack {
             priceClass: PriceClass.PRICE_CLASS_100,
             httpVersion: HttpVersion.HTTP2,
             defaultRootObject: 'index.html',
+            errorConfigurations: [
+                {
+                    errorCode: 404,
+                    responseCode: 200,
+                    responsePagePath: 'index.html',
+                }
+            ] 
         });
         this.webUrl = distribution.distributionDomainName;
     }

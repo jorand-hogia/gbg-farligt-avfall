@@ -14,6 +14,7 @@ export const StopListItem: FunctionalComponent<StopListItemProps> = ({
     <div
       className={style.stop}
       onClick={() => {
+        console.log(`Navigating to ${stop.location_id}`);
         route(`/stop/${stop.location_id}`);
       }}
     >
