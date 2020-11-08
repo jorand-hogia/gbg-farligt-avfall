@@ -1,0 +1,15 @@
+.stop {
+  height: 64px;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.stop .title {
+  height: 28px;
+  font-size: 1rem;
+}
+
+.stop .subtitle {
+  height: 20px;
+  font-size: 0.75rem;
+}

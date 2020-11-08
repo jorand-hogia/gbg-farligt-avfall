@@ -1,13 +1,35 @@
-import { FunctionalComponent, h } from 'preact';
+import { createContext, FunctionalComponent, h } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { Route, Router } from 'preact-router';
-import Home from '../routes/home';
+import { ApiClient } from '../api/apiClient';
+import { Stop as StopType } from '../types/Stop';
+import List from '../routes/list';
+import Stop from '../routes/stop';
+
+export const StopsContext = createContext<StopType[]>([]);
 
 const App: FunctionalComponent<{}> = () => {
+  const [stops, setStops] = useState<StopType[]>([]);
+  useEffect(() => {
+    const apiClient = new ApiClient(API_URL);
+    apiClient
+      .getStops()
+      .then(stops => {
+        setStops(stops);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }, []);
+
   return (
     <div id="app">
-      <Router>
-        <Route path="/" default component={Home} />
-      </Router>
+      <StopsContext.Provider value={stops}>
+        <Router>
+          <Route path="/stop/:id" component={Stop} />
+          <Route path="/" component={List} default />
+        </Router>
+      </StopsContext.Provider>
     </div>
   );
 };
