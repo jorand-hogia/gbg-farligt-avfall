@@ -48,6 +48,9 @@ export class GbgFarligtAvfallStack extends Stack {
     });
     new CfnOutput(this, 'WebUrl', {
       value: webStack.webUrl,
+    });
+    new CfnOutput(this, 'WebDistributionId', {
+      value: webStack.webDistributionId,
     })
   }
 }

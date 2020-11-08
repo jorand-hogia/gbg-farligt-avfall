@@ -68,7 +68,9 @@ jobs:
       - name: Obtain web hosting bucket
         run: |
           WEB_BUCKET=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='WebBucket'].OutputValue" --output text)
+          DIST_ID=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='WebDistributionId'].OutputValue" --output text)
           echo "::set-output name=bucket::$WEB_BUCKET"
+          echo "::set-output name=dist_id::$DIST_ID"
         id: web_hosting
 
       - name: Build frontend
@@ -76,3 +78,6 @@ jobs:
 
       - name: Deploy frontend
         run: aws s3 sync build s3://${{ steps.web_hosting.outputs.bucket }}
+
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.web_hosting.outputs.dist_id }} --paths "/*" 

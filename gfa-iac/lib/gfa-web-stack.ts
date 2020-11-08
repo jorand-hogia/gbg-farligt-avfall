@@ -6,6 +6,7 @@ import { CloudFrontAllowedCachedMethods, CloudFrontAllowedMethods, CloudFrontWeb
 export class WebStack extends NestedStack {
 
     public readonly webUrl: string;
+    public readonly webDistributionId: string;
     public readonly webHostingBucketName: string;
 
     constructor(scope: Construct, id: string, props?: NestedStackProps) {
@@ -58,5 +59,6 @@ export class WebStack extends NestedStack {
             ] 
         });
         this.webUrl = distribution.distributionDomainName;
+        this.webDistributionId = distribution.distributionId;
     }
 }
