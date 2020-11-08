@@ -1,7 +1,7 @@
-import { Construct, RemovalPolicy } from '@aws-cdk/core';
+import { Construct, RemovalPolicy, Duration } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { BlockPublicAccess, Bucket } from '@aws-cdk/aws-s3';
-import { CfnDistribution, CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
+import { CloudFrontAllowedCachedMethods, CloudFrontAllowedMethods, CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
 
 export class WebStack extends NestedStack {
 
@@ -28,7 +28,15 @@ export class WebStack extends NestedStack {
                         s3BucketSource: webHostingBucket,
                         originAccessIdentity: accessIdentity,
                     },
-                    behaviors: [{ isDefaultBehavior: true }],
+                    behaviors: [{
+                        isDefaultBehavior: true,
+                        cachedMethods: CloudFrontAllowedCachedMethods.GET_HEAD_OPTIONS,
+                        allowedMethods: CloudFrontAllowedMethods.GET_HEAD_OPTIONS,
+                        compress: true,
+                        defaultTtl: Duration.hours(1),
+                        maxTtl: Duration.days(1),
+                        minTtl: Duration.minutes(1),
+                    }],
                 }
             ],
             priceClass: PriceClass.PRICE_CLASS_100,
