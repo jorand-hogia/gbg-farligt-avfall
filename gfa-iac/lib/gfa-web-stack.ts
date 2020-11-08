@@ -36,9 +36,16 @@ export class WebStack extends NestedStack {
             defaultRootObject: 'index.html',
             errorConfigurations: [
                 {
+                    errorCode: 403,
+                    responseCode: 200,
+                    responsePagePath: '/index.html',
+                    errorCachingMinTtl: 86400
+                },
+                {
                     errorCode: 404,
                     responseCode: 200,
-                    responsePagePath: 'index.html',
+                    responsePagePath: '/index.html',
+                    errorCachingMinTtl: 86400
                 }
             ] 
         });
