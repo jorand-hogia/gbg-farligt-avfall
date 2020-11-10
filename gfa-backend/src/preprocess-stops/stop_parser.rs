@@ -21,9 +21,9 @@ mod tests {
     #[test]
     fn should_give_unique_stops_sorted() {
         let events = vec![
-            PickUpEvent::new("aaa_gatan".to_string(), "Hisingen".to_string(), Some("Hjalle!".to_string()), "2020-01-01T16:00:00+02:00".to_string(), "2020-01-01T17:00:00+02:00".to_string()),
-            PickUpEvent::new("aaa_gatan".to_string(), "Hisingen".to_string(), Some("Hjalle!".to_string()), "2020-06-06T16:00:00+02:00".to_string(), "2020-06-06T17:00:00+02:00".to_string()),
-            PickUpEvent::new("zzz_gatan".to_string(), "Hisingen".to_string(), Some("Wieselgren".to_string()), "2020-06-06T16:00:00+02:00".to_string(), "2020-06-06T17:00:00+02:00".to_string()),
+            PickUpEvent::new("aaa_gatan".to_string(), "Hisingen".to_string(), Some("Hjalle!".to_string()), "2020-01-01T16:00:00+02:00".to_string(), "2020-01-01T17:00:00+02:00".to_string()).unwrap(),
+            PickUpEvent::new("aaa_gatan".to_string(), "Hisingen".to_string(), Some("Hjalle!".to_string()), "2020-06-06T16:00:00+02:00".to_string(), "2020-06-06T17:00:00+02:00".to_string()).unwrap(),
+            PickUpEvent::new("zzz_gatan".to_string(), "Hisingen".to_string(), Some("Wieselgren".to_string()), "2020-06-06T16:00:00+02:00".to_string(), "2020-06-06T17:00:00+02:00".to_string()).unwrap(),
         ];
         let stops = parse_unique_stops(events);
         assert_eq!(2, stops.len());

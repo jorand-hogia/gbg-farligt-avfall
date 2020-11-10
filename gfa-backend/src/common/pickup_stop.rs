@@ -2,9 +2,7 @@ use std::fmt;
 use serde::{Serialize, Deserialize};
 use crate::coordinate::Coordinate;
 
-#[derive(fmt::Debug)]
-#[derive(Serialize)]
-#[derive(Deserialize)]
+#[derive(fmt::Debug, Serialize, Deserialize)]
 pub struct PickUpStop {
     pub location_id: String,
     pub street: String,

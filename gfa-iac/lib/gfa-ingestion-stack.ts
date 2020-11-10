@@ -3,6 +3,7 @@ import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
 import { Secret } from "@aws-cdk/aws-secretsmanager";
 import { IBucket } from '@aws-cdk/aws-s3';
+import { ITable } from '@aws-cdk/aws-dynamodb';
 import { functionWithInvokeCreator } from './function-creator';
 
 export interface IngestionStackProps extends NestedStackProps {
@@ -10,6 +11,7 @@ export interface IngestionStackProps extends NestedStackProps {
   artifactsBucket: IBucket,
   stopsBucket: IBucket,
   stopsPath: string,
+  eventsTable: ITable,
 }
 
 export class IngestionStack extends NestedStack {
@@ -22,7 +24,14 @@ export class IngestionStack extends NestedStack {
     const [scraper, invokeScraper] = functionWithInvokeTask(this, 'scraper', {
       outputPath: '$.Payload'
     });
-    const [saveEvents, invokeSaveEvents] = functionWithInvokeTask(this, 'save-events');
+
+    const [saveEvents, invokeSaveEvents] = functionWithInvokeTask(this, 'save-events', {
+      environment: {
+        EVENTS_TABLE: props.eventsTable.tableName, 
+      }
+    });
+    props.eventsTable.grantWriteData(saveEvents);
+
     const [preProcessStops, invokePreprocessStops] = functionWithInvokeTask(this, 'preprocess-stops', {
       timeout: Duration.seconds(30),
       environment: {
@@ -30,6 +39,7 @@ export class IngestionStack extends NestedStack {
       },
       outputPath: '$.Payload',
     });
+
     const [saveStops, invokeSaveStops] = functionWithInvokeTask(this, 'save-stops', {
       environment: {
         STOPS_BUCKET: props.stopsBucket.bucketName,
