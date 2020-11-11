@@ -21,7 +21,7 @@ impl error::Error for EventsRepoError {
     }
 }
 
-pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) -> Result<usize, Box<dyn std::error::Error + Send + Sync + 'static>> {
     let client = DynamoDbClient::new(region);
     let write_requests: Vec<WriteRequest> = events.into_iter()
         .map(|event| {
@@ -78,13 +78,22 @@ pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) ->
         });
     }
     let mut db_errors: Vec<RusotoError<BatchWriteItemError>> = Vec::new(); 
+    let mut unprocessed_count = 0 as usize;
     for batch_write_request in batch_write_requests {
         match client.batch_write_item(batch_write_request).await {
+            Ok(output) => match output.unprocessed_items {
+                Some(unprocessed_items) => match unprocessed_items.get(&table) {
+                    Some(items_for_table) => {
+                        unprocessed_count += items_for_table.len(); // TODO: Do this in a less nested way..
+                    },
+                    None => {}
+                },
+                None => {}
+            }
             Err(e) => {
                 db_errors.push(e);
             },
-            _ => {}
         };
     }
-    Ok(())
+    Ok(unprocessed_count)
 }
