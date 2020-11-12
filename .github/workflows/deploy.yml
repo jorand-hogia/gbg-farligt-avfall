@@ -30,7 +30,8 @@ jobs:
         uses: youyo/aws-cdk-github-actions@v1
         with:
           working_dir: 'gfa-iac'
-          cdk_subcommand: "deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }}"
+          cdk_subcommand: "deploy"
+          args: "-c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }} -c hostedZoneId=${{ secrets.HOSTED_ZONE_ID }} -c apiDomainName=${{ secrets.API_DOMAIN_NAME }}"
           actions_comment: false
 
   deploy-frontend:

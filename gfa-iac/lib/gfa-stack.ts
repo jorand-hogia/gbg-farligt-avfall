@@ -8,6 +8,8 @@ import { WebStack } from './gfa-web-stack';
 interface GbgFarligtAvfallStackProps extends StackProps {
   artifactsBucketName: string,
   version: string,
+  hostedZoneId: string,
+  apiDomainName: string,
 }
 
 export class GbgFarligtAvfallStack extends Stack {

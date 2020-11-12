@@ -1,14 +1,20 @@
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { IBucket } from '@aws-cdk/aws-s3';
 import { Construct } from '@aws-cdk/core';
-import { Cors, LambdaIntegration, LambdaRestApi, PassthroughBehavior, RestApi, JsonSchemaType, JsonSchemaVersion } from '@aws-cdk/aws-apigateway';
+import { Cors, LambdaIntegration, LambdaRestApi, RestApi } from '@aws-cdk/aws-apigateway';
 import { functionCreator } from './function-creator';
+import { Certificate } from '@aws-cdk/aws-certificatemanager';
+import { CertificateValidation } from '@aws-cdk/aws-certificatemanager';
+import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
+import * as targets from '@aws-cdk/aws-route53-targets';
 
 interface ApiStackProps extends NestedStackProps {
     version: string,
     artifactsBucket: IBucket,
     stopsBucket: IBucket,
     stopsPath: string,
+    hostedZoneId?: string,
+    apiDomainName?: string,
 }
 
 export class ApiStack extends NestedStack {
@@ -39,5 +45,22 @@ export class ApiStack extends NestedStack {
         });
         const stopsResource = this.api.root.addResource('stops');
         stopsResource.addMethod('GET', getStopsIntegration);
+
+        if (props.hostedZoneId && props.apiDomainName) {
+            const hostedZone = HostedZone.fromHostedZoneId(this, 'external-hostedzone', props.hostedZoneId);
+            const apiCert = new Certificate(this, 'gfa-api-certificate', {
+                domainName: props.apiDomainName,
+                validation: CertificateValidation.fromDns(hostedZone),
+            });
+            this.api.addDomainName('gfa-api-domain', {
+                domainName: props.apiDomainName,
+                certificate: apiCert, 
+            });
+            new ARecord(this, 'gfa-api-domain-record', {
+                zone: hostedZone,
+                target: RecordTarget.fromAlias(new targets.ApiGateway(this.api)),
+                recordName: props.apiDomainName,
+            });
+        }
     }
 }
