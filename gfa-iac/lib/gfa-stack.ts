@@ -41,6 +41,8 @@ export class GbgFarligtAvfallStack extends Stack {
       artifactsBucket: artifactsBucket,
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path,
+      hostedZoneId: props.hostedZoneId,
+      apiDomainName: props.apiDomainName,
     });
 
     new CfnOutput(this, 'WebBucket', {
