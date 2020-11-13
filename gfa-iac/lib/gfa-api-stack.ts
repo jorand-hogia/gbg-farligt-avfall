@@ -14,7 +14,7 @@ interface ApiStackProps extends NestedStackProps {
     stopsBucket: IBucket,
     stopsPath: string,
     hostedZoneId?: string,
-    apiDomainName?: string,
+    domainName?: string,
 }
 
 export class ApiStack extends NestedStack {
@@ -46,20 +46,24 @@ export class ApiStack extends NestedStack {
         const stopsResource = this.api.root.addResource('stops');
         stopsResource.addMethod('GET', getStopsIntegration);
 
-        if (props.hostedZoneId && props.apiDomainName) {
-            const hostedZone = HostedZone.fromHostedZoneId(this, 'external-hostedzone', props.hostedZoneId);
+        if (props.hostedZoneId && props.domainName) {
+            const apiDomainName = `gfa-api.${props.domainName}`;
+            const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
+                hostedZoneId: props.hostedZoneId,
+                zoneName: props.domainName,
+            });
             const apiCert = new Certificate(this, 'gfa-api-certificate', {
-                domainName: props.apiDomainName,
+                domainName: apiDomainName,
                 validation: CertificateValidation.fromDns(hostedZone),
             });
             this.api.addDomainName('gfa-api-domain', {
-                domainName: props.apiDomainName,
+                domainName: apiDomainName,
                 certificate: apiCert, 
             });
             new ARecord(this, 'gfa-api-domain-record', {
                 zone: hostedZone,
                 target: RecordTarget.fromAlias(new targets.ApiGateway(this.api)),
-                recordName: props.apiDomainName,
+                recordName: apiDomainName,
             });
         }
     }

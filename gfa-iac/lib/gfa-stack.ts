@@ -9,7 +9,7 @@ interface GbgFarligtAvfallStackProps extends StackProps {
   artifactsBucketName: string,
   version: string,
   hostedZoneId: string,
-  apiDomainName: string,
+  domainName: string,
 }
 
 export class GbgFarligtAvfallStack extends Stack {
@@ -42,7 +42,7 @@ export class GbgFarligtAvfallStack extends Stack {
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path,
       hostedZoneId: props.hostedZoneId,
-      apiDomainName: props.apiDomainName,
+      domainName: props.domainName,
     });
 
     new CfnOutput(this, 'WebBucket', {

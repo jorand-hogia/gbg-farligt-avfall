@@ -8,11 +8,11 @@ const artifactsBucketName = app.node.tryGetContext('artifactsBucketName');
 const version = app.node.tryGetContext('version');
 
 const hostedZoneId = app.node.tryGetContext('hostedZoneId');
-const apiDomainName = app.node.tryGetContext('apiDomainName');
+const domainName = app.node.tryGetContext('domainName');
 
 const gfaStack = new GbgFarligtAvfallStack(app, 'GbgFarligtAvfallStack', {
   artifactsBucketName,
   version,
   hostedZoneId,
-  apiDomainName
+  domainName
 });
