@@ -19,7 +19,7 @@ interface ApiStackProps extends NestedStackProps {
 
 export class ApiStack extends NestedStack {
 
-    public readonly api: LambdaRestApi;
+    public readonly apiUrl: string;
 
     constructor(scope: Construct, id: string, props: ApiStackProps) {
         super(scope, id, props);
@@ -33,17 +33,18 @@ export class ApiStack extends NestedStack {
         });
         props.stopsBucket.grantRead(getStops, props.stopsPath);
 
-        this.api = new RestApi(this, 'gfa-api', {
+        const api = new RestApi(this, 'gfa-api', {
             defaultCorsPreflightOptions: {
                 allowOrigins: Cors.ALL_ORIGINS,
                 allowMethods: ['GET'],
                 allowHeaders: ['Content-Type', 'Accept'],
             },
         });
+        this.apiUrl = api.url;
         const getStopsIntegration = new LambdaIntegration(getStops, {
             proxy: true,
         });
-        const stopsResource = this.api.root.addResource('stops');
+        const stopsResource = api.root.addResource('stops');
         stopsResource.addMethod('GET', getStopsIntegration);
 
         if (props.hostedZoneId && props.domainName) {
@@ -56,19 +57,17 @@ export class ApiStack extends NestedStack {
                 domainName: apiDomainName,
                 validation: CertificateValidation.fromDns(hostedZone),
             });
-            this.api.addDomainName('gfa-api-domain', {
+            api.addDomainName('gfa-api-domain', {
                 domainName: apiDomainName,
                 certificate: apiCert, 
                 securityPolicy: SecurityPolicy.TLS_1_2,
             });
             new ARecord(this, 'gfa-api-domain-record', {
                 zone: hostedZone,
-                target: RecordTarget.fromAlias(new targets.ApiGateway(this.api)),
+                target: RecordTarget.fromAlias(new targets.ApiGateway(api)),
                 recordName: apiDomainName,
             });
-            this.api.domainName?.addBasePathMapping(this.api, {
-                basePath: 'stops'
-            })
+            this.apiUrl = `https://${apiDomainName}`;
         }
     }
 }

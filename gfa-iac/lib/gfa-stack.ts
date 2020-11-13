@@ -49,7 +49,7 @@ export class GbgFarligtAvfallStack extends Stack {
       value: webStack.webHostingBucketName,
     });
     new CfnOutput(this, 'ApiUrl', {
-      value: apiStack.api.url,
+      value: apiStack.apiUrl,
     });
     new CfnOutput(this, 'WebUrl', {
       value: webStack.webUrl,
