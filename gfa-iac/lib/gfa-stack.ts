@@ -4,6 +4,7 @@ import { Bucket } from '@aws-cdk/aws-s3';
 import { IngestionStack } from './gfa-ingestion-stack';
 import { ApiStack } from './gfa-api-stack';
 import { WebStack } from './gfa-web-stack';
+import { NotifyStack } from './gfa-notify-stack';
 
 interface GbgFarligtAvfallStackProps extends StackProps {
   artifactsBucketName: string,
@@ -44,6 +45,12 @@ export class GbgFarligtAvfallStack extends Stack {
       stopsPath: stopsS3Path,
       hostedZoneId: props.hostedZoneId,
       domainName: props.domainName,
+    });
+
+    const notifyStack = new NotifyStack(this, 'gfa-notify-stack', {
+      version: props.version,
+      artifactsBucket: artifactsBucket,
+      eventsTable: eventsDb,
     });
 
     new CfnOutput(this, 'WebBucket', {
