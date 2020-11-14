@@ -5,11 +5,10 @@ use simple_logger::{SimpleLogger};
 use log::{self, info, error, LevelFilter};
 use rusoto_core::Region;
 use chrono::{Utc};
-use common::pickup_event::PickUpEvent;
+use common::{pickup_event::PickUpEvent, events_repo};
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
-mod events_repo;
 mod events_filter;
 
 #[tokio::main]

@@ -1,7 +1,7 @@
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { IBucket } from '@aws-cdk/aws-s3';
 import { Construct } from '@aws-cdk/core';
-import { Cors, LambdaIntegration, LambdaRestApi, RestApi, SecurityPolicy, Stage } from '@aws-cdk/aws-apigateway';
+import { Cors, LambdaIntegration, RestApi, SecurityPolicy, Stage } from '@aws-cdk/aws-apigateway';
 import { functionCreator } from './function-creator';
 import { Certificate } from '@aws-cdk/aws-certificatemanager';
 import { CertificateValidation } from '@aws-cdk/aws-certificatemanager';

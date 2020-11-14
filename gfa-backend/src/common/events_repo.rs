@@ -1,6 +1,6 @@
 use std::{fmt, error, collections::HashMap};
-use common::pickup_event::PickUpEvent;
-use rusoto_dynamodb::{DynamoDb, DynamoDbClient, WriteRequest, PutRequest, AttributeValue, BatchWriteItemInput, BatchWriteItemError};
+use crate::pickup_event::PickUpEvent;
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, WriteRequest, PutRequest, AttributeValue, BatchWriteItemInput, BatchWriteItemError, QueryInput};
 use rusoto_core::{Region, RusotoError};
 
 #[derive(fmt::Debug)]
@@ -19,6 +19,40 @@ impl error::Error for EventsRepoError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         None 
     }
+}
+
+pub async fn get_by_date(table: String, region: Region, date: String) -> Result<Vec<PickUpEvent>, Box<dyn std::error::Error + Send + Sync + 'static>> {
+    let client = DynamoDbClient::new(region);
+    let mut attribute_values = HashMap::new();
+    attribute_values.insert(":date".to_string(), AttributeValue{
+        s: Some(date),
+        ..Default::default()
+    });
+    let events: Vec<PickUpEvent> = client
+        .query(QueryInput{
+            table_name: table,
+            expression_attribute_values: Some(attribute_values),
+            key_condition_expression: Some("event-date = :date".to_string()),
+            ..Default::default()
+        })
+        .await?
+        .items
+        .unwrap_or_else(|| vec![])
+        .into_iter()
+        .map(|item| {
+            PickUpEvent::new(
+                item.get("street").unwrap().s.as_ref().unwrap().clone(),
+                item.get("district").unwrap().s.as_ref().unwrap().clone(),
+                match item.get("description") {
+                    Some(description) => Some(description.s.as_ref().unwrap().clone()),
+                    None => None,
+                },
+                item.get("start_time").unwrap().s.as_ref().unwrap().clone(),
+                item.get("end_time").unwrap().s.as_ref().unwrap().clone(),
+            ).unwrap()
+        })
+        .collect();
+    Ok(events)
 }
 
 pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) -> Result<usize, Box<dyn std::error::Error + Send + Sync + 'static>> {

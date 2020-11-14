@@ -24,6 +24,7 @@ export class GbgFarligtAvfallStack extends Stack {
       sortKey: { name: 'location-id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
+
     const stopsS3Path = 'stops.json';
     const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
 

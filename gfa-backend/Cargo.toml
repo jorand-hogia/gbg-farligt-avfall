@@ -24,6 +24,10 @@ path = "src/save-stops/main.rs"
 name = "get-stops"
 path = "src/get-stops/main.rs"
 
+[[bin]]
+name = "notify"
+path = "src/notify/main.rs"
+
 [lib]
 name = "common"
 path = "src/common/lib.rs"
