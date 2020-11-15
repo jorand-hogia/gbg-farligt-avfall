@@ -21,8 +21,8 @@ export class GbgFarligtAvfallStack extends Stack {
     const artifactsBucket = Bucket.fromBucketName(this, 'artifactsBucket', props.artifactsBucketName);
 
     const eventsDb = new Table(this, 'gfa-events-db', {
-      partitionKey: { name: 'event-date', type: AttributeType.STRING },
-      sortKey: { name: 'location-id', type: AttributeType.STRING },
+      partitionKey: { name: 'event_date', type: AttributeType.STRING },
+      sortKey: { name: 'location_id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
     });
 

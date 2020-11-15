@@ -32,7 +32,7 @@ pub async fn get_by_date(table: String, region: Region, date: String) -> Result<
         .query(QueryInput{
             table_name: table,
             expression_attribute_values: Some(attribute_values),
-            key_condition_expression: Some("event-date = :date".to_string()),
+            key_condition_expression: Some("event_date = :date".to_string()),
             ..Default::default()
         })
         .await?
@@ -60,11 +60,11 @@ pub async fn store(table: String, region: Region, events: Vec::<PickUpEvent>) ->
     let write_requests: Vec<WriteRequest> = events.into_iter()
         .map(|event| {
             let mut attributes: HashMap<String, AttributeValue> = HashMap::new(); 
-            attributes.insert("event-date".to_string(), AttributeValue{
+            attributes.insert("event_date".to_string(), AttributeValue{
                 s: Some(event.date),
                 ..Default::default()
             });
-            attributes.insert("location-id".to_string(), AttributeValue{
+            attributes.insert("location_id".to_string(), AttributeValue{
                 s: Some(event.location_id),
                 ..Default::default()
             });
