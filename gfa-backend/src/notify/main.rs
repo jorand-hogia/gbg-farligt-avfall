@@ -21,7 +21,7 @@ async fn main() -> Result<(), Error> {
 
 async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     let today_topic_arn = env::var("TODAY_TOPIC").unwrap();
-    let event_table = env::var("EVENT_TABLE").unwrap();
+    let event_table = env::var("EVENTS_TABLE").unwrap();
     let region = env::var("AWS_REGION").unwrap();
     let region = Region::from_str(&region).unwrap(); 
 
