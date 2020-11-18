@@ -38,11 +38,12 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
         });
         info!("Try publish event for: {}", event.street);
         let publish_input = PublishInput{
-            message: format!("Farligt avfall-bilen arrives to {}, today at {}-{}", event.street, event.time_start, event.time_end),
+            message: format!("Farligt avfall-bilen arrives today!"),
             message_attributes: Some(message_attributes),
             topic_arn: Some(today_topic_arn.clone()),
             ..Default::default()
         };
+        info!("Event: {:?}", publish_input.message_attributes);
         match sns_client.publish(publish_input).await {
             Ok(output) => {
                 info!("Successfully published message");
