@@ -38,7 +38,7 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
         });
         info!("Try publish event for: {}", event.street);
         let publish_input = PublishInput{
-            message: format!("Farligt avfall-bilen arrives today!"),
+            message: format!("Farligt avfall-bilen will arrive to {}, today at {} - {}", event.street, event.time_start, event.time_end),
             message_attributes: Some(message_attributes),
             topic_arn: Some(today_topic_arn.clone()),
             ..Default::default()
