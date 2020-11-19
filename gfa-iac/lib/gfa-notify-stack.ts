@@ -4,6 +4,7 @@ import { IBucket } from '@aws-cdk/aws-s3';
 import { functionCreator } from './function-creator';
 import { ITable } from '@aws-cdk/aws-dynamodb';
 import { Topic } from '@aws-cdk/aws-sns';
+import { LambdaEndpoint } from './gfa-api-stack';
 
 interface NotifyStackProps extends NestedStackProps {
     version: string,
@@ -12,6 +13,9 @@ interface NotifyStackProps extends NestedStackProps {
 }
 
 export class NotifyStack extends NestedStack {
+
+    public readonly subscribeEndpoint: LambdaEndpoint;
+
     constructor(scope: Construct, id: string, props: NotifyStackProps) {
         super(scope, id, props);
 
@@ -27,5 +31,15 @@ export class NotifyStack extends NestedStack {
         props.eventsTable.grantReadData(notify);
         arrivalToday.grantPublish(notify);
 
+        const subscribe = newFunction(this, 'subscribe', {
+            environment: {
+                TODAY_TOPIC: arrivalToday.topicArn,
+            }
+        });
+        this.subscribeEndpoint = {
+            lambda: subscribe,
+            resource: 'subscriptions',
+            methods: ['PUT']
+        };
     }
 }

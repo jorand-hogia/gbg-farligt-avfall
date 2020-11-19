@@ -5,6 +5,7 @@ import { IngestionStack } from './gfa-ingestion-stack';
 import { ApiStack } from './gfa-api-stack';
 import { WebStack } from './gfa-web-stack';
 import { NotifyStack } from './gfa-notify-stack';
+import { functionCreator } from './function-creator';
 
 interface GbgFarligtAvfallStackProps extends StackProps {
   artifactsBucketName: string,
@@ -37,20 +38,34 @@ export class GbgFarligtAvfallStack extends Stack {
       eventsTable: eventsDb,
     });
 
-    const webStack = new WebStack(this, 'gfa-web-stack');
-    const apiStack = new ApiStack(this, 'gfa-api-stack', {
-      version: props.version,
-      artifactsBucket: artifactsBucket,
-      stopsBucket: stopsBucket,
-      stopsPath: stopsS3Path,
-      hostedZoneId: props.hostedZoneId,
-      domainName: props.domainName,
+
+    const newFunction = functionCreator(artifactsBucket, props.version);
+    const getStops = newFunction(this, 'get-stops', {
+        environment: {
+            STOPS_BUCKET: stopsBucket.bucketName,
+            STOPS_PATH: stopsS3Path,
+        }
     });
+    stopsBucket.grantRead(getStops, stopsS3Path);
 
     const notifyStack = new NotifyStack(this, 'gfa-notify-stack', {
       version: props.version,
       artifactsBucket: artifactsBucket,
       eventsTable: eventsDb,
+    });
+
+    const webStack = new WebStack(this, 'gfa-web-stack');
+    const apiStack = new ApiStack(this, 'gfa-api-stack', {
+      hostedZoneId: props.hostedZoneId,
+      domainName: props.domainName,
+      lambdaEndpoints: [
+        {
+          lambda: getStops,
+          resource: 'stops',
+          methods: ['GET']
+        },
+        notifyStack.subscribeEndpoint,
+      ]
     });
 
     new CfnOutput(this, 'WebBucket', {

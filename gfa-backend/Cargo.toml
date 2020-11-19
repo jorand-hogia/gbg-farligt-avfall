@@ -28,6 +28,10 @@ path = "src/get-stops/main.rs"
 name = "notify"
 path = "src/notify/main.rs"
 
+[[bin]]
+name = "subscribe"
+path = "src/subscribe/main.rs"
+
 [lib]
 name = "common"
 path = "src/common/lib.rs"

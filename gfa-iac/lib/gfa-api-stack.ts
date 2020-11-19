@@ -1,20 +1,21 @@
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
-import { IBucket } from '@aws-cdk/aws-s3';
 import { Construct } from '@aws-cdk/core';
 import { Cors, LambdaIntegration, RestApi, SecurityPolicy, Stage } from '@aws-cdk/aws-apigateway';
-import { functionCreator } from './function-creator';
+import { IFunction } from '@aws-cdk/aws-lambda';
 import { Certificate } from '@aws-cdk/aws-certificatemanager';
 import { CertificateValidation } from '@aws-cdk/aws-certificatemanager';
 import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
 import * as targets from '@aws-cdk/aws-route53-targets';
 
+export interface LambdaEndpoint {
+    lambda: IFunction,
+    resource: string,
+    methods: string[],
+}
 interface ApiStackProps extends NestedStackProps {
-    version: string,
-    artifactsBucket: IBucket,
-    stopsBucket: IBucket,
-    stopsPath: string,
     hostedZoneId?: string,
     domainName?: string,
+    lambdaEndpoints: LambdaEndpoint[],
 }
 
 export class ApiStack extends NestedStack {
@@ -24,28 +25,24 @@ export class ApiStack extends NestedStack {
     constructor(scope: Construct, id: string, props: ApiStackProps) {
         super(scope, id, props);
 
-        const newFunction = functionCreator(props.artifactsBucket, props.version);
-        const getStops = newFunction(this, 'get-stops', {
-            environment: {
-                STOPS_BUCKET: props.stopsBucket.bucketName,
-                STOPS_PATH: props.stopsPath,
-            }
-        });
-        props.stopsBucket.grantRead(getStops, props.stopsPath);
-
-        const api = new RestApi(this, 'gfa-api', {
-            defaultCorsPreflightOptions: {
-                allowOrigins: Cors.ALL_ORIGINS,
-                allowMethods: ['GET'],
-                allowHeaders: ['Content-Type', 'Accept'],
-            },
-        });
+        const api = new RestApi(this, 'gfa-api');
         this.apiUrl = api.url;
-        const getStopsIntegration = new LambdaIntegration(getStops, {
-            proxy: true,
-        });
-        const stopsResource = api.root.addResource('stops');
-        stopsResource.addMethod('GET', getStopsIntegration);
+
+        props.lambdaEndpoints.forEach(endpoint => {
+            const integration = new LambdaIntegration(endpoint.lambda, {
+                proxy: true,
+            });
+            const resource = api.root.getResource(endpoint.resource)
+                || api.root.addResource(endpoint.resource);
+            resource.addCorsPreflight({
+                allowOrigins: Cors.ALL_ORIGINS,
+                allowMethods: endpoint.methods,
+                allowHeaders: ['Content-Type', 'Accept']
+            })
+            endpoint.methods.forEach(method => {
+                resource.addMethod(method, integration);
+            })
+        })
 
         if (props.hostedZoneId && props.domainName) {
             const apiDomainName = `gfa-api.${props.domainName}`;
