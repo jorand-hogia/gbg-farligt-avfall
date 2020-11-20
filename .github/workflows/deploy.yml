@@ -31,6 +31,7 @@ jobs:
         with:
           working_dir: 'gfa-iac'
           cdk_subcommand: "deploy -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }} -c hostedZoneId=${{ secrets.HOSTED_ZONE_ID }} -c domainName=${{ secrets.DOMAIN_NAME }}"
+          cdk_args: '--require-approval never'
           actions_comment: false
 
   deploy-frontend:
