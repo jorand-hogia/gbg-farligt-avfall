@@ -1,6 +1,6 @@
 use std::{error, env, str::FromStr, collections::HashMap};
 use simple_logger::{SimpleLogger};
-use log::{self, info, LevelFilter};
+use log::{self, info, error, LevelFilter};
 use serde_json::{Value};
 use lambda::{handler_fn, Context};
 use aws_lambda_events::event::apigw::{ApiGatewayProxyResponse, ApiGatewayProxyRequest};
@@ -33,14 +33,17 @@ async fn handle_request(event: ApiGatewayProxyRequest, _: Context) -> Result<Api
     };
     let subscription: subscription::Subscription = match serde_json::from_str(&body) {
         Ok(subscription) => subscription,
-        Err(e) => return Ok(create_response("Malformed request body".to_string(), 400))
+        Err(_e) => return Ok(create_response("Malformed request body".to_string(), 400))
     };
     match validate_request::validate(&subscription) {
-        Err(e) => return Ok(create_response("Invalid request body".to_string(), 422)),
+        Err(_e) => return Ok(create_response("Invalid request body".to_string(), 422)),
         _ => {}
     };
     match subscribe::subscribe(&subscription, today_topic_arn, region).await {
-        Err(e) => return Ok(create_response("Failed to subscribe".to_string(), 500)),
+        Err(e) => {
+            error!("Failed to subscribe due to: {}", e);
+            return Ok(create_response("Failed to subscribe".to_string(), 500));
+        }
         _ => {}
     };
     info!("{:?}", subscription);
