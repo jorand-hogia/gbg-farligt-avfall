@@ -7,6 +7,8 @@ use aws_lambda_events::event::apigw::{ApiGatewayProxyResponse, ApiGatewayProxyRe
 use rusoto_core::{Region};
 
 mod subscription;
+mod subscribe;
+mod validate_request;
 
 type Error = Box<dyn error::Error + Send + Sync + 'static>;
 
@@ -31,9 +33,15 @@ async fn handle_request(event: ApiGatewayProxyRequest, _: Context) -> Result<Api
     };
     let subscription: subscription::Subscription = match serde_json::from_str(&body) {
         Ok(subscription) => subscription,
-        Err(e) => {
-            return Ok(create_response("Malformed request body".to_string(), 400));
-        }
+        Err(e) => return Ok(create_response("Malformed request body".to_string(), 400))
+    };
+    match validate_request::validate(&subscription) {
+        Err(e) => return Ok(create_response("Invalid request body".to_string(), 422)),
+        _ => {}
+    };
+    match subscribe::subscribe(&subscription, today_topic_arn, region).await {
+        Err(e) => return Ok(create_response("Failed to subscribe".to_string(), 500)),
+        _ => {}
     };
     info!("{:?}", subscription);
     Ok(create_response("".to_string(), 200))

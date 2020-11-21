@@ -3,6 +3,6 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Subscription {
-    email: String,
-    location_id: String,
+    pub email: String,
+    pub location_id: String,
 } 
