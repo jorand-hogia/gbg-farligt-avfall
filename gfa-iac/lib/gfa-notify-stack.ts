@@ -4,6 +4,7 @@ import { IBucket } from '@aws-cdk/aws-s3';
 import { functionCreator } from './function-creator';
 import { ITable } from '@aws-cdk/aws-dynamodb';
 import { Topic } from '@aws-cdk/aws-sns';
+import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { LambdaEndpoint } from './gfa-api-stack';
 
 interface NotifyStackProps extends NestedStackProps {
@@ -36,6 +37,11 @@ export class NotifyStack extends NestedStack {
                 TODAY_TOPIC: arrivalToday.topicArn,
             }
         });
+        subscribe.addToRolePolicy(new PolicyStatement({
+            effect: Effect.ALLOW,
+            actions: [ 'sns:Subscribe' ],
+            resources: [ arrivalToday.topicArn ]
+        }));
         this.subscribeEndpoint = {
             lambda: subscribe,
             resource: 'subscriptions',
