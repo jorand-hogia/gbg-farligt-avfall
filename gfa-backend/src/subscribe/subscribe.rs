@@ -7,7 +7,7 @@ pub async fn subscribe(subscription: &Subscription, topic_arn: String, region: R
     let client = SnsClient::new(region);
 
     let mut message_attributes: HashMap<String, String> = HashMap::new();
-    message_attributes.insert("location_id".to_string(), subscription.location_id.clone());
+    message_attributes.insert("FilterPolicy".to_string(), format!("{{\"location_id\": [\"{}\"]}}", subscription.location_id));
     let input = SubscribeInput{
         protocol: "email".to_string(),
         endpoint: Some(subscription.email.clone()),
