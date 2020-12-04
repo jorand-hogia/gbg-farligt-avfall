@@ -20,6 +20,13 @@ export class ApiClient {
     return this.instance.get<Stop[]>('/stops').then(res => res.data);
   };
 
+  public subscribe = (email: string, locationId: string): Promise<Stop[]> => {
+    return this.instance.put('/subscriptions', {
+      email,
+      location_id: locationId
+    }).then(res => res.data);
+  }
+
   private initResponseInterceptor = (): void => {
     this.instance.interceptors.response.use(
       response => response,
