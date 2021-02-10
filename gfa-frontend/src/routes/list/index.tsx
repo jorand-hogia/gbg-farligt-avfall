@@ -33,12 +33,6 @@ const List: FunctionalComponent<{}> = () => {
           />
         ))}
       </div>
-      <div>
-        <p>
-          Coordinates for each location are powered by {}
-          <a href="http://www.mapquest.com">MapQuest</a>
-        </p>
-      </div>
       {showSubscribe && stopToSubscribeTo && (
         <SubscribeModal
           stop={stopToSubscribeTo}

@@ -8,12 +8,11 @@ End goal is to have subscriptions, and send notifications some time before the t
    - AWS_SECRET_ACCESS_KEY
    - AWS_REGION
    - S3_ARTIFACT_BUCKET 
- - Add an API key for [MapQuest](https://developer.mapquest.com/) to Secrets Manager (named `mapquest-api-key`) in the AWS account/region you're deploying to
 
 ## First deploy
 The first time you're deploying this stack you'll need to run the following command:
  - `cdk bootstrap aws://###AWS_ACCOUNT###/###AWS_REGION### -c artifactsBucketName=does_not_matter -c version=does_not_matter`
-This is required because the infrastructure containes a nested stack. For CDK to handle this, it needs 'bootstrap' in the AWS account (it will deploy a stagind bucket, where it will place assets, such as nested cloudformation templates). 
+This is required because the infrastructure containes a nested stack. For CDK to handle this, it needs 'bootstrap' in the AWS account (it will deploy a staging bucket, where it will place assets, such as nested cloudformation templates).
 
 ## Some useful commands
 Launch frontend with 'real' API:

@@ -8,6 +8,10 @@ use simple_logger::{SimpleLogger};
 use log::{self, LevelFilter};
 use rusoto_core::{Region, ByteStream};
 use rusoto_s3::{S3, S3Client, PutObjectRequest};
+use common::pickup_event::PickUpEvent;
+use common::pickup_stop::PickUpStop;
+
+mod stop_parser;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -42,10 +46,14 @@ async fn handle_request(event: Value, _: Context) -> Result<(), Error> {
     let stops_bucket = env::var("STOPS_BUCKET")?;
     let stops_path = env::var("STOPS_PATH")?;
 
+    let pickup_events: Vec<PickUpEvent> = serde_json::from_value(event)?;
+    let unique_stops: Vec<PickUpStop> = stop_parser::parse_unique_stops(pickup_events); 
+
     let mut request = PutObjectRequest::default();
     request.bucket = stops_bucket;
     request.key = stops_path;
-    let body = to_vec(&event)?;
+
+    let body = to_vec(&unique_stops)?;
     request.body = Some(ByteStream::from(body));
 
     let s3_client = S3Client::new(aws_region);

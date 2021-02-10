@@ -13,10 +13,6 @@ name = "save-events"
 path = "src/save-events/main.rs"
 
 [[bin]]
-name = "preprocess-stops"
-path = "src/preprocess-stops/main.rs"
-
-[[bin]]
 name = "save-stops"
 path = "src/save-stops/main.rs"
 

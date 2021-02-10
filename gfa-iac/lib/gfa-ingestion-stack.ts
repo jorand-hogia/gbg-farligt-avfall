@@ -32,14 +32,6 @@ export class IngestionStack extends NestedStack {
     });
     props.eventsTable.grantWriteData(saveEvents);
 
-    const [preProcessStops, invokePreprocessStops] = functionWithInvokeTask(this, 'preprocess-stops', {
-      timeout: Duration.seconds(30),
-      environment: {
-        GEOCODING_API_KEY: `${Secret.fromSecretName(this, 'geocoding-api-key', 'mapquest-api-key').secretValue}`
-      },
-      outputPath: '$.Payload',
-    });
-
     const [saveStops, invokeSaveStops] = functionWithInvokeTask(this, 'save-stops', {
       environment: {
         STOPS_BUCKET: props.stopsBucket.bucketName,
@@ -52,8 +44,7 @@ export class IngestionStack extends NestedStack {
       definition: invokeScraper 
         .next(new Parallel(this, 'process-scrape-results', {})
           .branch(invokeSaveEvents)
-          .branch(invokePreprocessStops
-            .next(invokeSaveStops))
+          .branch(invokeSaveStops)
         ),
       timeout: Duration.minutes(5)
     });
