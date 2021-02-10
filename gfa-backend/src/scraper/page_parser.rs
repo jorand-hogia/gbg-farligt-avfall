@@ -122,7 +122,7 @@ fn split_desc_and_times(raw: String) -> Result<(Option<String>, String), PagePar
     lazy_static! {
         // Should match either "vid ica gunnilse och återvinningsstationen. onsdag 16 september 17.35-17.55" or "onsdag 16 september 17.35-17.55"
         // Index of second group indicates where to split description and time data.
-        static ref DESC_TIMES_RE: Regex = Regex::new(r"([\w\s]+\. |^)(måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag)").unwrap();
+        static ref DESC_TIMES_RE: Regex = Regex::new(r"([\w\s\-\(\)]+\. |^)(måndag|tisdag|tisadg|onsdag|torsdag|fredag|lördag|söndag)").unwrap();
     }
     let raw = raw.trim().to_lowercase();
     let captures = match DESC_TIMES_RE.captures(&raw) {
@@ -290,6 +290,14 @@ mod tests {
         assert_eq!(true, description.is_some());
         assert_eq!("vid ica gunnilse och återvinningsstationen", description.unwrap());
         assert_eq!("onsdag 16 september 17.35-17.55 och onsdag 28 oktober 17-17.20", raw_times);
+    }
+
+    #[test]
+    fn should_handle_some_special_chars_in_description() {
+        let (description, raw_times) = split_desc_and_times("vid se-banken (seb). onsdag 7 april 19-19.45 och tisdag 25 maj 19-19.45.".to_owned()).unwrap();
+        assert_eq!(true, description.is_some());
+        assert_eq!("vid se-banken (seb)", description.unwrap());
+        assert_eq!("onsdag 7 april 19-19.45 och tisdag 25 maj 19-19.45", raw_times);
     }
 
     #[test]
