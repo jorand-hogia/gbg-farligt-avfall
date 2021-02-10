@@ -181,11 +181,14 @@ fn parse_times(raw: &String, year: i32) -> Result<Vec<(DateTime::<chrono_tz::Tz>
 
 fn append_zeros_in_timestamp(raw: &str) -> String {
     lazy_static! {
-        static ref BAD_TIMESTAMP_RE: Regex = Regex::new(r"[^\.](?P<bad_hour>\d{2})-").unwrap();
+        static ref BAD_TIMESTAMP_START_RE: Regex = Regex::new(r"[^\.](?P<bad_hour>\d{2})-").unwrap();
+        static ref BAD_TIMESTAMP_END_RE: Regex = Regex::new(r"-(?P<bad_hour>\d{2}$)").unwrap();
     }
     let dt = raw.trim();
-    let dt = BAD_TIMESTAMP_RE.replace(dt, " $bad_hour.00-");
-    String::from(dt)
+    println!("TS: {}", dt);
+    let dt = String::from(BAD_TIMESTAMP_START_RE.replace(dt, " $bad_hour.00-"));
+    let dt = String::from(BAD_TIMESTAMP_END_RE.replace(&dt, "-$bad_hour.00"));
+    dt
 }
 
 fn zero_pad_day_number(raw: &str) -> String {
@@ -313,12 +316,21 @@ mod tests {
     }
 
     #[test]
-    fn should_parse_single_timestamp() {
+    fn should_parse_single_timestamp_without_minutes_in_start_time() {
         let raw = "Måndag 28 september 17-17.45";
-        let time = parse_times(&raw.to_string(), 2020 as i32).unwrap();
+        let time = parse_times(&raw.to_owned(), 2020 as i32).unwrap();
         assert_eq!(1, time.len());
         assert_eq!("2020-09-28T17:00:00+02:00".to_string(), time.get(0).unwrap().0.to_rfc3339());
         assert_eq!("2020-09-28T17:45:00+02:00", time.get(0).unwrap().1.to_rfc3339());
+    }
+
+    #[test]
+    fn should_parse_single_timestamp_without_minutes_in_end_time() {
+        let raw = "måndag 29 mars 19.15-20";
+        let time = parse_times(&raw.to_owned(), 2021 as i32).unwrap();
+        assert_eq!(1, time.len());
+        assert_eq!("2021-03-29T19:15:00+02:00".to_owned(), time.get(0).unwrap().0.to_rfc3339());
+        assert_eq!("2021-03-29T20:00:00+02:00".to_owned(), time.get(0).unwrap().1.to_rfc3339());
     }
 
     #[test]
