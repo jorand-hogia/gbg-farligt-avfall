@@ -17,3 +17,10 @@ This is required because the infrastructure containes a nested stack. For CDK to
 ## Some useful commands
 Launch frontend with 'real' API:
  - `(cd gfa-frontend && API_URL=$(aws cloudformation describe-stacks --stack-name GbgFarligtAvfallStack --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text) npm run dev)`
+
+## Adding a new lambda function to the project
+ - Create a new folder in `gfa-backend/src`, including a `main.rs` file
+ - Update `gfa-backend/Cargo.toml` with a new `[[bin]]` section for the new function
+ - Add name of the folder created above to the build step of `.github/workflows/build.yml`:
+   - `executables="get-stops save-events save-stops scraper notify subscribe NEW-FOLDER"`
+ - Add CDK resource for the new lambda to a suitable stack in `gfa-iac/lib`
