@@ -5,6 +5,8 @@ import { functionCreator } from './function-creator';
 import { ITable } from '@aws-cdk/aws-dynamodb';
 import { Topic } from '@aws-cdk/aws-sns';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
+import { Rule, Schedule } from '@aws-cdk/aws-events';
+import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import { LambdaEndpoint } from './gfa-api-stack';
 
 interface NotifyStackProps extends NestedStackProps {
@@ -31,6 +33,11 @@ export class NotifyStack extends NestedStack {
         });
         props.eventsTable.grantReadData(notify);
         arrivalToday.grantPublish(notify);
+        new Rule(this, 'gfa-notify-scheduled-execution', {
+            schedule: Schedule.expression('cron(0 3 * * ? *)'),
+            targets: [new LambdaFunction(notify)]
+        });
+        // TODO: Notify on failure
 
         const subscribe = newFunction(this, 'subscribe', {
             environment: {

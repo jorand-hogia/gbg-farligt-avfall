@@ -32,6 +32,7 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     match publish_events::publish_events(todays_events, today_topic_arn, region).await {
         Err(e) => {
             error!("Errors occurred while publishing events, {}", e);
+            return Err(e);
         },
         _ => {}
     };
