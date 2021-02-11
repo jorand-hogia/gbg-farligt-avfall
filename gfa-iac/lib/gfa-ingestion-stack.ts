@@ -42,16 +42,18 @@ export class IngestionStack extends NestedStack {
     });
     props.stopsBucket.grantWrite(saveStops, props.stopsPath);
 
-    const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
-      definition: invokeScraper 
-        .next(new Parallel(this, 'process-scrape-results', {})
-          .branch(invokeSaveEvents)
-          .branch(invokeSaveStops)
-          .addCatch(new SnsPublish(this, 'Data ingestion alert', {
+    const alertTask = new SnsPublish(this, 'Data ingestion alert', {
             topic: props.alertTopic,
             message: TaskInput.fromDataAt('$.error'),
             subject: 'GFA: Data ingestion alert'
-          }))
+    });
+    const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
+      definition: invokeScraper 
+        .addCatch(alertTask)
+        .next(new Parallel(this, 'process-scrape-results', {})
+          .branch(invokeSaveEvents)
+          .branch(invokeSaveStops)
+          .addCatch(alertTask)
         ),
       timeout: Duration.minutes(5)
     });
