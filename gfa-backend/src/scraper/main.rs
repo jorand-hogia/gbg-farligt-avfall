@@ -38,6 +38,7 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(_event: Value, _c: Context) -> Result<Value, Error> {
+    panic!("Temp panic to try alert flow!");
     debug!("About to load pages");
     let pages_to_scrape = block_on(page_fetcher::obtain_pages());
     let pages_to_scrape = match pages_to_scrape {

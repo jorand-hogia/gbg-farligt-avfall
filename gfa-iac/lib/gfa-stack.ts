@@ -1,6 +1,8 @@
 import { App, CfnOutput, Stack, StackProps } from '@aws-cdk/core';
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 import { Bucket } from '@aws-cdk/aws-s3';
+import { Topic } from '@aws-cdk/aws-sns';
+import { EmailSubscription} from '@aws-cdk/aws-sns-subscriptions';
 import { IngestionStack } from './gfa-ingestion-stack';
 import { ApiStack } from './gfa-api-stack';
 import { WebStack } from './gfa-web-stack';
@@ -12,6 +14,7 @@ interface GbgFarligtAvfallStackProps extends StackProps {
   version: string,
   hostedZoneId: string,
   domainName: string,
+  adminEmail: string,
 }
 
 export class GbgFarligtAvfallStack extends Stack {
@@ -30,12 +33,18 @@ export class GbgFarligtAvfallStack extends Stack {
     const stopsS3Path = 'stops.json';
     const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
 
+    const alertTopic = new Topic(this, 'gfa-admin-alert');
+    if (props.adminEmail) {
+      alertTopic.addSubscription(new EmailSubscription(props.adminEmail));
+    }
+
     const ingestionStack = new IngestionStack(this, 'gfa-ingestion-stack', {
       version: props.version,
       artifactsBucket: artifactsBucket,
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path,
       eventsTable: eventsDb,
+      alertTopic,
     });
 
 

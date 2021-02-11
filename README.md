@@ -8,6 +8,9 @@ End goal is to have subscriptions, and send notifications some time before the t
    - AWS_SECRET_ACCESS_KEY
    - AWS_REGION
    - S3_ARTIFACT_BUCKET 
+   - ADMIN_EMAIL (optional)
+   - DOMAIN_NAME (optional)
+   - HOSTED_ZONE_ID (optional)
 
 ## First deploy
 The first time you're deploying this stack you'll need to run the following command:

@@ -1,9 +1,10 @@
 import { Construct, Duration } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
-import { Parallel, StateMachine } from '@aws-cdk/aws-stepfunctions';
-import { Secret } from "@aws-cdk/aws-secretsmanager";
+import { Parallel, StateMachine, TaskInput } from '@aws-cdk/aws-stepfunctions';
+import { SnsPublish } from '@aws-cdk/aws-stepfunctions-tasks';
 import { IBucket } from '@aws-cdk/aws-s3';
 import { ITable } from '@aws-cdk/aws-dynamodb';
+import { ITopic } from '@aws-cdk/aws-sns';
 import { functionWithInvokeCreator } from './function-creator';
 
 export interface IngestionStackProps extends NestedStackProps {
@@ -12,6 +13,7 @@ export interface IngestionStackProps extends NestedStackProps {
   stopsBucket: IBucket,
   stopsPath: string,
   eventsTable: ITable,
+  alertTopic: ITopic, 
 }
 
 export class IngestionStack extends NestedStack {
@@ -45,6 +47,11 @@ export class IngestionStack extends NestedStack {
         .next(new Parallel(this, 'process-scrape-results', {})
           .branch(invokeSaveEvents)
           .branch(invokeSaveStops)
+          .addCatch(new SnsPublish(this, 'Data ingestion alert', {
+            topic: props.alertTopic,
+            message: TaskInput.fromDataAt('$.error'),
+            subject: 'GFA: Data ingestion alert'
+          }))
         ),
       timeout: Duration.minutes(5)
     });
