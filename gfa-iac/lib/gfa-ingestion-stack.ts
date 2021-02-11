@@ -44,7 +44,7 @@ export class IngestionStack extends NestedStack {
 
     const alertTask = new SnsPublish(this, 'Data ingestion alert', {
             topic: props.alertTopic,
-            message: TaskInput.fromDataAt('$.error'),
+            message: TaskInput.fromDataAt('$.Cause'),
             subject: 'GFA: Data ingestion alert'
     });
     const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
