@@ -5,6 +5,8 @@ import { SnsPublish } from '@aws-cdk/aws-stepfunctions-tasks';
 import { IBucket } from '@aws-cdk/aws-s3';
 import { ITable } from '@aws-cdk/aws-dynamodb';
 import { ITopic } from '@aws-cdk/aws-sns';
+import { Rule, Schedule } from '@aws-cdk/aws-events';
+import { SfnStateMachine } from '@aws-cdk/aws-events-targets';
 import { functionWithInvokeCreator } from './function-creator';
 
 export interface IngestionStackProps extends NestedStackProps {
@@ -56,6 +58,11 @@ export class IngestionStack extends NestedStack {
           .addCatch(alertTask)
         ),
       timeout: Duration.minutes(5)
+    });
+
+    new Rule(this, 'gfa-scrape-and-save-scheduled-execution', {
+      schedule: Schedule.expression('cron(0 0 1 * ? *)'),
+      targets: [new SfnStateMachine(scrapeAndSaveFlow)],
     });
   }
 }
