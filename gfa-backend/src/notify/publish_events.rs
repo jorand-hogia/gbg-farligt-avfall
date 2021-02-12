@@ -3,6 +3,7 @@ use rusoto_core::{Region, RusotoError};
 use rusoto_sns::{SnsClient, Sns, PublishInput, MessageAttributeValue, PublishError};
 use chrono::{DateTime};
 use chrono_tz::Europe::Stockholm;
+use log::{self, info};
 use common::pickup_event::PickUpEvent;
 
 type Error = Box<dyn error::Error + Send + Sync + 'static>;
@@ -29,12 +30,14 @@ pub async fn publish_events(events: Vec<PickUpEvent>, topic_arn: String, region:
     let sns_client = SnsClient::new(region);
     let mut errors: Vec<RusotoError<PublishError>> = Vec::new();
     for event in events {
-        let publish_input = create_sns_publish_input(event, topic_arn.clone())?;
+        let publish_input = create_sns_publish_input(&event, topic_arn.clone())?;
         match sns_client.publish(publish_input).await {
             Err(e) => {
                 errors.push(e);
             },
-            _ => {}
+            _ => {
+                info!("Successfully published notification for {}", event.location_id);
+            }
         };
     }
     if !errors.is_empty() {
@@ -45,18 +48,18 @@ pub async fn publish_events(events: Vec<PickUpEvent>, topic_arn: String, region:
     Ok(())
 } 
 
-fn create_sns_publish_input(event: PickUpEvent, topic_arn: String) -> Result<PublishInput, Error> {
+fn create_sns_publish_input(event: &PickUpEvent, topic_arn: String) -> Result<PublishInput, Error> {
     let mut message_attributes: HashMap<String, MessageAttributeValue> = HashMap::new();
     message_attributes.insert("location_id".to_string(), MessageAttributeValue{
         data_type: "String".to_string(),
-        string_value: Some(event.location_id),
+        string_value: Some(String::from(&event.location_id)),
         ..Default::default()
     });
     Ok(PublishInput{
         message: format!("Farligt avfall-bilen will arrive to {} today at {}-{}",
             event.street,
-            rfc3339_string_to_local_time(event.time_start)?,
-            rfc3339_string_to_local_time(event.time_end)?
+            rfc3339_string_to_local_time(String::from(&event.time_start))?,
+            rfc3339_string_to_local_time(String::from(&event.time_end))?
         ),
         message_attributes: Some(message_attributes),
         topic_arn: Some(topic_arn.clone()),
@@ -81,14 +84,14 @@ mod tests {
     #[test]
     fn should_include_correct_location_id() {
         let event = create_test_event();
-        let publish_input = create_sns_publish_input(event, "some-topic".to_string());
+        let publish_input = create_sns_publish_input(&event, "some-topic".to_string());
         assert_eq!("hisingen_hittepåvägen14".to_string(), publish_input.unwrap().message_attributes.unwrap().get("location_id").unwrap().string_value.as_ref().unwrap().clone());
     }
 
     #[test]
     fn should_include_correct_message() {
         let event = create_test_event();
-        let publish_input = create_sns_publish_input(event, "some-topic".to_string());
+        let publish_input = create_sns_publish_input(&event, "some-topic".to_string());
         assert_eq!("Farligt avfall-bilen will arrive to Hittepåvägen 14 today at 08:00-09:00".to_string(), publish_input.unwrap().message);
     }
 

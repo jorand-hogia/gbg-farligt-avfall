@@ -2,7 +2,7 @@ use std::{env, str::FromStr};
 use lambda::{handler_fn, Context};
 use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
-use log::{self, error, LevelFilter};
+use log::{self, error, info, LevelFilter};
 use rusoto_core::Region;
 use chrono::{Utc};
 use common::events_repo::{get_by_date};
@@ -28,7 +28,9 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     let region = Region::from_str(&region).unwrap(); 
 
     let todays_date = Utc::today().format("%Y-%m-%d").to_string();
+    info!("Fetching events for: {}", todays_date);
     let todays_events = get_by_date(event_table, region.clone(), todays_date).await?;
+    info!("About to notify for {} events", todays_events.len());
     match publish_events::publish_events(todays_events, today_topic_arn, region).await {
         Err(e) => {
             error!("Errors occurred while publishing events, {}", e);
