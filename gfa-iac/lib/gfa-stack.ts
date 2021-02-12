@@ -61,6 +61,7 @@ export class GbgFarligtAvfallStack extends Stack {
       version: props.version,
       artifactsBucket: artifactsBucket,
       eventsTable: eventsDb,
+      alertTopic,
     });
 
     const webStack = new WebStack(this, 'gfa-web-stack');

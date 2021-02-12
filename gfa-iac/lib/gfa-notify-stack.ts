@@ -3,16 +3,19 @@ import { Construct } from '@aws-cdk/core';
 import { IBucket } from '@aws-cdk/aws-s3';
 import { functionCreator } from './function-creator';
 import { ITable } from '@aws-cdk/aws-dynamodb';
-import { Topic } from '@aws-cdk/aws-sns';
+import { ITopic, Topic } from '@aws-cdk/aws-sns';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 import { Rule, Schedule } from '@aws-cdk/aws-events';
 import { LambdaFunction } from '@aws-cdk/aws-events-targets';
+import { Alarm, ComparisonOperator } from '@aws-cdk/aws-cloudwatch';
+import { SnsAction } from '@aws-cdk/aws-cloudwatch-actions';
 import { LambdaEndpoint } from './gfa-api-stack';
 
 interface NotifyStackProps extends NestedStackProps {
     version: string,
     artifactsBucket: IBucket,
     eventsTable: ITable,
+    alertTopic: ITopic
 }
 
 export class NotifyStack extends NestedStack {
@@ -37,7 +40,13 @@ export class NotifyStack extends NestedStack {
             schedule: Schedule.expression('cron(0 3 * * ? *)'),
             targets: [new LambdaFunction(notify)]
         });
-        // TODO: Notify on failure
+        new Alarm(this, 'Notify alert', {
+            metric: notify.metricErrors(),
+            threshold: 0,
+            comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+            evaluationPeriods: 1,
+            datapointsToAlarm: 1
+        }).addAlarmAction(new SnsAction(props.alertTopic));
 
         const subscribe = newFunction(this, 'subscribe', {
             environment: {
