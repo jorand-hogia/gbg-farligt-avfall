@@ -64,7 +64,10 @@ export class GbgFarligtAvfallStack extends Stack {
       alertTopic,
     });
 
-    const webStack = new WebStack(this, 'gfa-web-stack');
+    const webStack = new WebStack(this, 'gfa-web-stack', {
+      hostedZoneId: props.hostedZoneId,
+      domainName: props.domainName
+    });
     const apiStack = new ApiStack(this, 'gfa-api-stack', {
       hostedZoneId: props.hostedZoneId,
       domainName: props.domainName,

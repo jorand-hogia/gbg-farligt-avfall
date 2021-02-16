@@ -2,6 +2,13 @@ import { Construct, RemovalPolicy, Duration } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { BlockPublicAccess, Bucket } from '@aws-cdk/aws-s3';
 import { CloudFrontAllowedCachedMethods, CloudFrontAllowedMethods, CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
+import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
+import * as targets from '@aws-cdk/aws-route53-targets';
+
+interface WebStackProps extends NestedStackProps {
+    hostedZoneId?: string,
+    domainName?: string,
+}
 
 export class WebStack extends NestedStack {
 
@@ -9,7 +16,7 @@ export class WebStack extends NestedStack {
     public readonly webDistributionId: string;
     public readonly webHostingBucketName: string;
 
-    constructor(scope: Construct, id: string, props?: NestedStackProps) {
+    constructor(scope: Construct, id: string, props: WebStackProps = {}) {
         super(scope, id, props);
 
         const webHostingBucket = new Bucket(this, 'gfa-web-bucket', {
@@ -60,5 +67,20 @@ export class WebStack extends NestedStack {
         });
         this.webUrl = distribution.distributionDomainName;
         this.webDistributionId = distribution.distributionId;
+
+
+        if (props.hostedZoneId && props.domainName) {
+            const webDomainName = `gfa-web.${props.domainName}`;
+            const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
+                hostedZoneId: props.hostedZoneId,
+                zoneName: props.domainName,
+            });
+            new ARecord(this, 'gfa-web-domain-record', {
+                zone: hostedZone,
+                target: RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+                recordName: webDomainName,
+            });
+
+        }
     }
 }
