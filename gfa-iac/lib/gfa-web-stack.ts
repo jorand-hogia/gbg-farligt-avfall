@@ -1,8 +1,10 @@
 import { Construct, RemovalPolicy, Duration } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { BlockPublicAccess, Bucket } from '@aws-cdk/aws-s3';
-import { CloudFrontAllowedCachedMethods, CloudFrontAllowedMethods, CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
+import { CloudFrontAllowedCachedMethods, CloudFrontAllowedMethods, CloudFrontWebDistribution, CloudFrontWebDistributionProps, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
 import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
+import { Certificate } from '@aws-cdk/aws-certificatemanager';
+import { CertificateValidation } from '@aws-cdk/aws-certificatemanager';
 import * as targets from '@aws-cdk/aws-route53-targets';
 
 interface WebStackProps extends NestedStackProps {
@@ -29,7 +31,7 @@ export class WebStack extends NestedStack {
         const accessIdentity = new OriginAccessIdentity(this, 'gfa-web-access-identity');
         webHostingBucket.grantRead(accessIdentity);
 
-        const distribution = new CloudFrontWebDistribution(this, 'gfa-web-dist', {
+        let distributionProps: any = {
             originConfigs: [
                 {
                     s3OriginSource: {
@@ -63,24 +65,31 @@ export class WebStack extends NestedStack {
                     responsePagePath: '/index.html',
                     errorCachingMinTtl: 86400
                 }
-            ] 
-        });
-        this.webUrl = distribution.distributionDomainName;
-        this.webDistributionId = distribution.distributionId;
+            ],
 
-
+        };
         if (props.hostedZoneId && props.domainName) {
             const webDomainName = `gfa-web.${props.domainName}`;
             const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
                 hostedZoneId: props.hostedZoneId,
                 zoneName: props.domainName,
             });
-            new ARecord(this, 'gfa-web-domain-record', {
-                zone: hostedZone,
-                target: RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
-                recordName: webDomainName,
+            const webCert = new Certificate(this, 'gfa-web-certificate', {
+                domainName: webDomainName,
+                validation: CertificateValidation.fromDns(hostedZone),
             });
-
+            distributionProps.viewerCertificate = {
+                aliases: webDomainName,
+                props: {
+                    acmCertificateArn: webCert.certificateArn,
+                    sslSupportMethod: 'sni-only'
+                }
+            };
         }
+        const distribution = new CloudFrontWebDistribution(this, 'gfa-web-dist', {
+            ...distributionProps
+        });
+        this.webUrl = distribution.distributionDomainName;
+        this.webDistributionId = distribution.distributionId;
     }
 }
