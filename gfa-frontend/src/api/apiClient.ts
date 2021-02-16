@@ -20,7 +20,7 @@ export class ApiClient {
     return this.instance.get<Stop[]>('/stops').then(res => res.data);
   };
 
-  public subscribe = (email: string, locationId: string): Promise<Stop[]> => {
+  public subscribe = (email: string, locationId: string): Promise<void> => {
     return this.instance.put('/subscriptions', {
       email,
       location_id: locationId
