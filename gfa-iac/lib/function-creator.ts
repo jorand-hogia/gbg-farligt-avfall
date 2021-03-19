@@ -1,7 +1,7 @@
 import { Construct, Duration } from "@aws-cdk/core";
 import { IBucket } from '@aws-cdk/aws-s3';
 import { LambdaInvoke } from '@aws-cdk/aws-stepfunctions-tasks';
-import { Function, Runtime, S3Code } from '@aws-cdk/aws-lambda';
+import { Function, Runtime, S3Code, Tracing } from '@aws-cdk/aws-lambda';
 
 interface FunctionProps {
     timeout?: Duration,
@@ -34,5 +34,6 @@ const createFunction = (artifactsBucket: IBucket, version: string, scope: Constr
         handler: 'doesnt.matter',
         timeout: props.timeout || Duration.seconds(10),
         environment: props.environment || {},
+        tracing: Tracing.ACTIVE 
     })
 }
