@@ -27,3 +27,10 @@ Launch frontend with 'real' API:
  - Add name of the folder created above to the build step of `.github/workflows/build.yml`:
    - `executables="get-stops save-events save-stops scraper notify subscribe NEW-FOLDER"`
  - Add CDK resource for the new lambda to a suitable stack in `gfa-iac/lib`
+
+ ## Limitations
+For sending notifications, AWS SNS is used. Currently a single topic is used, and to only notify relevant subscribers is handled via subscription filters.
+Since subscription filters are used, it's quite hard to update an existing subscription. It's possible to do via the AWS Console, but it's hard to design an API for it.
+Additionally, AWS SNS have very limited possibilites for changing the e-mail template.
+
+If this were to be used 'for real', I think AWS SNS would need to be replaced with something better suited for sending (transactional?) emails. Preferably with double opt-in, per location that the user subscribes to.
