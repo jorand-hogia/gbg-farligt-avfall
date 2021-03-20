@@ -56,6 +56,7 @@ fn create_sns_publish_input(event: &PickUpEvent, topic_arn: String) -> Result<Pu
         ..Default::default()
     });
     Ok(PublishInput{
+        subject: Some(format!("Farligt avfall-bilen")),
         message: format!("Farligt avfall-bilen will arrive to {} today at {}-{}",
             event.street,
             rfc3339_string_to_local_time(String::from(&event.time_start))?,
