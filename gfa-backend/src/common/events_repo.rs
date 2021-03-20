@@ -40,7 +40,8 @@ pub async fn get_by_date(table: String, region: Region, date: String) -> Result<
         .unwrap_or_else(|| vec![])
         .into_iter()
         .map(|item| {
-            PickUpEvent::new(
+            PickUpEvent::new_with_id(
+                item.get("location_id").unwrap().s.as_ref().unwrap().clone(),
                 item.get("street").unwrap().s.as_ref().unwrap().clone(),
                 item.get("district").unwrap().s.as_ref().unwrap().clone(),
                 match item.get("description") {

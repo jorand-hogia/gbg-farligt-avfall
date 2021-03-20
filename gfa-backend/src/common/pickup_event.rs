@@ -40,15 +40,20 @@ impl PartialOrd for PickUpEvent {
 
 impl PickUpEvent {
     pub fn new(street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Result<Self, Box<dyn error::Error>> {
+        let location_id = format!("{}_{}",
+            district.to_lowercase().trim().replace(" ", "").replace("/", "-"),
+            street.to_lowercase().trim().replace(" ", "").replace("/", "-")
+        );
+        PickUpEvent::new_with_id(location_id, street, district, description, time_start, time_end)
+    }
+    
+    pub fn new_with_id(location_id: String, street: String, district: String, description: Option<String>, time_start: String, time_end: String) -> Result<Self, Box<dyn error::Error>> {
         let time_start = DateTime::parse_from_rfc3339(&time_start)?
             .with_timezone(&Utc);
         let time_end = DateTime::parse_from_rfc3339(&time_end)?
             .with_timezone(&Utc);
         Ok(PickUpEvent{
-            location_id: format!("{}_{}",
-                district.to_lowercase().trim().replace(" ", "").replace("/", "-"),
-                street.to_lowercase().trim().replace(" ", "").replace("/", "-")
-            ),
+            location_id,
             street,
             district,
             description,
