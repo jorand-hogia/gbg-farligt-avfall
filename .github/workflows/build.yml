@@ -27,7 +27,9 @@ jobs:
         uses: youyo/aws-cdk-github-actions@v1
         with:
           working_dir: 'gfa-iac'
-          cdk_subcommand: "synth -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }} -c version=${{ steps.pull_request.outputs.number }}"
+          cdk_subcommand: >
+            synth -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }}
+                  -c version=${{ steps.pull_request.outputs.number }}
           actions_comment: false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
