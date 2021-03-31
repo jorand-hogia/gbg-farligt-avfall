@@ -7,11 +7,9 @@ import { ITable } from '@aws-cdk/aws-dynamodb';
 import { ITopic } from '@aws-cdk/aws-sns';
 import { Rule, Schedule } from '@aws-cdk/aws-events';
 import { SfnStateMachine } from '@aws-cdk/aws-events-targets';
-import { functionWithInvokeCreator } from './function-creator';
+import { GfaFunctionWithInvokeTask } from './function/gfa-function-invoke';
 
 export interface IngestionStackProps extends NestedStackProps {
-  version: string,
-  artifactsBucket: IBucket,
   stopsBucket: IBucket,
   stopsPath: string,
   eventsTable: ITable,
@@ -23,26 +21,27 @@ export class IngestionStack extends NestedStack {
   constructor(scope: Construct, id: string, props: IngestionStackProps) {
     super(scope, id, props);
 
-    const functionWithInvokeTask = functionWithInvokeCreator(props.artifactsBucket, props.version);
-
-    const [scraper, invokeScraper] = functionWithInvokeTask(this, 'scraper', {
+    const scraper = new GfaFunctionWithInvokeTask(this, 'scraper', {
+      name: 'scraper',
       outputPath: '$.Payload'
     });
 
-    const [saveEvents, invokeSaveEvents] = functionWithInvokeTask(this, 'save-events', {
+    const saveEvents = new GfaFunctionWithInvokeTask(this, 'save-events', {
+      name: 'save-events',
       environment: {
-        EVENTS_TABLE: props.eventsTable.tableName, 
+        EVENTS_TABLE: props.eventsTable.tableName
       }
     });
-    props.eventsTable.grantWriteData(saveEvents);
+    props.eventsTable.grantWriteData(saveEvents.handler);
 
-    const [saveStops, invokeSaveStops] = functionWithInvokeTask(this, 'save-stops', {
+    const saveStops = new GfaFunctionWithInvokeTask(this, 'save-stops', {
+      name: 'save-stops',
       environment: {
         STOPS_BUCKET: props.stopsBucket.bucketName,
-        STOPS_PATH: props.stopsPath,
+        STOPS_PATH: props.stopsPath
       }
     });
-    props.stopsBucket.grantWrite(saveStops, props.stopsPath);
+    props.stopsBucket.grantWrite(saveStops.handler, props.stopsPath);
 
     const alertTask = new SnsPublish(this, 'Data ingestion alert', {
             topic: props.alertTopic,
@@ -50,11 +49,11 @@ export class IngestionStack extends NestedStack {
             subject: 'GFA: Data ingestion alert'
     });
     const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
-      definition: invokeScraper 
+      definition: scraper.task 
         .addCatch(alertTask)
         .next(new Parallel(this, 'process-scrape-results', {})
-          .branch(invokeSaveEvents)
-          .branch(invokeSaveStops)
+          .branch(saveEvents.task)
+          .branch(saveStops.task)
           .addCatch(alertTask)
         ),
       timeout: Duration.minutes(5)

@@ -1,7 +1,6 @@
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { Construct } from '@aws-cdk/core';
 import { IBucket } from '@aws-cdk/aws-s3';
-import { functionCreator } from './function-creator';
 import { ITable } from '@aws-cdk/aws-dynamodb';
 import { ITopic, Topic } from '@aws-cdk/aws-sns';
 import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
@@ -13,8 +12,6 @@ import { LambdaEndpoint } from './gfa-api-stack';
 import { GfaFunction } from './function/gfa-function';
 
 interface NotifyStackProps extends NestedStackProps {
-    version: string,
-    artifactsBucket: IBucket,
     eventsTable: ITable,
     alertTopic: ITopic
 }
@@ -28,7 +25,6 @@ export class NotifyStack extends NestedStack {
 
         const arrivalToday = new Topic(this, 'gfa-today-topic');
 
-        const newFunction = functionCreator(props.artifactsBucket, props.version);
         const notify = new GfaFunction(this, 'notify', {
             name: 'notify',
             environment: {
@@ -50,18 +46,19 @@ export class NotifyStack extends NestedStack {
             datapointsToAlarm: 1
         }).addAlarmAction(new SnsAction(props.alertTopic));
 
-        const subscribe = newFunction(this, 'subscribe', {
+        const subscribe = new GfaFunction(this, 'subscribe', {
+            name: 'notify',
             environment: {
                 TODAY_TOPIC: arrivalToday.topicArn,
             }
         });
-        subscribe.addToRolePolicy(new PolicyStatement({
+        subscribe.handler.addToRolePolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [ 'sns:Subscribe' ],
             resources: [ arrivalToday.topicArn ]
         }));
         this.subscribeEndpoint = {
-            lambda: subscribe,
+            lambda: subscribe.handler,
             resource: 'subscriptions',
             methods: ['PUT']
         };

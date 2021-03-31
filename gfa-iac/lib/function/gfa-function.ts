@@ -25,6 +25,6 @@ export class GfaFunction extends Construct {
             handler: 'doesnt.matter',
             timeout: props.timeout || Duration.seconds(10),
             environment: props.environment || {},
-        })
+        });
     }
 }
