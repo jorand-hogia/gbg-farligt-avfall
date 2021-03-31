@@ -10,6 +10,7 @@ import { LambdaFunction } from '@aws-cdk/aws-events-targets';
 import { Alarm, ComparisonOperator } from '@aws-cdk/aws-cloudwatch';
 import { SnsAction } from '@aws-cdk/aws-cloudwatch-actions';
 import { LambdaEndpoint } from './gfa-api-stack';
+import { GfaFunction } from './function/gfa-function';
 
 interface NotifyStackProps extends NestedStackProps {
     version: string,
@@ -28,20 +29,21 @@ export class NotifyStack extends NestedStack {
         const arrivalToday = new Topic(this, 'gfa-today-topic');
 
         const newFunction = functionCreator(props.artifactsBucket, props.version);
-        const notify = newFunction(this, 'notify', {
+        const notify = new GfaFunction(this, 'notify', {
+            name: 'notify',
             environment: {
                 EVENTS_TABLE: props.eventsTable.tableName,
                 TODAY_TOPIC: arrivalToday.topicArn,
             }
         });
-        props.eventsTable.grantReadData(notify);
-        arrivalToday.grantPublish(notify);
+        props.eventsTable.grantReadData(notify.handler);
+        arrivalToday.grantPublish(notify.handler);
         new Rule(this, 'gfa-notify-scheduled-execution', {
             schedule: Schedule.expression('cron(0 3 * * ? *)'),
-            targets: [new LambdaFunction(notify)]
+            targets: [new LambdaFunction(notify.handler)]
         });
         new Alarm(this, 'Notify alert', {
-            metric: notify.metricErrors(),
+            metric: notify.handler.metricErrors(),
             threshold: 0,
             comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
             evaluationPeriods: 1,
