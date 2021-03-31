@@ -9,16 +9,10 @@ import { WebStack } from './gfa-web-stack';
 import { NotifyStack } from './gfa-notify-stack';
 import { GfaFunction } from './function/gfa-function';
 
-interface GbgFarligtAvfallStackProps extends StackProps {
-  hostedZoneId: string,
-  domainName: string,
-  adminEmail: string,
-}
-
 export class GbgFarligtAvfallStack extends Stack {
 
-  constructor(app: App, id: string, props: GbgFarligtAvfallStackProps) {
-    super(app, id, props);
+  constructor(app: App, id: string) {
+    super(app, id);
 
     const eventsDb = new Table(this, 'gfa-events-db', {
       partitionKey: { name: 'event_date', type: AttributeType.STRING },
@@ -30,11 +24,12 @@ export class GbgFarligtAvfallStack extends Stack {
     const stopsBucket = new Bucket(this, 'gfa-stops-bucket');
 
     const alertTopic = new Topic(this, 'gfa-admin-alert');
-    if (props.adminEmail) {
-      alertTopic.addSubscription(new EmailSubscription(props.adminEmail));
+    const adminEmail = app.node.tryGetContext('adminEmail');
+    if (adminEmail) {
+      alertTopic.addSubscription(new EmailSubscription(adminEmail));
     }
 
-    const ingestionStack = new IngestionStack(this, 'gfa-ingestion-stack', {
+    new IngestionStack(this, 'gfa-ingestion-stack', {
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path,
       eventsTable: eventsDb,
@@ -57,8 +52,6 @@ export class GbgFarligtAvfallStack extends Stack {
 
     const webStack = new WebStack(this, 'gfa-web-stack');
     const apiStack = new ApiStack(this, 'gfa-api-stack', {
-      hostedZoneId: props.hostedZoneId,
-      domainName: props.domainName,
       lambdaEndpoints: [
         {
           lambda: getStops.handler,

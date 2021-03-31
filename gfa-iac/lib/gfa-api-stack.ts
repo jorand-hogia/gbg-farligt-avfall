@@ -13,8 +13,6 @@ export interface LambdaEndpoint {
     methods: string[],
 }
 interface ApiStackProps extends NestedStackProps {
-    hostedZoneId?: string,
-    domainName?: string,
     lambdaEndpoints: LambdaEndpoint[],
 }
 
@@ -44,11 +42,15 @@ export class ApiStack extends NestedStack {
             })
         })
 
-        if (props.hostedZoneId && props.domainName) {
-            const apiDomainName = `gfa-api.${props.domainName}`;
+
+        const hostedZoneId = scope.node.tryGetContext('hostedZoneId');
+        const domainName = scope.node.tryGetContext('domainName');
+
+        if (hostedZoneId && domainName) {
+            const apiDomainName = `gfa-api.${domainName}`;
             const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
-                hostedZoneId: props.hostedZoneId,
-                zoneName: props.domainName,
+                hostedZoneId: hostedZoneId,
+                zoneName: domainName,
             });
             const apiCert = new Certificate(this, 'gfa-api-certificate', {
                 domainName: apiDomainName,
