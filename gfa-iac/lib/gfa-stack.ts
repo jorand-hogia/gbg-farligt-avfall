@@ -8,6 +8,7 @@ import { ApiStack } from './gfa-api-stack';
 import { WebStack } from './gfa-web-stack';
 import { NotifyStack } from './gfa-notify-stack';
 import { GfaFunction } from './function/gfa-function';
+import { SendGridDomainVerifier } from './sendgrid/domain-verifier';
 
 export class GbgFarligtAvfallStack extends Stack {
 
@@ -60,6 +61,15 @@ export class GbgFarligtAvfallStack extends Stack {
         },
         notifyStack.subscribeEndpoint,
       ]
+    });
+
+    const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
+    const hostedZoneId = app.node.tryGetContext('hostedZoneId');
+    const domainName = app.node.tryGetContext('domainName');
+    new SendGridDomainVerifier(this, 'gfa-sendgrid-verifier', {
+      hostedZoneId,
+      domainName,
+      apiKey: sendgridApiKey,
     });
 
     new CfnOutput(this, 'WebBucket', {

@@ -47,7 +47,7 @@ export class NotifyStack extends NestedStack {
         }).addAlarmAction(new SnsAction(props.alertTopic));
 
         const subscribe = new GfaFunction(this, 'subscribe', {
-            name: 'notify',
+            name: 'subscribe',
             environment: {
                 TODAY_TOPIC: arrivalToday.topicArn,
             }

@@ -35,6 +35,7 @@ jobs:
                    -c version=${{ steps.pull_request.outputs.number }}
                    -c hostedZoneId=${{ secrets.HOSTED_ZONE_ID }}
                    -c domainName=${{ secrets.DOMAIN_NAME }}
+                   -c sendgridApiKey=${{ secrets.SENDGRID_API_KEY }}
                    -c adminEmail=${{ secrets.ADMIN_EMAIL }}
           cdk_args: '--require-approval never'
           actions_comment: false

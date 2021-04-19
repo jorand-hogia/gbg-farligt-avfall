@@ -30,6 +30,7 @@ jobs:
           cdk_subcommand: >
             synth -c artifactsBucketName=${{ secrets.S3_ARTIFACT_BUCKET }}
                   -c version=${{ steps.pull_request.outputs.number }}
+                  -c sendgridApiKey=${{ secrets.SENDGRID_API_KEY }}
           actions_comment: false
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
