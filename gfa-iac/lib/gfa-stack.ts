@@ -7,8 +7,9 @@ import { IngestionStack } from './gfa-ingestion-stack';
 import { ApiStack } from './gfa-api-stack';
 import { WebStack } from './gfa-web-stack';
 import { NotifyStack } from './gfa-notify-stack';
-import { GfaFunction } from './function/gfa-function';
 import { SendGridDomainVerifier } from './sendgrid/domain-verifier';
+import { SubscriptionStack } from './gfa-subscriptions-stack';
+import { StopsStack } from './gfa-stops-stack';
 
 export class GbgFarligtAvfallStack extends Stack {
 
@@ -37,31 +38,13 @@ export class GbgFarligtAvfallStack extends Stack {
       alertTopic,
     });
 
-    const getStops = new GfaFunction(this, 'get-stops', {
-        name: 'get-stops',
-        environment: {
-            STOPS_BUCKET: stopsBucket.bucketName,
-            STOPS_PATH: stopsS3Path,
-        }
-    });
-    stopsBucket.grantRead(getStops.handler, stopsS3Path);
-
-    const notifyStack = new NotifyStack(this, 'gfa-notify-stack', {
+    new NotifyStack(this, 'gfa-notify-stack', {
       eventsTable: eventsDb,
       alertTopic,
     });
 
     const webStack = new WebStack(this, 'gfa-web-stack');
-    const apiStack = new ApiStack(this, 'gfa-api-stack', {
-      lambdaEndpoints: [
-        {
-          lambda: getStops.handler,
-          resource: 'stops',
-          methods: ['GET']
-        },
-        notifyStack.subscribeEndpoint,
-      ]
-    });
+    const apiStack = new ApiStack(this, 'gfa-api-stack');
 
     const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
     const hostedZoneId = app.node.tryGetContext('hostedZoneId');
@@ -72,11 +55,21 @@ export class GbgFarligtAvfallStack extends Stack {
       apiKey: sendgridApiKey,
     });
 
+    const stopsStack = new StopsStack(this, 'gfa-stops-stack', {
+      api: apiStack.api,
+      stopsBucket: stopsBucket,
+      stopsPath: stopsS3Path
+    })
+
+    const subscriptionStack = new SubscriptionStack(this, 'gfa-subscription-stack', {
+      api: apiStack.api
+    });
+
     new CfnOutput(this, 'WebBucket', {
       value: webStack.webHostingBucketName,
     });
     new CfnOutput(this, 'ApiUrl', {
-      value: apiStack.apiUrl,
+      value: apiStack.externalUrl || apiStack.api.url,
     });
     new CfnOutput(this, 'WebUrl', {
       value: webStack.webUrl,

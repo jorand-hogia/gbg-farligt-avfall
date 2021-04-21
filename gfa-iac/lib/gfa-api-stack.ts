@@ -1,47 +1,20 @@
-import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
+import { NestedStack } from '@aws-cdk/aws-cloudformation';
 import { Construct } from '@aws-cdk/core';
-import { Cors, LambdaIntegration, RestApi, SecurityPolicy, Stage } from '@aws-cdk/aws-apigateway';
-import { IFunction } from '@aws-cdk/aws-lambda';
+import { RestApi, SecurityPolicy } from '@aws-cdk/aws-apigateway';
 import { Certificate } from '@aws-cdk/aws-certificatemanager';
 import { CertificateValidation } from '@aws-cdk/aws-certificatemanager';
 import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
 import * as targets from '@aws-cdk/aws-route53-targets';
 
-export interface LambdaEndpoint {
-    lambda: IFunction,
-    resource: string,
-    methods: string[],
-}
-interface ApiStackProps extends NestedStackProps {
-    lambdaEndpoints: LambdaEndpoint[],
-}
-
 export class ApiStack extends NestedStack {
 
-    public readonly apiUrl: string;
+    public readonly api: RestApi;
+    public readonly externalUrl?: string;
 
-    constructor(scope: Construct, id: string, props: ApiStackProps) {
-        super(scope, id, props);
+    constructor(scope: Construct, id: string) {
+        super(scope, id);
 
-        const api = new RestApi(this, 'gfa-api');
-        this.apiUrl = api.url;
-
-        props.lambdaEndpoints.forEach(endpoint => {
-            const integration = new LambdaIntegration(endpoint.lambda, {
-                proxy: true,
-            });
-            const resource = api.root.getResource(endpoint.resource)
-                || api.root.addResource(endpoint.resource);
-            resource.addCorsPreflight({
-                allowOrigins: Cors.ALL_ORIGINS,
-                allowMethods: endpoint.methods,
-                allowHeaders: ['Content-Type', 'Accept']
-            })
-            endpoint.methods.forEach(method => {
-                resource.addMethod(method, integration);
-            })
-        })
-
+        this.api = new RestApi(this, 'gfa-api');
 
         const hostedZoneId = scope.node.tryGetContext('hostedZoneId');
         const domainName = scope.node.tryGetContext('domainName');
@@ -56,17 +29,17 @@ export class ApiStack extends NestedStack {
                 domainName: apiDomainName,
                 validation: CertificateValidation.fromDns(hostedZone),
             });
-            api.addDomainName('gfa-api-domain', {
+            this.api.addDomainName('gfa-api-domain', {
                 domainName: apiDomainName,
                 certificate: apiCert, 
                 securityPolicy: SecurityPolicy.TLS_1_2,
             });
             new ARecord(this, 'gfa-api-domain-record', {
                 zone: hostedZone,
-                target: RecordTarget.fromAlias(new targets.ApiGateway(api)),
+                target: RecordTarget.fromAlias(new targets.ApiGateway(this.api)),
                 recordName: apiDomainName,
             });
-            this.apiUrl = `https://${apiDomainName}`;
+            this.externalUrl = `https://${apiDomainName}`;
         }
     }
 }
