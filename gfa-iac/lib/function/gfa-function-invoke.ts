@@ -15,8 +15,8 @@ export class GfaFunctionWithInvokeTask extends Construct {
     constructor(scope: Construct, id: string, props: GfaFunctionWithInvokeTaskProps) {
         super(scope, id);
 
-        this.handler = new GfaFunction(scope, `${id}-function`, props).handler;
-        this.task = new LambdaInvoke(scope, `invoke-${props.name}`, {
+        this.handler = new GfaFunction(this, `fn-${props.name}`, props).handler;
+        this.task = new LambdaInvoke(this, `invoke-${props.name}`, {
             lambdaFunction: this.handler,
             outputPath: props.outputPath,
         });

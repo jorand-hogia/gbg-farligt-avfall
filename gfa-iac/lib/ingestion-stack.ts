@@ -48,7 +48,7 @@ export class IngestionStack extends NestedStack {
             message: TaskInput.fromDataAt('$.Cause'),
             subject: 'GFA: Data ingestion alert'
     });
-    const scrapeAndSaveFlow = new StateMachine(this, 'gfa-scrape-and-save', {
+    const scrapeAndSaveFlow = new StateMachine(this, 'scrape-and-save', {
       definition: scraper.task 
         .addCatch(alertTask)
         .next(new Parallel(this, 'process-scrape-results', {})
@@ -59,7 +59,7 @@ export class IngestionStack extends NestedStack {
       timeout: Duration.minutes(5)
     });
 
-    new Rule(this, 'gfa-scrape-and-save-scheduled-execution', {
+    new Rule(this, 'scrape-and-save-scheduled-execution', {
       schedule: Schedule.expression('cron(0 0 1 * ? *)'),
       targets: [new SfnStateMachine(scrapeAndSaveFlow)],
     });

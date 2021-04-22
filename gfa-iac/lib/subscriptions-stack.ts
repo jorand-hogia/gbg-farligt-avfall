@@ -12,7 +12,7 @@ export class SubscriptionStack extends NestedStack {
     constructor(scope: Construct, id: string, props: SubscriptionsStackProps) {
         super(scope, id);
 
-        const subscriptionsDb = new Table(scope, 'gfa-subscriptions-db', {
+        const subscriptionsDb = new Table(this, 'subscriptions-db', {
             partitionKey: { name: 'email', type: AttributeType.STRING },
             sortKey: { name: 'location_id', type: AttributeType.STRING },
             billingMode: BillingMode.PAY_PER_REQUEST,
@@ -22,7 +22,7 @@ export class SubscriptionStack extends NestedStack {
             partitionKey: { name: 'auth_token', type: AttributeType.STRING }
         });
 
-        const addSubscription = new GfaFunction(scope, 'addSubscription', {
+        const addSubscription = new GfaFunction(this, 'addSubscription', {
             name: 'add-subscription',
             environment: {
                 SUBSCRIPTIONS_TABLE: subscriptionsDb.tableName

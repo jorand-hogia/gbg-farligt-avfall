@@ -1,6 +1,5 @@
 use std::fmt;
 use serde::{Serialize, Deserialize};
-use crate::coordinate::Coordinate;
 
 #[derive(fmt::Debug, Serialize, Deserialize)]
 pub struct PickUpStop {

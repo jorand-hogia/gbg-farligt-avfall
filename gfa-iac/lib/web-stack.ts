@@ -12,17 +12,17 @@ export class WebStack extends NestedStack {
     constructor(scope: Construct, id: string, props?: NestedStackProps) {
         super(scope, id, props);
 
-        const webHostingBucket = new Bucket(this, 'gfa-web-bucket', {
+        const webHostingBucket = new Bucket(this, 'web-bucket', {
             removalPolicy: RemovalPolicy.DESTROY,
             websiteIndexDocument: 'index.html',
             blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
         });
         this.webHostingBucketName = webHostingBucket.bucketName;
         
-        const accessIdentity = new OriginAccessIdentity(this, 'gfa-web-access-identity');
+        const accessIdentity = new OriginAccessIdentity(this, 'web-access-identity');
         webHostingBucket.grantRead(accessIdentity);
 
-        const distribution = new CloudFrontWebDistribution(this, 'gfa-web-dist', {
+        const distribution = new CloudFrontWebDistribution(this, 'web-dist', {
             originConfigs: [
                 {
                     s3OriginSource: {

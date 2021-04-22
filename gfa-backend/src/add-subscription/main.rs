@@ -2,7 +2,7 @@ use std::{collections::HashMap};
 use lambda::{handler_fn, Context};
 use log::{self, LevelFilter};
 use simple_logger::{SimpleLogger};
-use serde_json::{json, Value};
+use serde_json::{Value};
 use aws_lambda_events::event::apigw::ApiGatewayProxyResponse;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;

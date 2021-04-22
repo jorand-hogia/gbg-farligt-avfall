@@ -14,7 +14,7 @@ export class ApiStack extends NestedStack {
     constructor(scope: Construct, id: string) {
         super(scope, id);
 
-        this.api = new RestApi(this, 'gfa-api');
+        this.api = new RestApi(this, 'api');
 
         const hostedZoneId = scope.node.tryGetContext('hostedZoneId');
         const domainName = scope.node.tryGetContext('domainName');
@@ -25,16 +25,16 @@ export class ApiStack extends NestedStack {
                 hostedZoneId: hostedZoneId,
                 zoneName: domainName,
             });
-            const apiCert = new Certificate(this, 'gfa-api-certificate', {
+            const apiCert = new Certificate(this, 'api-certificate', {
                 domainName: apiDomainName,
                 validation: CertificateValidation.fromDns(hostedZone),
             });
-            this.api.addDomainName('gfa-api-domain', {
+            this.api.addDomainName('api-domain', {
                 domainName: apiDomainName,
                 certificate: apiCert, 
                 securityPolicy: SecurityPolicy.TLS_1_2,
             });
-            new ARecord(this, 'gfa-api-domain-record', {
+            new ARecord(this, 'api-domain-record', {
                 zone: hostedZone,
                 target: RecordTarget.fromAlias(new targets.ApiGateway(this.api)),
                 recordName: apiDomainName,

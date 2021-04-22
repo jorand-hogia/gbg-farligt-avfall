@@ -17,7 +17,7 @@ export class NotifyStack extends NestedStack {
     constructor(scope: Construct, id: string, props: NotifyStackProps) {
         super(scope, id, props);
 
-        const arrivalToday = new Topic(this, 'gfa-today-topic');
+        const arrivalToday = new Topic(this, 'today-topic');
         const notify = new GfaFunction(this, 'notify', {
             name: 'notify',
             environment: {
@@ -27,7 +27,7 @@ export class NotifyStack extends NestedStack {
         });
         props.eventsTable.grantReadData(notify.handler);
         arrivalToday.grantPublish(notify.handler);
-        new Rule(this, 'gfa-notify-scheduled-execution', {
+        new Rule(this, 'notify-scheduled-execution', {
             schedule: Schedule.expression('cron(0 3 * * ? *)'),
             targets: [new LambdaFunction(notify.handler)]
         });

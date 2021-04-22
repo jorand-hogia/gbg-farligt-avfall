@@ -81,27 +81,6 @@ async fn fetch_page(client: &Client, url: String) -> Result<Vec<u8>, PageFetcher
     Ok(Vec::from(body))
 }
 
-fn find_paging_path(page: &Vec<u8>) -> Result<String, PageFetcherError> {
-    let doc = match document::Document::from_read(page.as_slice()) {
-        Ok(doc) => doc,
-        Err(_e) => return Err(PageFetcherError{
-            message: format!("Could not parse page")
-        })
-    };
-    let node = match doc.find(predicate::Class("c-pagination__link")).into_selection().first() {
-        Some(node) => node,
-        None => return Err(PageFetcherError{
-            message: format!("Could not find paging url")
-        })
-    };
-    return match node.attr("href") {
-        Some(url) => Ok(String::from(url)),
-        None => return Err(PageFetcherError{
-            message: format!("Could not find href attribute of expected element")
-        })
-    };
-}
-
 fn find_total_items(page: &Vec<u8>) -> Result<u16, PageFetcherError> {
     lazy_static! {
         static ref TOTAL_RE: Regex = Regex::new(r".*Hittade\s+(\d+)").unwrap();
@@ -169,13 +148,6 @@ mod tests {
         buffer
     }
 
-    // Temp disabled, maybe?
-    fn should_find_paging_path() {
-        let file = read_file("body_with_items.html");
-        let expected_path = String::from("/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/lZBLC4JAFEZ_jdu51xlxhnZKYBg96EF6N2Fhk9A4opbQr89aFVTU3V0451scIEiAyuxS6KwtbJmd-j8lf-vxCN3Yc8ezqRdiEE-G09CNeDTyYfMA8OUCDBc8FIjRjAP97z8v_eZ_Aej7fNr78qM_57AEAqoyXZSPJpAixEDFzrBubxgyVEoq4QvhSom-5OreLCh3QmmgOj_kdV6zc92nPLZt1QwcdLDrOqat1aec7a1x8J1ytE0LySsJlVmvk-vqYDaquQHKfKPn/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!0==/");
-        assert_eq!(expected_path, find_paging_path(&file).unwrap());
-    }
-
     #[test]
     fn should_find_total_items() {
         let file = read_file("body_with_items.html");
@@ -200,10 +172,4 @@ mod tests {
         );
         assert_eq!(expected_urls, urls);
     } 
-
-    // #[tokio::test]
-    async fn temp() {
-        let res = obtain_pages().await.unwrap();
-        println!("{}", res.len());
-    }
 }

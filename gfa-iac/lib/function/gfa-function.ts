@@ -19,7 +19,7 @@ export class GfaFunction extends Construct {
         const artifactsBucket = Bucket.fromBucketName(this, 'artifactsBucket', artifactsBucketName);
         const version = scope.node.tryGetContext('version');
 
-        this.handler = new Function(scope, `gfa-${props.name}`, {
+        this.handler = new Function(this, `${props.name}-handler`, {
             code: new S3Code(artifactsBucket, `gfa-${props.name}-${version}`),
             runtime: Runtime.PROVIDED,
             handler: 'doesnt.matter',
