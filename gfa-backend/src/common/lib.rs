@@ -3,3 +3,5 @@ pub mod pickup_stop;
 pub mod coordinate;
 pub mod events_repo;
 pub mod send_email;
+pub mod subscription;
+pub mod subscriptions_repo;

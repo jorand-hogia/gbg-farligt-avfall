@@ -16,6 +16,7 @@ export class SubscriptionStack extends NestedStack {
             partitionKey: { name: 'email', type: AttributeType.STRING },
             sortKey: { name: 'location_id', type: AttributeType.STRING },
             billingMode: BillingMode.PAY_PER_REQUEST,
+            timeToLiveAttribute: 'ttl'
         });
         subscriptionsDb.addGlobalSecondaryIndex({
             indexName: 'byAuthToken',
