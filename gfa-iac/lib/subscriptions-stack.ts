@@ -31,17 +31,36 @@ export class SubscriptionStack extends NestedStack {
         });
         subscriptionsDb.grantReadWriteData(addSubscription.handler);
 
+        const verifySubscription = new GfaFunction(this, 'verifySubscription', {
+            name: 'verify-subscription',
+            environment: {
+                SUBSCRIPTIONS_TABLE: subscriptionsDb.tableName
+            }
+        });
+        subscriptionsDb.grantReadWriteData(verifySubscription.handler);
+
         const addSubscriptionIntegration = new LambdaIntegration(addSubscription.handler, {
             proxy: true,
         });
+        const verifySubscriptionIntegration = new LambdaIntegration(verifySubscription.handler, {
+            proxy: true,
+        });
 
-        const resource = props.api.root.addResource('subscriptions');
-        resource.addCorsPreflight({
+        const subscriptionsResource = props.api.root.addResource('subscriptions');
+        subscriptionsResource.addCorsPreflight({
             allowOrigins: Cors.ALL_ORIGINS,
             allowMethods: ['PUT'],
             allowHeaders: ['Content-Type', 'Accept']
         });
-        resource.addMethod('PUT', addSubscriptionIntegration);
+        subscriptionsResource.addMethod('PUT', addSubscriptionIntegration);
 
+        const verifyResource = subscriptionsResource.addResource('verify');
+        verifyResource.addCorsPreflight({
+            allowOrigins: Cors.ALL_ORIGINS,
+            allowMethods: ['POST'],
+            allowHeaders: ['Content-Typ', 'Accept']
+        });
+        verifyResource.addMethod('POST', verifySubscriptionIntegration);
     }
+
 }

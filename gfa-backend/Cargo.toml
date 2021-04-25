@@ -28,6 +28,10 @@ path = "src/notify/main.rs"
 name = "add-subscription"
 path = "src/add-subscription/main.rs"
 
+[[bin]]
+name = "verify-subscription"
+path = "src/verify-subscription/main.rs"
+
 [lib]
 name = "common"
 path = "src/common/lib.rs"

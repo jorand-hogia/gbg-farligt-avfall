@@ -24,7 +24,7 @@ impl error::Error for EventsRepoError {
 pub async fn get_by_date(table: String, region: Region, date: String) -> Result<Vec<PickUpEvent>, Box<dyn std::error::Error + Send + Sync + 'static>> {
     let client = DynamoDbClient::new(region);
     let mut attribute_values = HashMap::new();
-    attribute_values.insert(":date".to_string(), AttributeValue{
+    attribute_values.insert(":date".to_owned(), AttributeValue{
         s: Some(date),
         ..Default::default()
     });
@@ -32,7 +32,7 @@ pub async fn get_by_date(table: String, region: Region, date: String) -> Result<
         .query(QueryInput{
             table_name: table,
             expression_attribute_values: Some(attribute_values),
-            key_condition_expression: Some("event_date = :date".to_string()),
+            key_condition_expression: Some("event_date = :date".to_owned()),
             ..Default::default()
         })
         .await?

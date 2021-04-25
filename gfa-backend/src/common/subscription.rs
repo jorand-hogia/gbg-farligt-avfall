@@ -29,6 +29,10 @@ impl Subscription {
             ttl: Some((Utc::now() + Duration::days(1)).timestamp())
         }
     }
+    pub fn verify(&mut self) {
+        self.is_authenticated = true;
+        self.ttl = None;
+    }
 }
 
 #[cfg(test)]
