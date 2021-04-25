@@ -2,6 +2,9 @@ import { Construct, RemovalPolicy, Duration } from '@aws-cdk/core';
 import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { BlockPublicAccess, Bucket } from '@aws-cdk/aws-s3';
 import { CloudFrontAllowedCachedMethods, CloudFrontAllowedMethods, CloudFrontWebDistribution, HttpVersion, OriginAccessIdentity, PriceClass } from '@aws-cdk/aws-cloudfront';
+import { HostedZone, ARecord, RecordTarget } from '@aws-cdk/aws-route53';
+import * as targets from '@aws-cdk/aws-route53-targets';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from '@aws-cdk/custom-resources';
 
 export class WebStack extends NestedStack {
 
@@ -22,6 +25,24 @@ export class WebStack extends NestedStack {
         const accessIdentity = new OriginAccessIdentity(this, 'web-access-identity');
         webHostingBucket.grantRead(accessIdentity);
 
+
+        const certificateArn = new AwsCustomResource(this, 'get-web-certificate-arn', {
+            onUpdate: {
+                service: 'SSM',
+                action: 'getParameter',
+                parameters: {
+                    'Name': 'gfa-web-certificate',
+                },
+                region: 'us-east-1',
+                physicalResourceId: PhysicalResourceId.of(new Date().toISOString()),
+            },
+            policy: AwsCustomResourcePolicy.fromSdkCalls({
+                resources: AwsCustomResourcePolicy.ANY_RESOURCE,
+            }),
+        });
+        const domainName = scope.node.tryGetContext('domainName');
+        const webDomainName = `gfa.${domainName}`;
+
         const distribution = new CloudFrontWebDistribution(this, 'web-dist', {
             originConfigs: [
                 {
@@ -40,6 +61,13 @@ export class WebStack extends NestedStack {
                     }],
                 }
             ],
+            viewerCertificate: {
+                aliases: [ webDomainName ],
+                props: {
+                    acmCertificateArn: certificateArn.getResponseField('Parameter.Value'),
+                    sslSupportMethod: 'sni-only',
+                },
+            },
             priceClass: PriceClass.PRICE_CLASS_100,
             httpVersion: HttpVersion.HTTP2,
             defaultRootObject: 'index.html',
@@ -60,5 +88,16 @@ export class WebStack extends NestedStack {
         });
         this.webUrl = distribution.distributionDomainName;
         this.webDistributionId = distribution.distributionId;
+
+        const hostedZoneId = scope.node.tryGetContext('hostedZoneId');
+        const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
+            hostedZoneId: hostedZoneId,
+            zoneName: domainName,
+        });
+        new ARecord(this, 'web-domain-record', {
+            zone: hostedZone,
+            target: RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution)),
+            recordName: webDomainName,
+        });
     }
 }
