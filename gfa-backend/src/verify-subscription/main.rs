@@ -48,7 +48,7 @@ async fn handle_request(
 
     subscription.verify();
 
-    match store_subscription(&subscriptions_table, &region, subscription).await {
+    match store_subscription(&subscriptions_table, &region, &subscription).await {
         Ok(()) => Ok(create_response(200, "Successfully verified subscription".to_owned())),
         Err(error) => {
             error!("Failed to write to database: {}", error);

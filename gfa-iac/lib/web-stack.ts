@@ -14,14 +14,16 @@ export class WebStack extends NestedStack {
 
     public readonly webDistributionId: string;
     public readonly webHostingBucketName: string;
-    public readonly webDomainName: string;
+    public readonly externalUrl: string;
 
+    private readonly webDomainName: string;
     private readonly rootDomainName: string;
 
     constructor(scope: Construct, id: string, props: WebStackProps) {
         super(scope, id, props);
         this.rootDomainName = scope.node.tryGetContext('domainName');
         this.webDomainName = `gfa.${this.rootDomainName}`;
+        this.externalUrl = `https://${this.webDomainName}`;
 
         const webHostingBucket = this.setupHostingBucket();
         this.webHostingBucketName = webHostingBucket.bucketName;

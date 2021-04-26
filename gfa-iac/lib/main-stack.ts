@@ -32,6 +32,11 @@ export class GbgFarligtAvfallStack extends Stack {
       removalPolicy: RemovalPolicy.DESTROY
     });
 
+    const webStack = new WebStack(this, 'web-stack', {
+      webCertParameterName: props.webCertParameterName
+    });
+    const apiStack = new ApiStack(this, 'api-stack');
+
     const alertTopic = new Topic(this, 'admin-alert');
     const adminEmail = app.node.tryGetContext('adminEmail');
     if (adminEmail) {
@@ -50,28 +55,26 @@ export class GbgFarligtAvfallStack extends Stack {
       alertTopic,
     });
 
-    const webStack = new WebStack(this, 'web-stack', {
-      webCertParameterName: props.webCertParameterName
-    });
-    const apiStack = new ApiStack(this, 'api-stack');
-
-    const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
-    const hostedZoneId = app.node.tryGetContext('hostedZoneId');
-    const domainName = app.node.tryGetContext('domainName');
-    new SendGridDomainVerifier(this, 'sendgrid-verifier', {
-      hostedZoneId,
-      domainName,
-      apiKey: sendgridApiKey,
-    });
-
-    const stopsStack = new StopsStack(this, 'stops-stack', {
+    new StopsStack(this, 'stops-stack', {
       api: apiStack.api,
       stopsBucket: stopsBucket,
       stopsPath: stopsS3Path
     })
 
-    const subscriptionStack = new SubscriptionStack(this, 'subscription-stack', {
-      api: apiStack.api
+    const domainName = app.node.tryGetContext('domainName');
+    const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
+    new SubscriptionStack(this, 'subscription-stack', {
+      api: apiStack.api,
+      verifyUrl: `${webStack.externalUrl}/verify`,
+      emailDomain: domainName,
+      apiKey: sendgridApiKey,
+    });
+
+    const hostedZoneId = app.node.tryGetContext('hostedZoneId');
+    new SendGridDomainVerifier(this, 'sendgrid-verifier', {
+      hostedZoneId,
+      domainName,
+      apiKey: sendgridApiKey,
     });
 
     new CfnOutput(this, 'WebBucket', {
@@ -84,7 +87,7 @@ export class GbgFarligtAvfallStack extends Stack {
       value: apiStack.externalUrl || apiStack.api.url,
     });
     new CfnOutput(this, 'WebUrl', {
-      value: webStack.webDomainName,
+      value: webStack.externalUrl,
     });
   }
 }

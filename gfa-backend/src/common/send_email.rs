@@ -1,19 +1,26 @@
 use std::{error, fmt};
+use std::collections::HashMap;
 use reqwest::{Client, StatusCode};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::Serialize;
 
 pub struct SendEmailRequest {
-    subject: String,
-    html_content: String,
-    from: From,
-    recipients: Vec<String>
+    pub subject: String,
+    pub html_content: String,
+    pub from: From,
+    pub recipients: Vec<Recipient>
 }
+pub struct Recipient {
+  pub email: String,
+  pub substitutions: HashMap<String, String>
+}
+
 #[derive(Serialize, Debug)]
 pub struct From {
-    name: String,
-    email: String,
+    pub name: String,
+    pub email: String,
 }
+
 #[derive(Debug)]
 pub struct BadStatusCode {
   status_code: StatusCode
@@ -34,7 +41,8 @@ struct RequestBody {
 }
 #[derive(Serialize, Debug)]
 struct Personalization {
-  to: Vec<To>
+  to: Vec<To>,
+  substitutions: HashMap<String, String>
 }
 #[derive(Serialize, Debug)]
 struct To {
@@ -59,6 +67,10 @@ pub async fn send_email(api_key: String, request: SendEmailRequest) -> Result<()
     headers.insert(
       HeaderName::from_lowercase(b"authorization").unwrap(),
       HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap()
+    );
+    headers.insert(
+      HeaderName::from_lowercase(b"content-type").unwrap(),
+      HeaderValue::from_str("application/json").unwrap()
     );
     match client.post(URL)
       .body(create_request_body(request))
@@ -85,14 +97,15 @@ fn create_request_body(request: SendEmailRequest) -> String {
       content_type: "text/html".to_owned(),
       value: request.html_content
     }],
-    personalizations: vec![Personalization{
-      to: request.recipients
-        .iter()
-        .map(|email| To{
-          email: email.clone(),
-        })
-        .collect()
-    }]
+    personalizations: request.recipients
+      .iter()
+      .map(|recipient| Personalization{
+        to: vec![To{
+          email: recipient.email.clone()
+        }],
+        substitutions: recipient.substitutions.clone()
+      })
+      .collect()
   };
   serde_json::to_string(&request_body).unwrap()
 }
@@ -105,12 +118,25 @@ mod tests {
     fn should_create_proper_request_body() {
       let send_email_request = SendEmailRequest{
         subject: "My subject".to_owned(),
-        html_content: "<p>I are HTML content</p>".to_owned(),
+        html_content: "<p>I are HTML content with token: -authToken-</p>".to_owned(),
         from: From{
           name: "My sender name".to_owned(),
           email: "my-sender-email@some-domain.com".to_owned()
         },
-        recipients: vec!["first@email.com".to_owned(), "second@email.com".to_owned()]
+        recipients: vec![
+          Recipient{
+            email: "first@email.com".to_owned(),
+            substitutions: [("-authToken-".to_owned(), "first_token".to_owned())].iter()
+              .cloned()
+              .collect::<HashMap<String, String>>(),
+          },
+          Recipient{
+            email: "second@email.com".to_owned(),
+            substitutions: [("-authToken-".to_owned(), "second_token".to_owned())].iter()
+              .cloned()
+              .collect::<HashMap<String, String>>()
+          }
+        ]
       };
       let expected_response_body = "{\
         \"personalizations\":[\
@@ -118,11 +144,21 @@ mod tests {
             \"to\":[\
               {\
                 \"email\":\"first@email.com\"\
-              },\
+              }\
+            ],\
+            \"substitutions\":{\
+              \"-authToken-\":\"first_token\"\
+            }\
+          },\
+          {\
+            \"to\":[\
               {\
                 \"email\":\"second@email.com\"\
               }\
-            ]\
+            ],\
+            \"substitutions\":{\
+              \"-authToken-\":\"second_token\"\
+            }\
           }\
         ],\
         \"from\":{\
@@ -133,7 +169,7 @@ mod tests {
         \"content\":[\
           {\
             \"type\":\"text/html\",\
-            \"value\":\"<p>I are HTML content</p>\"\
+            \"value\":\"<p>I are HTML content with token: -authToken-</p>\"\
           }\
         ]\
       }".to_owned();

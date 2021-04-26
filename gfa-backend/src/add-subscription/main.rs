@@ -1,11 +1,12 @@
-use std::{collections::HashMap, env, str::FromStr};
-use log::{self, error, LevelFilter};
-use simple_logger::SimpleLogger;
-use lambda::{handler_fn, Context};
 use aws_lambda_events::event::apigw::{ApiGatewayProxyRequest, ApiGatewayProxyResponse};
-use rusoto_core::Region;
-use common::subscriptions_repo::{get_subscription, store_subscription};
+use common::send_email::{send_email, From, Recipient, SendEmailRequest};
 use common::subscription::Subscription;
+use common::subscriptions_repo::{get_subscription, store_subscription};
+use lambda::{handler_fn, Context};
+use log::{self, error, LevelFilter};
+use rusoto_core::Region;
+use simple_logger::SimpleLogger;
+use std::{collections::HashMap, env, str::FromStr};
 
 mod add_subscription_request;
 
@@ -24,6 +25,9 @@ async fn handle_request(
     _: Context,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     let subscriptions_table = env::var("SUBSCRIPTIONS_TABLE").unwrap();
+    let verify_url = env::var("VERIFY_URL").unwrap();
+    let api_key = env::var("SENDGRID_API_KEY").unwrap();
+    let email_domain = env::var("EMAIL_DOMAIN").unwrap();
     let region = env::var("AWS_REGION").unwrap();
     let region = Region::from_str(&region).unwrap();
 
@@ -41,27 +45,67 @@ async fn handle_request(
             }
         };
 
-    match get_subscription(&subscriptions_table, &region, &request.email, &request.location_id).await {
+    match get_subscription(
+        &subscriptions_table,
+        &region,
+        &request.email,
+        &request.location_id,
+    )
+    .await
+    {
         Ok(optional_subscription) => match optional_subscription {
             Some(subscription) => {
                 if subscription.is_authenticated {
-                    return Ok(create_response(400, "Subscription already exist for this e-mail address and location".to_owned()));
+                    return Ok(create_response(
+                        400,
+                        "Subscription already exist for this e-mail address and location"
+                            .to_owned(),
+                    ));
                 }
             }
             None => {}
         },
         Err(error) => {
             error!("Failed to read from database: {}", error);
-            return Ok(create_response(500, "Failed to read from database".to_owned()));
+            return Ok(create_response(
+                500,
+                "Failed to read from database".to_owned(),
+            ));
         }
     }
 
     let subscription = Subscription::new(request.email, request.location_id);
-    match store_subscription(&subscriptions_table, &region, subscription).await {
-        Ok(()) => Ok(create_response(200, "Successfully created subscription".to_owned())),
+    match store_subscription(&subscriptions_table, &region, &subscription).await {
+        Ok(()) => (),
         Err(error) => {
             error!("Failed to write to database: {}", error);
-            Ok(create_response(500, "Failed to write to database".to_owned()))
+            return Ok(create_response(
+                500,
+                "Failed to write to database".to_owned(),
+            ));
+        }
+    };
+
+    let html_content = include_str!("verification_email.html");
+    let email_request = SendEmailRequest {
+        from: From {
+            name: "Göteborg Farligt Avfall notifications".to_owned(),
+            email: format!("noreply-farligtavfall@{}", email_domain),
+        },
+        subject: "Please verify your subscription".to_owned(),
+        recipients: vec![Recipient {
+            email: subscription.email,
+            substitutions: [("-verifyUrl-".to_owned(), format!("{}?auth_token={}", verify_url, subscription.auth_token))].iter()
+                .cloned()
+                .collect::<HashMap<String, String>>()
+        }],
+        html_content: html_content.to_owned()
+    };
+    match send_email(api_key, email_request).await {
+        Ok(_response) => Ok(create_response(200, "Successfully created subscription".to_owned())),
+        Err(error) => {
+            error!("Failed to send verification email: {}", error);
+            Ok(create_response(500, "Failed to send verification email".to_owned()))
         }
     }
 }

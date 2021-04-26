@@ -42,20 +42,20 @@ impl fmt::Display for MalformedDynamoDbResponse {
 }
 impl error::Error for MalformedDynamoDbResponse {}
 
-pub async fn store_subscription(table: &String, region: &Region, subscription: Subscription) -> Result<(), Error> {
+pub async fn store_subscription(table: &String, region: &Region, subscription: &Subscription) -> Result<(), Error> {
     let client = DynamoDbClient::new(region.clone());
 
     let mut attributes: HashMap<String, AttributeValue> = HashMap::new(); 
     attributes.insert("email".to_owned(), AttributeValue{
-        s: Some(subscription.email),
+        s: Some(subscription.email.clone()),
         ..Default::default()
     });
     attributes.insert("location_id".to_owned(), AttributeValue{
-        s: Some(subscription.location_id),
+        s: Some(subscription.location_id.clone()),
         ..Default::default()
     });
     attributes.insert("auth_token".to_owned(), AttributeValue{
-        s: Some(subscription.auth_token),
+        s: Some(subscription.auth_token.clone()),
         ..Default::default()
     });
     attributes.insert("is_authenticated".to_owned(), AttributeValue{
