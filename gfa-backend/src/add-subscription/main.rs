@@ -89,7 +89,7 @@ async fn handle_request(
     let html_content = include_str!("verification_email.html");
     let email_request = SendEmailRequest {
         from: From {
-            name: "Göteborg Farligt Avfall notifications".to_owned(),
+            name: "Göteborg Farligt Avfall Notifications".to_owned(),
             email: format!("noreply-farligtavfall@{}", email_domain),
         },
         subject: "Please verify your subscription".to_owned(),
