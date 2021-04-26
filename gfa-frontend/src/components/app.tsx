@@ -4,6 +4,7 @@ import { Route, Router } from 'preact-router';
 import { ApiClient } from '../api/apiClient';
 import { Stop as StopType } from '../types/Stop';
 import List from '../routes/list';
+import VerifySubscription from '../routes/verify';
 
 export const StopsContext = createContext<StopType[]>([]);
 
@@ -25,6 +26,7 @@ const App: FunctionalComponent<{}> = () => {
     <div id="app">
       <StopsContext.Provider value={stops}>
         <Router>
+          <Route path="/verify" component={VerifySubscription} />
           <Route path="/" component={List} default />
         </Router>
       </StopsContext.Provider>

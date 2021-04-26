@@ -27,6 +27,11 @@ export class ApiClient {
     }).then(res => res.data);
   }
 
+  public verifySubscription = (authToken: string): Promise<void> => {
+    return this.instance.post(`/subscriptions/verify?auth_token=${authToken}`)
+      .then(res => res.data);
+  }
+
   private initResponseInterceptor = (): void => {
     this.instance.interceptors.response.use(
       response => response,
