@@ -10,6 +10,9 @@ import { GfaFunction } from './function/gfa-function';
 
 interface NotifyStackProps extends NestedStackProps {
     eventsTable: ITable,
+    subscriptionsTable: ITable,
+    apiKey: string,
+    emailDomain: string,
     alertTopic: ITopic
 }
 
@@ -17,16 +20,18 @@ export class NotifyStack extends NestedStack {
     constructor(scope: Construct, id: string, props: NotifyStackProps) {
         super(scope, id, props);
 
-        const arrivalToday = new Topic(this, 'today-topic');
         const notify = new GfaFunction(this, 'notify', {
             name: 'notify',
             environment: {
                 EVENTS_TABLE: props.eventsTable.tableName,
-                TODAY_TOPIC: arrivalToday.topicArn,
+                SUBSCRIPTIONS_TABLE: props.subscriptionsTable.tableName,
+                SENDGRID_API_KEY: props.apiKey,
+                EMAIL_DOMAIN: props.emailDomain,
             }
         });
         props.eventsTable.grantReadData(notify.handler);
-        arrivalToday.grantPublish(notify.handler);
+        props.subscriptionsTable.grantReadData(notify.handler);
+
         new Rule(this, 'notify-scheduled-execution', {
             schedule: Schedule.expression('cron(0 3 * * ? *)'),
             targets: [new LambdaFunction(notify.handler)]

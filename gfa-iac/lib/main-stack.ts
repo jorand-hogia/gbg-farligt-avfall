@@ -50,11 +50,6 @@ export class GbgFarligtAvfallStack extends Stack {
       alertTopic,
     });
 
-    new NotifyStack(this, 'notify-stack', {
-      eventsTable: eventsDb,
-      alertTopic,
-    });
-
     new StopsStack(this, 'stops-stack', {
       api: apiStack.api,
       stopsBucket: stopsBucket,
@@ -63,11 +58,19 @@ export class GbgFarligtAvfallStack extends Stack {
 
     const domainName = app.node.tryGetContext('domainName');
     const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
-    new SubscriptionStack(this, 'subscription-stack', {
+    const subscriptionsStack = new SubscriptionStack(this, 'subscription-stack', {
       api: apiStack.api,
       verifyUrl: `${webStack.externalUrl}/verify`,
       emailDomain: domainName,
       apiKey: sendgridApiKey,
+    });
+
+    new NotifyStack(this, 'notify-stack', {
+      eventsTable: eventsDb,
+      subscriptionsTable: subscriptionsStack.subscriptionsDb, 
+      apiKey: sendgridApiKey,
+      emailDomain: domainName,
+      alertTopic,
     });
 
     const hostedZoneId = app.node.tryGetContext('hostedZoneId');

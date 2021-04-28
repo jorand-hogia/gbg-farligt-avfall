@@ -101,7 +101,7 @@ async fn handle_request(
         }],
         html_content: html_content.to_owned()
     };
-    match send_email(api_key, email_request).await {
+    match send_email(&api_key, email_request).await {
         Ok(_response) => Ok(create_response(200, "Successfully created subscription".to_owned())),
         Err(error) => {
             error!("Failed to send verification email: {}", error);

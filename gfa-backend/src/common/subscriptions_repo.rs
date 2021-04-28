@@ -1,6 +1,7 @@
 use std::{error, fmt, collections::HashMap};
 use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, QueryInput, AttributeValue};
 use rusoto_core::{Region};
+use log::{self, warn};
 use crate::subscription::Subscription;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -160,6 +161,42 @@ pub async fn get_subscription_by_auth_token(table: &String, region: &Region, aut
                 }
             }
 
+        },
+        Err(error) => {
+            Err(Box::new(error))
+        }
+    }
+}
+
+pub async fn get_authenticated_subscriptions(table: &String, region: &Region, location_id: &String) -> Result<Vec<Subscription>, Error> {
+    let client = DynamoDbClient::new(region.clone());
+    let mut attribute_values = HashMap::new();
+    attribute_values.insert(":locationId".to_owned(), AttributeValue{
+        s: Some(location_id.clone()),
+        ..Default::default()
+    });
+    match client.query(QueryInput{
+        index_name: Some("byLocationId".to_owned()),
+        table_name: table.clone(),
+        expression_attribute_values: Some(attribute_values),
+        key_condition_expression: Some("location_id = :locationId".to_owned()),
+        ..Default::default()
+    }).await {
+        Ok(response) => {
+           let items = match response.items {
+               Some(items) => items,
+               None => return Err(Box::new(MalformedDynamoDbResponse))
+           };
+           Ok(items.iter()
+                .filter_map(|item| match item_to_subscription(item) {
+                    Some(subscription) => Some(subscription),
+                    None => {
+                        warn!("Found malformed subscription: {:?}", item);
+                        None
+                    }
+                })
+                .filter(|subscription| subscription.is_authenticated)
+                .collect())
         },
         Err(error) => {
             Err(Box::new(error))

@@ -1,4 +1,5 @@
-use std::{env, str::FromStr};
+use std::{env, fmt, error, str::FromStr};
+use std::collections::HashMap;
 use lambda::{handler_fn, Context};
 use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
@@ -6,10 +7,21 @@ use log::{self, error, info, LevelFilter};
 use rusoto_core::Region;
 use chrono::{Utc};
 use common::events_repo::{get_by_date};
+use common::subscriptions_repo::{get_authenticated_subscriptions};
+use common::send_email::{send_email, SendEmailRequest, Recipient, From};
 
-mod publish_events;
+mod email_formatter;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
+
+#[derive(Debug)]
+struct MalformedEvent;
+impl fmt::Display for MalformedEvent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Malformed data in event. Could not format notification email.")
+    }
+}
+impl error::Error for MalformedEvent {}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -22,8 +34,10 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
-    let today_topic_arn = env::var("TODAY_TOPIC").unwrap();
     let event_table = env::var("EVENTS_TABLE").unwrap();
+    let subscriptions_table = env::var("SUBSCRIPTIONS_TABLE").unwrap();
+    let api_key = env::var("SENDGRID_API_KEY").unwrap();
+    let email_domain = env::var("EMAIL_DOMAIN").unwrap();
     let region = env::var("AWS_REGION").unwrap();
     let region = Region::from_str(&region).unwrap(); 
 
@@ -31,12 +45,49 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
     info!("Fetching events for: {}", todays_date);
     let todays_events = get_by_date(event_table, region.clone(), todays_date).await?;
     info!("About to notify for {} events", todays_events.len());
-    match publish_events::publish_events(todays_events, today_topic_arn, region).await {
-        Err(e) => {
-            error!("Errors occurred while publishing events, {}", e);
-            return Err(e);
-        },
-        _ => {}
-    };
+
+    for event in todays_events {
+        let subscriptions = match get_authenticated_subscriptions(&subscriptions_table, &region, &event.location_id).await {
+            Ok(subscriptions) => subscriptions, 
+            Err(error) => {
+                error!("Failed to get subscriptions for: {}", event);
+                return Err(error);
+            }
+        };
+        if subscriptions.len() == 0 {
+            info!("Skipped sending notifications for {}, since there are no subscribers.", event);
+            break;
+        }
+
+        let html_content = match email_formatter::format_email_message(&event) {
+            Some(content) => content,
+            None => {
+                error!("Unable to format email for: {}", event);
+                return Err(Box::new(MalformedEvent))
+            }
+        };
+        let email_request = SendEmailRequest{
+            from: From {
+                name: "Göteborg Farligt Avfall Notifications".to_owned(),
+                email: format!("noreply-farligtavfall@{}", email_domain),
+            },
+            subject: format!("Farligt Avfall-bilen to {}", event.street),
+            recipients: subscriptions.iter()
+                .map(|subscription| Recipient{
+                    email: subscription.email.clone(),
+                    substitutions: HashMap::new()
+                })
+                .collect(),
+            html_content,
+        };
+        match send_email(&api_key, email_request).await {
+            Ok(_res) => {
+                info!("Successfully sent notification email for: {}", event);
+            }
+            Err(_e) => {
+                error!("Unable to send notification email for: {}", event);
+            }
+        };
+    }
     Ok(json!({}))
 }

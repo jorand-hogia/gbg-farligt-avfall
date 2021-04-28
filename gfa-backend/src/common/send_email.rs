@@ -57,7 +57,7 @@ struct Content {
 
 const URL: &str = "https://api.sendgrid.com/v3/mail/send";
 
-pub async fn send_email(api_key: String, request: SendEmailRequest) -> Result<(), Box<dyn error::Error>> {
+pub async fn send_email(api_key: &String, request: SendEmailRequest) -> Result<(), Box<dyn error::Error>> {
     let client = Client::builder()
         .use_rustls_tls()
         .build()

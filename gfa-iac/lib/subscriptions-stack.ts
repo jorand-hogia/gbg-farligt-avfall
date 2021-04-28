@@ -12,38 +12,46 @@ export interface SubscriptionsStackProps extends NestedStackProps {
 }
 
 export class SubscriptionStack extends NestedStack {
+
+    public readonly subscriptionsDb: Table;
+
     constructor(scope: Construct, id: string, props: SubscriptionsStackProps) {
         super(scope, id);
 
-        const subscriptionsDb = new Table(this, 'subscriptions-db', {
+        this.subscriptionsDb = new Table(this, 'subscriptions-db', {
             partitionKey: { name: 'email', type: AttributeType.STRING },
             sortKey: { name: 'location_id', type: AttributeType.STRING },
             billingMode: BillingMode.PAY_PER_REQUEST,
             timeToLiveAttribute: 'ttl'
         });
-        subscriptionsDb.addGlobalSecondaryIndex({
+        this.subscriptionsDb.addGlobalSecondaryIndex({
             indexName: 'byAuthToken',
             partitionKey: { name: 'auth_token', type: AttributeType.STRING }
+        });
+        this.subscriptionsDb.addGlobalSecondaryIndex({
+            indexName: 'byLocationId',
+            partitionKey: { name: 'location_id', type: AttributeType.STRING },
+            sortKey: { name: 'email', type: AttributeType.STRING },
         });
 
         const addSubscription = new GfaFunction(this, 'addSubscription', {
             name: 'add-subscription',
             environment: {
-                SUBSCRIPTIONS_TABLE: subscriptionsDb.tableName,
+                SUBSCRIPTIONS_TABLE: this.subscriptionsDb.tableName,
                 VERIFY_URL: props.verifyUrl,
                 SENDGRID_API_KEY: props.apiKey,
                 EMAIL_DOMAIN: props.emailDomain,
             },
         });
-        subscriptionsDb.grantReadWriteData(addSubscription.handler);
+        this.subscriptionsDb.grantReadWriteData(addSubscription.handler);
 
         const verifySubscription = new GfaFunction(this, 'verifySubscription', {
             name: 'verify-subscription',
             environment: {
-                SUBSCRIPTIONS_TABLE: subscriptionsDb.tableName
+                SUBSCRIPTIONS_TABLE: this.subscriptionsDb.tableName
             }
         });
-        subscriptionsDb.grantReadWriteData(verifySubscription.handler);
+        this.subscriptionsDb.grantReadWriteData(verifySubscription.handler);
 
         const addSubscriptionIntegration = new LambdaIntegration(addSubscription.handler, {
             proxy: true,
