@@ -1,0 +1,26 @@
+name: Build/Test frontend
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'gfa-frontend/**'
+jobs:
+  test-frontend:
+    name: Test frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gfa-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Install dependencies
+        run: npm ci
+      - name: Test frontend
+        run: npm run test
+      - name: Build frontend
+        run: API_URL=testbuild npm run build

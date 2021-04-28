@@ -1,0 +1,89 @@
+name: Build/Test backend
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+env:
+  EXECUTABLES: "get-stops save-events save-stops scraper notify add-subscription verify-subscription"
+jobs:
+  set-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.pull_request.outputs.number }}
+    steps:
+    - id: pull_request
+      run: |
+        PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+        echo "::set-output name=number::$PR_NUMBER" 
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'gfa-backend/**'
+  copy-backend:
+    needs: [changes, set-version]
+    if: ${{ needs.changes.outputs.backend == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Copy backend
+        run: |
+          VERSION=${{ needs.set-version.outputs.version }}
+          PREVIOUS_VERSION=$((VERSION-1))
+          for executable in ${{ env.EXECUTABLES }};
+          do
+            aws s3 sync s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$PREVIOUS_VERSION \
+                        s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$VERSION
+          done
+  test-backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Unit tests
+        run: (cd gfa-backend && cargo test --release)
+  build-backend:
+    needs: [changes, set-version]
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gfa-backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Install required tools
+        run: sudo apt install musl-tools -y
+      - name: Add target
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: Build
+        run: |
+          cargo build --release --target x86_64-unknown-linux-musl
+      - name: Upload artifacts
+        run: |
+          for executable in ${{ env.EXECUTABLES }};
+          do
+            cp "target/x86_64-unknown-linux-musl/release/${executable}" bootstrap
+            zip -j lambda.zip bootstrap
+            aws s3 cp lambda.zip s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-${{ needs.set-version.outputs.version }}
+          done
