@@ -49,12 +49,18 @@ mod tests {
     #[test]
     fn should_convert_rfc3339_string_correctly_daylight_saving() {
         let result = rfc3339_string_to_local_time("2020-06-06T06:00:00+00:00");
-        assert_eq!("08:00".to_string(), result.unwrap());
+        assert_eq!("08:00".to_owned(), result.unwrap());
     }
 
     #[test]
-    fn should_convert_rfc3339_string_correctly() {
+    fn should_convert_rfc3339_string_to_time_correctly() {
         let result = rfc3339_string_to_local_time("2020-11-18T06:00:00+00:00");
-        assert_eq!("07:00".to_string(), result.unwrap());
+        assert_eq!("07:00".to_owned(), result.unwrap());
+    }
+
+    #[test]
+    fn should_convert_rfc3339_string_to_date() {
+        let result = rfc3339_string_to_date("2020-11-18T06:00:00+00:00");
+        assert_eq!("2020-11-18".to_owned(), result.unwrap());
     }
 }

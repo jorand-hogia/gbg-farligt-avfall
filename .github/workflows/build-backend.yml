@@ -55,14 +55,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Unit tests
-        run: (cd gfa-backend && cargo test --release)
+        run: cd gfa-backend && cargo test --release
   build-backend:
     needs: [changes, set-version]
     if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: gfa-backend
     steps:
       - name: Checkout
         uses: actions/checkout@v2 
@@ -76,14 +73,21 @@ jobs:
         run: sudo apt install musl-tools -y
       - name: Add target
         run: rustup target add x86_64-unknown-linux-musl
+      - name: Cache target
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-target
+        with:
+          path: gfa-backend/target
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
       - name: Build
         run: |
-          cargo build --release --target x86_64-unknown-linux-musl
+          cd gfa-backend && cargo build --release --target x86_64-unknown-linux-musl
       - name: Upload artifacts
         run: |
           for executable in ${{ env.EXECUTABLES }};
           do
-            cp "target/x86_64-unknown-linux-musl/release/${executable}" bootstrap
+            cp "gfa-backend/target/x86_64-unknown-linux-musl/release/${executable}" bootstrap
             zip -j lambda.zip bootstrap
             aws s3 cp lambda.zip s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-${{ needs.set-version.outputs.version }}
           done
