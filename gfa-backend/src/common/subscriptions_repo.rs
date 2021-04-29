@@ -55,10 +55,12 @@ pub async fn store_subscription(table: &String, region: &Region, subscription: &
         s: Some(subscription.location_id.clone()),
         ..Default::default()
     });
-    attributes.insert("auth_token".to_owned(), AttributeValue{
-        s: Some(subscription.auth_token.clone()),
-        ..Default::default()
-    });
+    if subscription.auth_token.is_some() {
+        attributes.insert("auth_token".to_owned(), AttributeValue{
+            s: Some(subscription.auth_token.as_ref().unwrap().clone()),
+            ..Default::default()
+        });
+    }
     attributes.insert("is_authenticated".to_owned(), AttributeValue{
         bool: Some(subscription.is_authenticated),
         ..Default::default()
@@ -207,8 +209,11 @@ pub async fn get_authenticated_subscriptions(table: &String, region: &Region, lo
 fn item_to_subscription(item: &HashMap<String, AttributeValue>) -> Option<Subscription> {
     let email = item.get("email")?.s.as_ref()?;
     let location_id = item.get("location_id")?.s.as_ref()?;
-    let auth_token = item.get("auth_token")?.s.as_ref()?;
     let is_authenticated = item.get("is_authenticated")?.bool.as_ref()?;
+    let auth_token = match item.get("auth_token") {
+        None => None,
+        Some(auth_token) => Some(auth_token.s.as_ref()?.clone())
+    };
     let ttl = match item.get("ttl") {
         None => None,
         Some(ttl) => Some(ttl.n.as_ref()?.parse::<i64>().ok()?)
@@ -216,7 +221,7 @@ fn item_to_subscription(item: &HashMap<String, AttributeValue>) -> Option<Subscr
     Some(Subscription{
         email: email.clone(),
         location_id: location_id.clone(),
-        auth_token: auth_token.clone(),
+        auth_token: auth_token,
         is_authenticated: is_authenticated.clone(),
         ttl,
     })

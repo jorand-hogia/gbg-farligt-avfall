@@ -95,7 +95,7 @@ async fn handle_request(
         subject: "Please verify your subscription".to_owned(),
         recipients: vec![Recipient {
             email: subscription.email,
-            substitutions: [("-verifyUrl-".to_owned(), format!("{}?auth_token={}", verify_url, subscription.auth_token))].iter()
+            substitutions: [("-verifyUrl-".to_owned(), format!("{}?auth_token={}", verify_url, subscription.auth_token.unwrap()))].iter()
                 .cloned()
                 .collect::<HashMap<String, String>>()
         }],

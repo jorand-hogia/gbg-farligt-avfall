@@ -57,7 +57,7 @@ rusoto_dynamodb = {version = "0.45.0", default_features = false, features=["rust
 rusoto_sns = { version = "0.45.0", default_features = false, features=["rustls"]}
 aws_lambda_events = "0.3.1"
 rand = "0.8.0"
-sha1 = "0.6.0"
+sha2 = "0.9.3"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
