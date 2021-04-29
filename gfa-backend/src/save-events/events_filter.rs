@@ -2,7 +2,7 @@ use chrono::{Date, DateTime, Utc, Duration};
 use common::pickup_event::PickUpEvent;
 
 pub fn filter(events: Vec<PickUpEvent>, today: Date<Utc>) -> Vec<PickUpEvent> {
-    let filtered_events = events.into_iter()
+    events.into_iter()
         .filter(|event| {
             let event_date = DateTime::parse_from_rfc3339(&event.time_start).unwrap()
                 .with_timezone(&Utc)
@@ -14,10 +14,9 @@ pub fn filter(events: Vec<PickUpEvent>, today: Date<Utc>) -> Vec<PickUpEvent> {
             if event_date > too_far_into_future {
                 return false;
             }
-            return true;
+            true
         })
-        .collect();
-    return filtered_events;
+        .collect()
 }
 
 #[cfg(test)]
@@ -32,12 +31,12 @@ mod tests {
             .with_timezone(&Utc)
             .date();
         let events: Vec<PickUpEvent> = vec![
-            PickUpEvent::new("some-street".to_string(), "some-district".to_string(), None, "2020-01-01T16:00:00+02:00".to_string(), "2020-01-01T17:00:00+02:00".to_string()).unwrap(),
-            PickUpEvent::new("some-other-street".to_string(), "some-other-district".to_string(), None, "2020-11-15T16:00:00+02:00".to_string(), "2020-11-15T17:00:00+02:00".to_string()).unwrap()
+            PickUpEvent::new("some-street".to_owned(), "some-district".to_owned(), None, "2020-01-01T16:00:00+02:00".to_owned(), "2020-01-01T17:00:00+02:00".to_owned()).unwrap(),
+            PickUpEvent::new("some-other-street".to_owned(), "some-other-district".to_owned(), None, "2020-11-15T16:00:00+02:00".to_owned(), "2020-11-15T17:00:00+02:00".to_owned()).unwrap()
         ];
         let result = filter(events, pseudo_today);
         assert_eq!(1, result.len());
-        assert_eq!("some-other-street".to_string(), result[0].street);
+        assert_eq!("some-other-street".to_owned(), result[0].street);
     }
 
     #[test]
@@ -49,11 +48,11 @@ mod tests {
             .with_timezone(&Utc)
             .date();
         let events: Vec<PickUpEvent> = vec![
-            PickUpEvent::new("some-street".to_string(), "some-district".to_string(), None, "2021-08-14T16:00:00+02:00".to_string(), "2021-08-14T17:00:00+02:00".to_string()).unwrap(),
-            PickUpEvent::new("some-other-street".to_string(), "some-other-district".to_string(), None, "2021-05-15T16:00:00+02:00".to_string(), "2020-05-15T17:00:00+02:00".to_string()).unwrap()
+            PickUpEvent::new("some-street".to_owned(), "some-district".to_owned(), None, "2021-08-14T16:00:00+02:00".to_owned(), "2021-08-14T17:00:00+02:00".to_owned()).unwrap(),
+            PickUpEvent::new("some-other-street".to_owned(), "some-other-district".to_owned(), None, "2021-05-15T16:00:00+02:00".to_owned(), "2020-05-15T17:00:00+02:00".to_owned()).unwrap()
         ];
         let result = filter(events, pseudo_today);
         assert_eq!(1, result.len());
-        assert_eq!("some-other-street".to_string(), result[0].street);
+        assert_eq!("some-other-street".to_owned(), result[0].street);
     }
 }

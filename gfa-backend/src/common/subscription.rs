@@ -18,12 +18,12 @@ impl Subscription {
         thread_rng().fill_bytes(&mut random_bytes);
         let mut auth_token = Sha512::new();
         auth_token.update(&random_bytes);
-        auth_token.update(email.clone().as_bytes());
-        auth_token.update(location_id.clone().as_bytes());
+        auth_token.update(email.as_bytes());
+        auth_token.update(location_id.as_bytes());
 
         Subscription{
-            email: email,
-            location_id: location_id,
+            email,
+            location_id,
             auth_token: Some(format!("{:x}", auth_token.finalize())),
             is_authenticated: false,
             ttl: Some((Utc::now() + Duration::days(1)).timestamp())

@@ -45,25 +45,14 @@ async fn handle_request(
             }
         };
 
-    match get_subscription(
-        &subscriptions_table,
-        &region,
-        &request.email,
-        &request.location_id,
-    )
-    .await
-    {
-        Ok(optional_subscription) => match optional_subscription {
-            Some(subscription) => {
-                if subscription.is_authenticated {
-                    return Ok(create_response(
-                        400,
-                        "Subscription already exist for this e-mail address and location"
-                            .to_owned(),
-                    ));
-                }
+    match get_subscription(&subscriptions_table, &region, &request.email, &request.location_id,).await {
+        Ok(optional_subscription) => if let Some(subscription) = optional_subscription {
+            if subscription.is_authenticated {
+                return Ok(create_response(
+                    400,
+                    "Subscription already exist for this e-mail address and location".to_owned(),
+                ));
             }
-            None => {}
         },
         Err(error) => {
             error!("Failed to read from database: {}", error);
@@ -113,19 +102,19 @@ async fn handle_request(
 fn create_response(status_code: i64, body: String) -> ApiGatewayProxyResponse {
     let mut headers: HashMap<String, String> = HashMap::new();
     headers.insert(
-        "Access-Control-Allow-Headers".to_string(),
-        "Content-Type,Accept".to_string(),
+        "Access-Control-Allow-Headers".to_owned(),
+        "Content-Type,Accept".to_owned()
     );
     headers.insert(
-        "Access-Control-Allow-Methods".to_string(),
-        "PUT".to_string(),
+        "Access-Control-Allow-Methods".to_owned(),
+        "PUT".to_owned(),
     );
-    headers.insert("Access-Control-Allow-Origin".to_string(), "*".to_string());
-    return ApiGatewayProxyResponse {
-        status_code: status_code,
-        headers: headers,
+    headers.insert("Access-Control-Allow-Origin".to_owned(), "*".to_owned());
+    ApiGatewayProxyResponse {
+        status_code,
+        headers,
         multi_value_headers: HashMap::new(),
         body: Some(body),
         is_base64_encoded: None,
-    };
+    }
 }

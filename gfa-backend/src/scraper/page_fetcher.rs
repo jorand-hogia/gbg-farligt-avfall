@@ -14,7 +14,7 @@ pub struct PageFetcherError {
 }
 impl fmt::Display for PageFetcherError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}\n", self.message)
+        writeln!(f, "{}", self.message)
     }
 }
 
@@ -27,7 +27,7 @@ pub async fn obtain_pages() -> Result<Vec<Vec<u8>>, PageFetcherError> {
     let main_page = fetch_page(&client, main_url).await?; 
     let total_events = find_total_items(&main_page)?;
     // let paging_path = find_paging_path(&main_page)?;
-    let paging_path = "/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I2PBOo3x6k_wEg_WD9KP6ogMT0zDxwm-pGWBvoFuaGhEVUhjgC0EC9V/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!0==/".to_string();
+    let paging_path = "/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen/!ut/p/z1/04_Sj9CPykssy0xPLMnMz0vMAfIjo8ziTYzcDQy9TAy9_f1MnAwcvXxd_JwM3Y3cPcz0w8EKDFCAo4FTkJGTsYGBu7-RfhTp-pFNIk4_HgVR-I2PBOo3x6k_wEg_WD9KP6ogMT0zDxwm-pGWBvoFuaGhEVUhjgC0EC9V/p0/IZ7_42G01J41KON4B0AJMDNB1G2GP2=CZ6_42G01J41KON4B0AJMDNB1G2GH6=MDfilterDirection!filterOrganisationType!filterArea=Epagination!0==/".to_owned();
     let urls = calculate_urls(&paging_path, total_events);
     let results = future::join_all(
         urls.into_iter()
@@ -59,12 +59,9 @@ async fn fetch_page(client: &Client, url: String) -> Result<Vec<u8>, PageFetcher
             message: format!("Request to {} failed", url)
         })
     };
-    match response.status().is_success() {
-        false => return Err(PageFetcherError{
-            message: format!("Non-OK status code from {}: {}", url, response.status())
-        }),
-        _ => {}
-    };
+    if let false = response.status().is_success() { return Err(PageFetcherError{
+        message: format!("Non-OK status code from {}: {}", url, response.status())
+    })};
     let response = match response.bytes().await {
         Ok(bytes) => bytes,
         Err(_e) => return Err(PageFetcherError{
@@ -81,14 +78,14 @@ async fn fetch_page(client: &Client, url: String) -> Result<Vec<u8>, PageFetcher
     Ok(Vec::from(body))
 }
 
-fn find_total_items(page: &Vec<u8>) -> Result<u16, PageFetcherError> {
+fn find_total_items(page: &[u8]) -> Result<u16, PageFetcherError> {
     lazy_static! {
         static ref TOTAL_RE: Regex = Regex::new(r".*Hittade\s+(\d+)").unwrap();
     }
-    let doc = match document::Document::from_read(page.as_slice()) {
+    let doc = match document::Document::from_read(page) {
         Ok(doc) => doc,
         Err(_e) => return Err(PageFetcherError{
-            message: format!("Could not parse page")
+            message: "Could not parse page".to_owned()
         })
     };
     let node = match doc.find(predicate::Class("c-result-bar"))
@@ -96,31 +93,31 @@ fn find_total_items(page: &Vec<u8>) -> Result<u16, PageFetcherError> {
         .first() {
             Some(node) => node,
             None => return Err(PageFetcherError{
-                message: format!("Could not find class c-result-bar on page")
+                message: "Could not find class c-result-bar on page".to_owned()
             })
         };
     let node = node.inner_html();
     let captures = match TOTAL_RE.captures(&node) {
         Some(cap) => cap,
         None => return Err(PageFetcherError{
-            message: format!("Could not find pattern 'Hittade TOTAL' on page")
+            message: "Could not find pattern 'Hittade TOTAL' on page".to_owned()
         })
     };
     let total = match captures.get(1) {
         Some(cap) => cap.as_str(),
         None => return Err(PageFetcherError{
-            message: format!("Could not find capturing group 1 when parsing total")
+            message: "Could not find capturing group 1 when parsing total".to_owned()
         })
     };
-    return match u16::from_str(total) {
+    match u16::from_str(total) {
         Ok(total) => Ok(total),
         Err(_e) => Err(PageFetcherError{
-            message: format!("Could not parse total as u16")
+            message: "Could not parse total as u16".to_owned()
         })
-    };
+    }
 }
 
-fn calculate_urls(base_path: &String, total: u16) -> Vec::<String> {
+fn calculate_urls(base_path: &str, total: u16) -> Vec::<String> {
     lazy_static! {
         static ref PAGINATION_RE: Regex = Regex::new(r"Epagination!\d+==/").unwrap();
     }
@@ -128,9 +125,9 @@ fn calculate_urls(base_path: &String, total: u16) -> Vec::<String> {
     let mut urls: Vec::<String> = Vec::new();
     for i in 0..num_urls {
         let new_pagination = format!("Epagination!{}==/", i * 30);
-        urls.push(format!("{}{}", BASE_URL, PAGINATION_RE.replace(base_path, &new_pagination[..]).to_string()));
+        urls.push(format!("{}{}", BASE_URL, PAGINATION_RE.replace(base_path, &new_pagination[..]).to_owned()));
     }
-    return urls; 
+    urls
 }
 
 #[cfg(test)]

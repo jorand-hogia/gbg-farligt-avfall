@@ -15,7 +15,7 @@ pub struct PickUpEvent {
 
 impl fmt::Display for PickUpEvent {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} - {} ({}): {} to {}", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_string()), self.time_start, self.time_end)
+        write!(f, "{} - {} ({}): {} to {}", self.district, self.street, self.description.as_ref().unwrap_or(&"-".to_owned()), self.time_start, self.time_end)
     }
 }
 
@@ -70,19 +70,19 @@ mod tests {
 
     #[test]
     fn should_generate_location_id() {
-        let event = PickUpEvent::new("  Doktor Fries torg, Doktor Bondesons Gata ".to_string(), "Centrum".to_string(), Some("jättestensskolan".to_string()), "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
+        let event = PickUpEvent::new("  Doktor Fries torg, Doktor Bondesons Gata ".to_owned(), "Centrum".to_owned(), Some("jättestensskolan".to_owned()), "2020-09-23T18:00:00+02:00".to_owned(), "2020-09-23T18:45:00+02:00".to_owned()).unwrap();
         assert_eq!("centrum_doktorfriestorg,doktorbondesonsgata", event.location_id);
     }
 
     #[test]
     fn should_not_include_slash_in_id() {
-        let event = PickUpEvent::new("Utmarksgatan/Dysiksgatan".to_string(), "Lundby".to_string(), None, "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
+        let event = PickUpEvent::new("Utmarksgatan/Dysiksgatan".to_owned(), "Lundby".to_owned(), None, "2020-09-23T18:00:00+02:00".to_owned(), "2020-09-23T18:45:00+02:00".to_owned()).unwrap();
         assert_eq!("lundby_utmarksgatan-dysiksgatan", event.location_id);
     }
 
     #[test]
     fn should_generate_date() {
-        let event = PickUpEvent::new("Utmarksgatan/Dysiksgatan".to_string(), "Lundby".to_string(), None, "2020-09-23T18:00:00+02:00".to_string(), "2020-09-23T18:45:00+02:00".to_string()).unwrap();
-        assert_eq!("2020-09-23".to_string(), event.date);
+        let event = PickUpEvent::new("Utmarksgatan/Dysiksgatan".to_owned(), "Lundby".to_owned(), None, "2020-09-23T18:00:00+02:00".to_owned(), "2020-09-23T18:45:00+02:00".to_owned()).unwrap();
+        assert_eq!("2020-09-23".to_owned(), event.date);
     }
 }

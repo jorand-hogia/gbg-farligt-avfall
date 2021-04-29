@@ -60,19 +60,19 @@ async fn handle_request(
 fn create_response(status_code: i64, body: String) -> ApiGatewayProxyResponse {
     let mut headers: HashMap<String, String> = HashMap::new();
     headers.insert(
-        "Access-Control-Allow-Headers".to_string(),
-        "Content-Type,Accept".to_string(),
+        "Access-Control-Allow-Headers".to_owned(),
+        "Content-Type,Accept".to_owned(),
     );
     headers.insert(
-        "Access-Control-Allow-Methods".to_string(),
-        "POST".to_string(),
+        "Access-Control-Allow-Methods".to_owned(),
+        "POST".to_owned(),
     );
-    headers.insert("Access-Control-Allow-Origin".to_string(), "*".to_string());
-    return ApiGatewayProxyResponse {
-        status_code: status_code,
-        headers: headers,
+    headers.insert("Access-Control-Allow-Origin".to_owned(), "*".to_owned());
+    ApiGatewayProxyResponse {
+        status_code,
+        headers,
         multi_value_headers: HashMap::new(),
         body: Some(body),
         is_base64_encoded: None,
-    };
+    }
 }

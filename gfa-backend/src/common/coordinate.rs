@@ -26,7 +26,7 @@ impl Coordinate {
 
 impl fmt::Display for Coordinate {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}, {}\n", self.latitude, self.longitude)
+        writeln!(f, "{}, {}", self.latitude, self.longitude)
     }
 }
 

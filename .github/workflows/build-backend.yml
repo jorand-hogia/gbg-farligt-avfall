@@ -14,6 +14,7 @@ jobs:
       run: |
         PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
         echo "::set-output name=number::$PR_NUMBER" 
+
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -25,6 +26,7 @@ jobs:
         filters: |
           backend:
             - 'gfa-backend/**'
+
   copy-backend:
     needs: [changes, set-version]
     if: ${{ needs.changes.outputs.backend == 'false' }}
@@ -47,6 +49,26 @@ jobs:
             aws s3 sync s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$PREVIOUS_VERSION \
                         s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$VERSION
           done
+
+  lint-backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Release cache
+        uses: actions/cache@v2
+        with:
+          path: gfa-backend/target
+          key: ${{ runner.os }}-build-release-cache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-release-cache-
+      - name: Install clippy
+        run: rustup component add clippy
+      - name: Linting
+        run: (cd gfa-backend && cargo clippy -- -D warnings)
+
   test-backend:
     needs: changes
     if: ${{ needs.changes.outputs.backend == 'true' }}
@@ -63,6 +85,7 @@ jobs:
             ${{ runner.os }}-build-release-cache-
       - name: Unit tests
         run: (cd gfa-backend && cargo test --release)
+
   build-backend:
     needs: [changes, set-version]
     if: ${{ needs.changes.outputs.backend == 'true' }}

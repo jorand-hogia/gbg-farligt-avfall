@@ -54,7 +54,7 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
                 return Err(error);
             }
         };
-        if subscriptions.len() == 0 {
+        if subscriptions.is_empty() {
             info!("Skipped sending notifications for {}, since there are no subscribers.", event);
             continue;
         }

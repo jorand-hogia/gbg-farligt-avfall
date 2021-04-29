@@ -43,9 +43,11 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayProxyResp
     let stops_bucket = env::var("STOPS_BUCKET")?;
     let stops_path = env::var("STOPS_PATH")?;
 
-    let mut request = GetObjectRequest::default();
-    request.bucket = stops_bucket;
-    request.key = stops_path;
+    let request = GetObjectRequest{
+        bucket: stops_bucket,
+        key: stops_path,
+        ..Default::default()
+    };
 
     debug!("About to make S3 request");
     let s3_client = S3Client::new(aws_region);
@@ -73,12 +75,12 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayProxyResp
 
 fn create_response(body: String) -> ApiGatewayProxyResponse {
     let mut headers: HashMap<String, String> = HashMap::new();
-    headers.insert("Access-Control-Allow-Headers".to_string(), "Content-Type,Accept".to_string());
-    headers.insert("Access-Control-Allow-Methods".to_string(), "GET".to_string());
-    headers.insert("Access-Control-Allow-Origin".to_string(), "*".to_string());
-    return ApiGatewayProxyResponse{
+    headers.insert("Access-Control-Allow-Headers".to_owned(), "Content-Type,Accept".to_owned());
+    headers.insert("Access-Control-Allow-Methods".to_owned(), "GET".to_owned());
+    headers.insert("Access-Control-Allow-Origin".to_owned(), "*".to_owned());
+    ApiGatewayProxyResponse{
         status_code: 200,
-        headers: headers,
+        headers,
         multi_value_headers: HashMap::new(),
         body: Some(body),
         is_base64_encoded: None,

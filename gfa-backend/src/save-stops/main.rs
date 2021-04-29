@@ -49,9 +49,11 @@ async fn handle_request(event: Value, _: Context) -> Result<(), Error> {
     let pickup_events: Vec<PickUpEvent> = serde_json::from_value(event)?;
     let unique_stops: Vec<PickUpStop> = stop_parser::parse_unique_stops(pickup_events); 
 
-    let mut request = PutObjectRequest::default();
-    request.bucket = stops_bucket;
-    request.key = stops_path;
+    let mut request = PutObjectRequest{
+        bucket: stops_bucket,
+        key: stops_path,
+        ..Default::default()
+    };
 
     let body = to_vec(&unique_stops)?;
     request.body = Some(ByteStream::from(body));

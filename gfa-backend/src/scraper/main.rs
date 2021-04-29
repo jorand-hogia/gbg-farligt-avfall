@@ -57,7 +57,7 @@ async fn handle_request(_event: Value, _c: Context) -> Result<Value, Error> {
             Err(error) => {
                 error!("{}", error);
                 return Err(Box::new(GfaScraperError{
-                    message: format!("Failed while parsing pages")
+                    message: "Failed while parsing pages".to_owned()
                 })) 
             }
         };

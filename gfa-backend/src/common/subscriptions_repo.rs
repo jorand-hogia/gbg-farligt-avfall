@@ -43,7 +43,7 @@ impl fmt::Display for MalformedDynamoDbResponse {
 }
 impl error::Error for MalformedDynamoDbResponse {}
 
-pub async fn store_subscription(table: &String, region: &Region, subscription: &Subscription) -> Result<(), Error> {
+pub async fn store_subscription(table: &str, region: &Region, subscription: &Subscription) -> Result<(), Error> {
     let client = DynamoDbClient::new(region.clone());
 
     let mut attributes: HashMap<String, AttributeValue> = HashMap::new(); 
@@ -74,7 +74,7 @@ pub async fn store_subscription(table: &String, region: &Region, subscription: &
 
     match client.put_item(PutItemInput{
         item: attributes,
-        table_name: table.clone(),
+        table_name: table.to_owned(),
         ..Default::default()
     }).await {
         Ok(_response) => {
@@ -86,21 +86,21 @@ pub async fn store_subscription(table: &String, region: &Region, subscription: &
     }
 }
 
-pub async fn get_subscription(table: &String, region: &Region, email: &String, location_id: &String) -> Result<Option<Subscription>, Error> {
+pub async fn get_subscription(table: &str, region: &Region, email: &str, location_id: &str) -> Result<Option<Subscription>, Error> {
     let client = DynamoDbClient::new(region.clone());
 
     let mut attributes: HashMap<String, AttributeValue> = HashMap::new();
     attributes.insert("email".to_owned(), AttributeValue{
-        s: Some(email.clone()),
+        s: Some(email.to_owned()),
         ..Default::default()
     });
     attributes.insert("location_id".to_owned(), AttributeValue{
-        s: Some(location_id.clone()),
+        s: Some(location_id.to_owned()),
         ..Default::default()
     });
 
     match client.get_item(GetItemInput{
-        table_name: table.clone(),
+        table_name: table.to_owned(),
         key: attributes,
         ..Default::default()
     }).await {
@@ -115,7 +115,7 @@ pub async fn get_subscription(table: &String, region: &Region, email: &String, l
                 Some(subscription) => Ok(Some(subscription)),
                 None => {
                     Err(Box::new(MalformedSubscription{
-                        email: Some(email.clone()),
+                        email: Some(email.to_owned()),
                         auth_token: None,
                     }))
                 }
@@ -127,16 +127,16 @@ pub async fn get_subscription(table: &String, region: &Region, email: &String, l
     }
 }
 
-pub async fn get_subscription_by_auth_token(table: &String, region: &Region, auth_token: &String) -> Result<Option<Subscription>, Error> {
+pub async fn get_subscription_by_auth_token(table: &str, region: &Region, auth_token: &str) -> Result<Option<Subscription>, Error> {
     let client = DynamoDbClient::new(region.clone());
     let mut attribute_values = HashMap::new();
     attribute_values.insert(":authToken".to_owned(), AttributeValue{
-        s: Some(auth_token.clone()),
+        s: Some(auth_token.to_owned()),
         ..Default::default()
     });
     match client.query(QueryInput{
         index_name: Some("byAuthToken".to_owned()),
-        table_name: table.clone(),
+        table_name: table.to_owned(),
         expression_attribute_values: Some(attribute_values),
         key_condition_expression: Some("auth_token = :authToken".to_owned()),
         ..Default::default()
@@ -146,7 +146,7 @@ pub async fn get_subscription_by_auth_token(table: &String, region: &Region, aut
                 Some(items) => items,
                 None => return Err(Box::new(MalformedDynamoDbResponse))
             };
-            if items.len() == 0 {
+            if items.is_empty() {
                 return Ok(None)
             }
             if items.len() > 1 {
@@ -158,7 +158,7 @@ pub async fn get_subscription_by_auth_token(table: &String, region: &Region, aut
                 None => {
                     Err(Box::new(MalformedSubscription{
                         email: None,
-                        auth_token: Some(auth_token.clone())
+                        auth_token: Some(auth_token.to_owned())
                     }))
                 }
             }
@@ -170,16 +170,16 @@ pub async fn get_subscription_by_auth_token(table: &String, region: &Region, aut
     }
 }
 
-pub async fn get_authenticated_subscriptions(table: &String, region: &Region, location_id: &String) -> Result<Vec<Subscription>, Error> {
+pub async fn get_authenticated_subscriptions(table: &str, region: &Region, location_id: &str) -> Result<Vec<Subscription>, Error> {
     let client = DynamoDbClient::new(region.clone());
     let mut attribute_values = HashMap::new();
     attribute_values.insert(":locationId".to_owned(), AttributeValue{
-        s: Some(location_id.clone()),
+        s: Some(location_id.to_owned()),
         ..Default::default()
     });
     match client.query(QueryInput{
         index_name: Some("byLocationId".to_owned()),
-        table_name: table.clone(),
+        table_name: table.to_owned(),
         expression_attribute_values: Some(attribute_values),
         key_condition_expression: Some("location_id = :locationId".to_owned()),
         ..Default::default()
@@ -221,8 +221,8 @@ fn item_to_subscription(item: &HashMap<String, AttributeValue>) -> Option<Subscr
     Some(Subscription{
         email: email.clone(),
         location_id: location_id.clone(),
-        auth_token: auth_token,
-        is_authenticated: is_authenticated.clone(),
+        auth_token,
+        is_authenticated: *is_authenticated,
         ttl,
     })
 }
