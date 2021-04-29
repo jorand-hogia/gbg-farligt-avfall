@@ -54,8 +54,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Release cache
+        uses: actions/cache@v2
+        with:
+          path: gfa-backend/target
+          key: ${{ runner.os }}-build-release-cache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-release-cache-
       - name: Unit tests
-        run: cd gfa-backend && cargo test --release
+        run: (cd gfa-backend && cargo test --release)
   build-backend:
     needs: [changes, set-version]
     if: ${{ needs.changes.outputs.backend == 'true' }}
@@ -73,16 +80,15 @@ jobs:
         run: sudo apt install musl-tools -y
       - name: Add target
         run: rustup target add x86_64-unknown-linux-musl
-      - name: Cache target
+      - name: Release cache
         uses: actions/cache@v2
-        env:
-          cache-name: cache-target
         with:
           path: gfa-backend/target
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-build-release-cache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-release-cache-
       - name: Build
-        run: |
-          cd gfa-backend && cargo build --release --target x86_64-unknown-linux-musl
+        run: (cd gfa-backend && cargo build --release --target x86_64-unknown-linux-musl)
       - name: Upload artifacts
         run: |
           for executable in ${{ env.EXECUTABLES }};

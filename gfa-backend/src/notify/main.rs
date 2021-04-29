@@ -56,7 +56,7 @@ async fn handle_request(_event: Value, _: Context) -> Result<Value, Error> {
         };
         if subscriptions.len() == 0 {
             info!("Skipped sending notifications for {}, since there are no subscribers.", event);
-            break;
+            continue;
         }
 
         let html_content = match email_formatter::format_email_message(&event) {
