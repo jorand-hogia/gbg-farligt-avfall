@@ -63,7 +63,7 @@ fn create_response(status_code: i64, body: String) -> ApiGatewayV2httpResponse {
         headers: HashMap::new(),
         multi_value_headers: HashMap::new(),
         body: Some(body),
-        is_base64_encoded: None,
+        is_base64_encoded: Some(false),
         cookies: Vec::new()
     }
 }
