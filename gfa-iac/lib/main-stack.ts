@@ -60,7 +60,7 @@ export class GbgFarligtAvfallStack extends Stack {
     const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
     const subscriptionsStack = new SubscriptionStack(this, 'subscription-stack', {
       api: apiStack.api,
-      verifyUrl: `${webStack.externalUrl}/verify`,
+      verifyUrl: `https://${webStack.externalDomain}/verify`,
       emailDomain: domainName,
       apiKey: sendgridApiKey,
     });
@@ -87,10 +87,10 @@ export class GbgFarligtAvfallStack extends Stack {
       value: webStack.webDistributionId,
     });
     new CfnOutput(this, 'ApiUrl', {
-      value: apiStack.externalUrl || apiStack.api.url,
+      value: `https://${apiStack.externalDomain}`,
     });
     new CfnOutput(this, 'WebUrl', {
-      value: webStack.externalUrl,
+      value: `https://${webStack.externalDomain}`,
     });
   }
 }

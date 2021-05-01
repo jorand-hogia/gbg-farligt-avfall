@@ -1,45 +1,52 @@
 import { NestedStack } from '@aws-cdk/aws-cloudformation';
 import { Construct } from '@aws-cdk/core';
-import { RestApi, SecurityPolicy } from '@aws-cdk/aws-apigateway';
+import { HttpApi, CorsHttpMethod, DomainName } from '@aws-cdk/aws-apigatewayv2';
 import { Certificate } from '@aws-cdk/aws-certificatemanager';
 import { CertificateValidation } from '@aws-cdk/aws-certificatemanager';
 import { ARecord, HostedZone, RecordTarget } from '@aws-cdk/aws-route53';
-import * as targets from '@aws-cdk/aws-route53-targets';
+import { ApiGatewayv2DomainProperties } from '@aws-cdk/aws-route53-targets';
 
 export class ApiStack extends NestedStack {
 
-    public readonly api: RestApi;
-    public readonly externalUrl?: string;
+    public readonly api: HttpApi;
+    public readonly externalDomain: string;
 
     constructor(scope: Construct, id: string) {
         super(scope, id);
 
-        this.api = new RestApi(this, 'api');
-
         const hostedZoneId = scope.node.tryGetContext('hostedZoneId');
         const domainName = scope.node.tryGetContext('domainName');
+        this.externalDomain = `gfa-api.${domainName}`;
 
-        if (hostedZoneId && domainName) {
-            const apiDomainName = `gfa-api.${domainName}`;
-            const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
-                hostedZoneId: hostedZoneId,
-                zoneName: domainName,
-            });
-            const apiCert = new Certificate(this, 'api-certificate', {
-                domainName: apiDomainName,
-                validation: CertificateValidation.fromDns(hostedZone),
-            });
-            this.api.addDomainName('api-domain', {
-                domainName: apiDomainName,
-                certificate: apiCert, 
-                securityPolicy: SecurityPolicy.TLS_1_2,
-            });
-            new ARecord(this, 'api-domain-record', {
-                zone: hostedZone,
-                target: RecordTarget.fromAlias(new targets.ApiGateway(this.api)),
-                recordName: apiDomainName,
-            });
-            this.externalUrl = `https://${apiDomainName}`;
-        }
+        const hostedZone = HostedZone.fromHostedZoneAttributes(this, 'e-hostedzone', {
+            hostedZoneId: hostedZoneId,
+            zoneName: domainName,
+        });
+        const apiCert = new Certificate(this, 'api-certificate', {
+            domainName: this.externalDomain,
+            validation: CertificateValidation.fromDns(hostedZone),
+        });
+        const customDomainName = new DomainName(this, 'domain-name', {
+            domainName: this.externalDomain,
+            certificate: apiCert,
+        });
+        this.api = new HttpApi(this, 'apiv2', {
+            corsPreflight: {
+                allowHeaders: ['Content-Type', 'Accept'],
+                allowOrigins: ['*'],
+                allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.PUT, CorsHttpMethod.POST],
+            },
+            defaultDomainMapping: {
+                domainName: customDomainName,
+            }
+        });
+        new ARecord(this, 'api-domain-record', {
+            zone: hostedZone,
+            recordName: this.externalDomain,
+            target: RecordTarget.fromAlias(new ApiGatewayv2DomainProperties(
+                customDomainName.regionalDomainName,
+                customDomainName.regionalHostedZoneId,
+            )),
+        });
     }
 }

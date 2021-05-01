@@ -2,10 +2,11 @@ import { NestedStack, NestedStackProps } from '@aws-cdk/aws-cloudformation';
 import { Construct } from "@aws-cdk/core";
 import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
 import { GfaFunction } from './function/gfa-function';
-import { RestApi, LambdaIntegration, Cors } from '@aws-cdk/aws-apigateway';
+import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
+import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 
 export interface SubscriptionsStackProps extends NestedStackProps {
-    api: RestApi,
+    api: HttpApi,
     verifyUrl: string,
     emailDomain: string,
     apiKey: string
@@ -53,28 +54,20 @@ export class SubscriptionStack extends NestedStack {
         });
         this.subscriptionsDb.grantReadWriteData(verifySubscription.handler);
 
-        const addSubscriptionIntegration = new LambdaIntegration(addSubscription.handler, {
-            proxy: true,
+        props.api.addRoutes({
+            path: '/subscriptions',
+            methods: [ HttpMethod.PUT ],
+            integration: new LambdaProxyIntegration({
+                handler: addSubscription.handler,
+            }),
         });
-        const verifySubscriptionIntegration = new LambdaIntegration(verifySubscription.handler, {
-            proxy: true,
+        props.api.addRoutes({
+            path: '/subscriptions/verify',
+            methods: [ HttpMethod.POST ],
+            integration: new LambdaProxyIntegration({
+                handler: verifySubscription.handler,
+            }),
         });
-
-        const subscriptionsResource = props.api.root.addResource('subscriptions');
-        subscriptionsResource.addCorsPreflight({
-            allowOrigins: Cors.ALL_ORIGINS,
-            allowMethods: ['PUT'],
-            allowHeaders: ['Content-Type', 'Accept']
-        });
-        subscriptionsResource.addMethod('PUT', addSubscriptionIntegration);
-
-        const verifyResource = subscriptionsResource.addResource('verify');
-        verifyResource.addCorsPreflight({
-            allowOrigins: Cors.ALL_ORIGINS,
-            allowMethods: ['POST'],
-            allowHeaders: ['Content-Typ', 'Accept']
-        });
-        verifyResource.addMethod('POST', verifySubscriptionIntegration);
     }
 
 }

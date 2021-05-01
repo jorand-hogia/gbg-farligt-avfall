@@ -1,12 +1,13 @@
 import { Construct, NestedStack } from "@aws-cdk/core";
 import { IBucket } from '@aws-cdk/aws-s3';
-import { RestApi, LambdaIntegration, Cors } from '@aws-cdk/aws-apigateway';
+import { HttpApi, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
+import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
 import { GfaFunction } from './function/gfa-function';
 
 export interface StopsStackProps {
     stopsBucket: IBucket,
     stopsPath: string,
-    api: RestApi
+    api: HttpApi,
 }
 
 export class StopsStack extends NestedStack {
@@ -22,16 +23,12 @@ export class StopsStack extends NestedStack {
         });
         props.stopsBucket.grantRead(getStops.handler, props.stopsPath);
 
-        const getStopsIntegration = new LambdaIntegration(getStops.handler, {
-            proxy: true,
+        props.api.addRoutes({
+            path: '/stops',
+            methods: [ HttpMethod.GET ],
+            integration: new LambdaProxyIntegration({
+                handler: getStops.handler,
+            }),
         });
-
-        const resource = props.api.root.addResource('stops');
-        resource.addCorsPreflight({
-            allowOrigins: Cors.ALL_ORIGINS,
-            allowMethods: ['GET'],
-            allowHeaders: ['Content-Type', 'Accept']
-        });
-        resource.addMethod('GET', getStopsIntegration);
     }
 }

@@ -14,16 +14,14 @@ export class WebStack extends NestedStack {
 
     public readonly webDistributionId: string;
     public readonly webHostingBucketName: string;
-    public readonly externalUrl: string;
+    public readonly externalDomain: string;
 
-    private readonly webDomainName: string;
     private readonly rootDomainName: string;
 
     constructor(scope: Construct, id: string, props: WebStackProps) {
         super(scope, id, props);
         this.rootDomainName = scope.node.tryGetContext('domainName');
-        this.webDomainName = `gfa.${this.rootDomainName}`;
-        this.externalUrl = `https://${this.webDomainName}`;
+        this.externalDomain = `gfa.${this.rootDomainName}`;
 
         const webHostingBucket = this.setupHostingBucket();
         this.webHostingBucketName = webHostingBucket.bucketName;
@@ -84,7 +82,7 @@ export class WebStack extends NestedStack {
                 }
             ],
             viewerCertificate: {
-                aliases: [ this.webDomainName ],
+                aliases: [ this.externalDomain ],
                 props: {
                     acmCertificateArn: certificateArn,
                     sslSupportMethod: 'sni-only',
@@ -118,7 +116,7 @@ export class WebStack extends NestedStack {
         new ARecord(this, 'web-domain-record', {
             zone: hostedZone,
             target: RecordTarget.fromAlias(new targets.CloudFrontTarget(cloudFront)),
-            recordName: this.webDomainName,
+            recordName: this.externalDomain,
         });
     }
 }

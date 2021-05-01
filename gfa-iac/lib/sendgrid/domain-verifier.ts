@@ -2,7 +2,7 @@ import { Construct, CustomResource, Duration } from "@aws-cdk/core";
 import { Function, Runtime, Code } from '@aws-cdk/aws-lambda';
 import { Provider } from '@aws-cdk/custom-resources';
 import { RetentionDays } from '@aws-cdk/aws-logs';
-import { Effect, PolicyStatement } from "@aws-cdk/aws-kms/node_modules/@aws-cdk/aws-iam";
+import { Effect, PolicyStatement } from "@aws-cdk/aws-iam";
 import { HostedZone } from '@aws-cdk/aws-route53';
 
 export interface SendGridDomainVerifierProps {
