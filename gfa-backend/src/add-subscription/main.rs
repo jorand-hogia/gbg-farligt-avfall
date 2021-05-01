@@ -1,4 +1,4 @@
-use aws_lambda_events::event::apigw::{ApiGatewayProxyRequest, ApiGatewayProxyResponse};
+use aws_lambda_events::event::apigw::{ApiGatewayV2httpRequest, ApiGatewayV2httpResponse};
 use common::send_email::{send_email, From, Recipient, SendEmailRequest};
 use common::subscription::Subscription;
 use common::subscriptions_repo::{get_subscription, store_subscription};
@@ -21,9 +21,9 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(
-    event: ApiGatewayProxyRequest,
+    event: ApiGatewayV2httpRequest,
     _: Context,
-) -> Result<ApiGatewayProxyResponse, Error> {
+) -> Result<ApiGatewayV2httpResponse, Error> {
     let subscriptions_table = env::var("SUBSCRIPTIONS_TABLE").unwrap();
     let verify_url = env::var("VERIFY_URL").unwrap();
     let api_key = env::var("SENDGRID_API_KEY").unwrap();
@@ -99,12 +99,13 @@ async fn handle_request(
     }
 }
 
-fn create_response(status_code: i64, body: String) -> ApiGatewayProxyResponse {
-    ApiGatewayProxyResponse {
+fn create_response(status_code: i64, body: String) -> ApiGatewayV2httpResponse {
+    ApiGatewayV2httpResponse {
         status_code,
         headers: HashMap::new(),
         multi_value_headers: HashMap::new(),
         body: Some(body),
         is_base64_encoded: None,
+        cookies: Vec::new()
     }
 }

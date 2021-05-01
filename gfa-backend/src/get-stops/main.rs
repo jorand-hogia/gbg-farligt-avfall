@@ -6,7 +6,7 @@ use log::{self, debug, LevelFilter};
 use rusoto_core::{Region};
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
 use tokio::io::AsyncReadExt;
-use aws_lambda_events::event::apigw::ApiGatewayProxyResponse;
+use aws_lambda_events::event::apigw::ApiGatewayV2httpResponse;
 use common::pickup_stop::PickUpStop;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -36,7 +36,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayProxyResponse, Error> {
+async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayV2httpResponse, Error> {
     debug!("Start get request");
     let aws_region = env::var("AWS_REGION")?;
     let aws_region = Region::from_str(&aws_region)?;
@@ -73,12 +73,13 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayProxyResp
     return Ok(create_response(response));
 }
 
-fn create_response(body: String) -> ApiGatewayProxyResponse {
-    ApiGatewayProxyResponse{
+fn create_response(body: String) -> ApiGatewayV2httpResponse {
+    ApiGatewayV2httpResponse {
         status_code: 200,
         headers: HashMap::new(),
         multi_value_headers: HashMap::new(),
         body: Some(body),
         is_base64_encoded: None,
+        cookies: Vec::new()
     }
 }

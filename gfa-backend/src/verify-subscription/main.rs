@@ -2,7 +2,7 @@ use std::{env, str::FromStr, collections::HashMap};
 use log::{self, error, LevelFilter};
 use simple_logger::SimpleLogger;
 use lambda::{handler_fn, Context};
-use aws_lambda_events::event::apigw::{ApiGatewayProxyRequest, ApiGatewayProxyResponse};
+use aws_lambda_events::event::apigw::{ApiGatewayV2httpRequest, ApiGatewayV2httpResponse};
 use rusoto_core::Region;
 use common::subscriptions_repo::{get_subscription_by_auth_token, store_subscription};
 
@@ -17,9 +17,9 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(
-    event: ApiGatewayProxyRequest,
+    event: ApiGatewayV2httpRequest,
     _: Context,
-) -> Result<ApiGatewayProxyResponse, Error> {
+) -> Result<ApiGatewayV2httpResponse, Error> {
     let subscriptions_table = env::var("SUBSCRIPTIONS_TABLE").unwrap();
     let region = env::var("AWS_REGION").unwrap();
     let region = Region::from_str(&region).unwrap();
@@ -57,12 +57,13 @@ async fn handle_request(
     }
 }
 
-fn create_response(status_code: i64, body: String) -> ApiGatewayProxyResponse {
-    ApiGatewayProxyResponse {
+fn create_response(status_code: i64, body: String) -> ApiGatewayV2httpResponse {
+    ApiGatewayV2httpResponse {
         status_code,
         headers: HashMap::new(),
         multi_value_headers: HashMap::new(),
         body: Some(body),
         is_base64_encoded: None,
+        cookies: Vec::new()
     }
 }
