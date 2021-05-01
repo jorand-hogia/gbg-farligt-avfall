@@ -31,6 +31,7 @@ export class ApiStack extends NestedStack {
             certificate: apiCert,
         });
         this.api = new HttpApi(this, 'apiv2', {
+            apiName: 'gfa-api',
             corsPreflight: {
                 allowHeaders: ['Content-Type', 'Accept'],
                 allowOrigins: ['*'],
