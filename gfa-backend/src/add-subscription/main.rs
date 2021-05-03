@@ -1,5 +1,5 @@
 use aws_lambda_events::event::apigw::{ApiGatewayV2httpRequest, ApiGatewayV2httpResponse};
-use common::send_email::{send_email, From, Recipient, SendEmailRequest};
+use common::send_email::send_email;
 use common::subscription::Subscription;
 use common::subscriptions_repo::{get_subscription, store_subscription};
 use lambda::{handler_fn, Context};
@@ -9,6 +9,8 @@ use simple_logger::SimpleLogger;
 use std::{collections::HashMap, env, str::FromStr};
 
 mod add_subscription_request;
+mod parser;
+mod verification_email;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -31,19 +33,10 @@ async fn handle_request(
     let region = env::var("AWS_REGION").unwrap();
     let region = Region::from_str(&region).unwrap();
 
-    let body = match event.body {
-        Some(body) => body,
-        None => {
-            return Ok(create_response(400, "Missing request body".to_owned()));
-        }
+    let request = match parser::parse_request(event) {
+        Ok(request)  => request,
+        Err(e) => return Ok(create_response(e.status_code, e.message))
     };
-    let request: add_subscription_request::AddSubscriptionRequest =
-        match serde_json::from_str(&body) {
-            Ok(request) => request,
-            Err(_error) => {
-                return Ok(create_response(400, "Malformed request body".to_owned()));
-            }
-        };
 
     match get_subscription(&subscriptions_table, &region, &request.email, &request.location_id,).await {
         Ok(optional_subscription) => if let Some(subscription) = optional_subscription {
@@ -75,21 +68,7 @@ async fn handle_request(
         }
     };
 
-    let html_content = include_str!("verification_email.html");
-    let email_request = SendEmailRequest {
-        from: From {
-            name: "Göteborg Farligt Avfall Notifications".to_owned(),
-            email: format!("noreply-farligtavfall@{}", email_domain),
-        },
-        subject: "Please verify your subscription".to_owned(),
-        recipients: vec![Recipient {
-            email: subscription.email,
-            substitutions: [("-verifyUrl-".to_owned(), format!("{}?auth_token={}", verify_url, subscription.auth_token.unwrap()))].iter()
-                .cloned()
-                .collect::<HashMap<String, String>>()
-        }],
-        html_content: html_content.to_owned()
-    };
+    let email_request = verification_email::create_request(&subscription, &email_domain, &verify_url); 
     match send_email(&api_key, email_request).await {
         Ok(_response) => Ok(create_response(200, "Successfully created subscription".to_owned())),
         Err(error) => {
