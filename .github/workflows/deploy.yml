@@ -102,3 +102,20 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id ${{ steps.web_hosting.outputs.dist_id }} --paths "/*" 
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Release cache
+        uses: actions/cache@v2
+        with:
+          path: gfa-backend/target
+          key: ${{ runner.os }}-build-release-cache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-release-cache-
+      - name: Unit tests
+        run: (cd gfa-backend && cargo test --release)
+
+

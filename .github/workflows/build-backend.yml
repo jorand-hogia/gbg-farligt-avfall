@@ -46,8 +46,8 @@ jobs:
           PREVIOUS_VERSION=$((VERSION-1))
           for executable in ${{ env.EXECUTABLES }};
           do
-            aws s3 sync s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$PREVIOUS_VERSION \
-                        s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$VERSION
+            aws s3 cp s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$PREVIOUS_VERSION \
+                      s3://${{ secrets.S3_ARTIFACT_BUCKET }}/gfa-$executable-$VERSION
           done
 
   lint-backend:
