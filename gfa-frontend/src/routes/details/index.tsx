@@ -3,6 +3,7 @@ import { StopsContext } from '../../components/app';
 import { useContext, useState } from 'preact/hooks';
 import { ApiClient } from '../../api/apiClient';
 import * as style from './style.css';
+import TextInputWithButton from '../../components/text-input-with-button';
 
 interface DetailsProps {
   locationId: string;
@@ -38,9 +39,9 @@ const Details: FunctionalComponent<DetailsProps> = props => {
   const stops = useContext(StopsContext);
   const stop = stops.find(stop => stop.location_id === locationId);
 
-  const [email, setEmail] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [hasSubscribed, setHasSubscribed] = useState<boolean>(false);
 
   return (
     <div className={style.main}>
@@ -55,33 +56,29 @@ const Details: FunctionalComponent<DetailsProps> = props => {
           below and hit subscribe.
         </p>
       </div>
-      <form>
-        <input
-          id="email"
-          type="email"
-          placeholder="someone@somewhere.com"
-          onInput={(event): void => {
-            setEmail((event.target as HTMLInputElement).value);
-          }}
-        />
-        <button
-          onClick={(event): void => {
-            event.preventDefault();
-            setLoading(true);
-            handleSubscribe(locationId, email)
-              .then(() => {
-                setLoading(false);
-              })
-              .catch(error => {
-                setLoading(false);
-                setError(error);
-              });
-          }}
-        >
-          Subscribe!
-        </button>
-      </form>
-      {error && <div className={style.error}>{error}</div>}
+      <TextInputWithButton
+        label="Subscribe!"
+        completed={hasSubscribed}
+        loading={loading}
+        error={error}
+        onButtonClick={email => {
+          if (hasSubscribed || loading) {
+            return;
+          }
+          setLoading(true);
+          handleSubscribe(locationId, email)
+            .then(() => {
+              setLoading(false);
+              setHasSubscribed(true);
+            })
+            .catch(error => {
+              setLoading(false);
+              setError(error);
+            });
+        }}
+        placeholder="someone@somewhere.com"
+        type="email"
+      />
     </div>
   );
 };
