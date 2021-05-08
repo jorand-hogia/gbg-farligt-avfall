@@ -1,8 +1,9 @@
-use std::{env, fmt, error, str::FromStr, collections::HashMap, io::Read};
+use std::{env, fmt, error, str::FromStr, collections::HashMap};
 use lambda::{handler_fn, Context};
 use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
-use log::{self, debug, LevelFilter};
+use log::{self, LevelFilter};
+use futures::TryStreamExt;
 use rusoto_core::{Region};
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
 use aws_lambda_events::event::apigw::ApiGatewayV2httpResponse;
@@ -61,16 +62,11 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayV2httpRes
             return Ok(create_response(json!(vec!(empty)).to_string()));
         }
     };
-    let mut response = String::new();
-    match body.into_blocking_read()
-        .read_to_string(&mut response) {
-            Ok(_size) => {},
-            Err(e) => return Err(Box::new(GetStopsError{
-                message: format!("Could not transform S3 response into string: {}", e),
-            })),
-        }
-    debug!("Got body: \n{}", response);
-    return Ok(create_response(response));
+    let response = body.map_ok(|b| bytes::BytesMut::from(&b[..]))
+        .try_concat()
+        .await
+        .unwrap();
+    return Ok(create_response(String::from_utf8(response.to_vec()).unwrap()));
 }
 
 fn create_response(body: String) -> ApiGatewayV2httpResponse {
