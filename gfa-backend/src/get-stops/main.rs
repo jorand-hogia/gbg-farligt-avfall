@@ -1,11 +1,10 @@
-use std::{env, fmt, error, str::FromStr, collections::HashMap};
+use std::{env, fmt, error, str::FromStr, collections::HashMap, io::Read};
 use lambda::{handler_fn, Context};
 use serde_json::{json, Value};
 use simple_logger::{SimpleLogger};
 use log::{self, debug, LevelFilter};
 use rusoto_core::{Region};
 use rusoto_s3::{S3, S3Client, GetObjectRequest};
-use tokio::io::AsyncReadExt;
 use aws_lambda_events::event::apigw::ApiGatewayV2httpResponse;
 use common::pickup_stop::PickUpStop;
 
@@ -37,7 +36,6 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayV2httpResponse, Error> {
-    debug!("Start get request");
     let aws_region = env::var("AWS_REGION")?;
     let aws_region = Region::from_str(&aws_region)?;
     let stops_bucket = env::var("STOPS_BUCKET")?;
@@ -49,7 +47,6 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayV2httpRes
         ..Default::default()
     };
 
-    debug!("About to make S3 request");
     let s3_client = S3Client::new(aws_region);
     let result = match s3_client.get_object(request).await {
         Ok(res) => res,
@@ -57,7 +54,6 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayV2httpRes
             message: format!("Failed to read from S3: {}", e),
         })),
     };
-    debug!("Got response from S3");
     let body = match result.body {
         Some(body) => body,
         None => {
@@ -65,10 +61,14 @@ async fn handle_request(_event: Value, _: Context) -> Result<ApiGatewayV2httpRes
             return Ok(create_response(json!(vec!(empty)).to_string()));
         }
     };
-    debug!("Got body from S3");
     let mut response = String::new();
-    body.into_async_read()
-        .read_to_string(&mut response).await?;
+    match body.into_blocking_read()
+        .read_to_string(&mut response) {
+            Ok(_size) => {},
+            Err(e) => return Err(Box::new(GetStopsError{
+                message: format!("Could not transform S3 response into string: {}", e),
+            })),
+        }
     debug!("Got body: \n{}", response);
     return Ok(create_response(response));
 }
