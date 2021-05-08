@@ -1,9 +1,9 @@
 import { App, CfnOutput, RemovalPolicy, Stack, StackProps } from '@aws-cdk/core';
-import { Table, AttributeType, BillingMode } from '@aws-cdk/aws-dynamodb';
+import { Table, AttributeType, BillingMode, ProjectionType } from '@aws-cdk/aws-dynamodb';
 import { Bucket } from '@aws-cdk/aws-s3';
 import { Topic } from '@aws-cdk/aws-sns';
 import { EmailSubscription} from '@aws-cdk/aws-sns-subscriptions';
-import { IngestionStack } from './ingestion-stack';
+import { EventsIngestionStack } from './events-ingestion-stack';
 import { ApiStack } from './api-stack';
 import { WebStack } from './web-stack';
 import { NotifyStack } from './notify-stack';
@@ -20,18 +20,6 @@ export class GbgFarligtAvfallStack extends Stack {
   constructor(app: App, id: string, props: GbgFarligtAvfallStackProps) {
     super(app, id, props);
 
-    const eventsDb = new Table(this, 'events-db', {
-      partitionKey: { name: 'event_date', type: AttributeType.STRING },
-      sortKey: { name: 'location_id', type: AttributeType.STRING },
-      billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: RemovalPolicy.DESTROY
-    });
-
-    const stopsS3Path = 'stops.json';
-    const stopsBucket = new Bucket(this, 'stops-bucket', {
-      removalPolicy: RemovalPolicy.DESTROY
-    });
-
     const webStack = new WebStack(this, 'web-stack', {
       webCertParameterName: props.webCertParameterName
     });
@@ -43,18 +31,15 @@ export class GbgFarligtAvfallStack extends Stack {
       alertTopic.addSubscription(new EmailSubscription(adminEmail));
     }
 
-    new IngestionStack(this, 'ingestion-stack', {
-      stopsBucket: stopsBucket,
-      stopsPath: stopsS3Path,
-      eventsTable: eventsDb,
+    const eventsIngestionStack = new EventsIngestionStack(this, 'ingestion-stack', {
       alertTopic,
     });
 
     new StopsStack(this, 'stops-stack', {
       api: apiStack.api,
-      stopsBucket: stopsBucket,
-      stopsPath: stopsS3Path
-    })
+      eventsTable: eventsIngestionStack.eventsTable,
+      locationIndex: eventsIngestionStack.locationIndex,
+    });
 
     const domainName = app.node.tryGetContext('domainName');
     const sendgridApiKey = app.node.tryGetContext('sendgridApiKey');
@@ -66,7 +51,7 @@ export class GbgFarligtAvfallStack extends Stack {
     });
 
     new NotifyStack(this, 'notify-stack', {
-      eventsTable: eventsDb,
+      eventsTable: eventsIngestionStack.eventsTable,
       subscriptionsTable: subscriptionsStack.subscriptionsDb, 
       apiKey: sendgridApiKey,
       emailDomain: domainName,

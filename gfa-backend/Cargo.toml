@@ -13,10 +13,6 @@ name = "save-events"
 path = "src/save-events/main.rs"
 
 [[bin]]
-name = "save-stops"
-path = "src/save-stops/main.rs"
-
-[[bin]]
 name = "get-stops"
 path = "src/get-stops/main.rs"
 

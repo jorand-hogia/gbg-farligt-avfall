@@ -5,3 +5,5 @@ pub mod events_repo;
 pub mod send_email;
 pub mod subscription;
 pub mod subscriptions_repo;
+pub mod stops_repo;
+pub mod dynamodb_util;

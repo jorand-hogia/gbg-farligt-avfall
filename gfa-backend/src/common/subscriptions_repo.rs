@@ -3,6 +3,7 @@ use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, Quer
 use rusoto_core::{Region};
 use log::{self, warn};
 use crate::subscription::Subscription;
+use crate::dynamodb_util::MalformedDynamoDbResponse;
 
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -33,15 +34,6 @@ impl fmt::Display for AuthTokenCollision {
     }
 }
 impl error::Error for AuthTokenCollision {}
-
-#[derive(Debug)]
-struct MalformedDynamoDbResponse;
-impl fmt::Display for MalformedDynamoDbResponse {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Malformed response from DynamoDb")
-    }
-}
-impl error::Error for MalformedDynamoDbResponse {}
 
 pub async fn store_subscription(table: &str, region: &Region, subscription: &Subscription) -> Result<(), Error> {
     let client = DynamoDbClient::new(region.clone());

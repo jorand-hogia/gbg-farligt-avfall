@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 env:
-  EXECUTABLES: "get-stops save-events save-stops scraper notify add-subscription verify-subscription"
+  EXECUTABLES: "get-stops save-events scraper notify add-subscription verify-subscription"
 jobs:
   set-version:
     runs-on: ubuntu-latest

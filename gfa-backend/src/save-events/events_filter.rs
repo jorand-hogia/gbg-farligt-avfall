@@ -7,9 +7,6 @@ pub fn filter(events: Vec<PickUpEvent>, today: Date<Utc>) -> Vec<PickUpEvent> {
             let event_date = DateTime::parse_from_rfc3339(&event.time_start).unwrap()
                 .with_timezone(&Utc)
                 .date();
-            if event_date < today {
-                return false;
-            }
             let too_far_into_future = today + Duration::weeks(24);
             if event_date > too_far_into_future {
                 return false;
@@ -23,21 +20,6 @@ pub fn filter(events: Vec<PickUpEvent>, today: Date<Utc>) -> Vec<PickUpEvent> {
 mod tests {
     use super::*;
     use chrono::{DateTime};
-
-    #[test]
-    fn should_filter_items_in_the_past() {
-        // No-one will be interested in events in the past - No reason to save them
-        let pseudo_today = DateTime::parse_from_rfc3339("2020-11-10T22:46:15+01:00").unwrap()
-            .with_timezone(&Utc)
-            .date();
-        let events: Vec<PickUpEvent> = vec![
-            PickUpEvent::new("some-street".to_owned(), "some-district".to_owned(), None, "2020-01-01T16:00:00+02:00".to_owned(), "2020-01-01T17:00:00+02:00".to_owned()).unwrap(),
-            PickUpEvent::new("some-other-street".to_owned(), "some-other-district".to_owned(), None, "2020-11-15T16:00:00+02:00".to_owned(), "2020-11-15T17:00:00+02:00".to_owned()).unwrap()
-        ];
-        let result = filter(events, pseudo_today);
-        assert_eq!(1, result.len());
-        assert_eq!("some-other-street".to_owned(), result[0].street);
-    }
 
     #[test]
     fn shoult_filter_items_too_far_into_future() {
