@@ -21,7 +21,7 @@ pub async fn get_all_stops(table: &str, region: &Region, location_index: &str) -
         Some(items) => items,
         None => return Err(Box::new(MalformedDynamoDbResponse))
     };
-    Ok(items.iter()
+    let mut stops = items.iter()
         .map(|item| item_to_stop(item))
         .filter_map(|optional_stop| {
             if optional_stop.is_none() {
@@ -30,8 +30,10 @@ pub async fn get_all_stops(table: &str, region: &Region, location_index: &str) -
             }
             Some(optional_stop.unwrap())
         })
-        .collect()
-    )
+        .collect::<Vec<PickUpStop>>();
+    stops.sort();
+    stops.dedup();
+    Ok(stops)
 }
 
 fn item_to_stop(item: &HashMap<String, AttributeValue>) -> Option<PickUpStop> {

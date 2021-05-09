@@ -1,7 +1,7 @@
 use std::fmt;
 use serde::{Serialize, Deserialize};
 
-#[derive(fmt::Debug, Serialize, Deserialize)]
+#[derive(fmt::Debug, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct PickUpStop {
     pub location_id: String,
     pub street: String,
@@ -27,6 +27,7 @@ impl PartialEq for PickUpStop {
         self.location_id == other.location_id
     }
 }
+impl Eq for PickUpStop {}
 
 impl PickUpStop {
     pub fn new(location_id: String, street: String, district: String, description: Option<String>) -> Self {
