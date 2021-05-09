@@ -48,6 +48,8 @@ export class GbgFarligtAvfallStack extends Stack {
       verifyUrl: `https://${webStack.externalDomain}/verify`,
       emailDomain: domainName,
       apiKey: sendgridApiKey,
+      eventsTable: eventsIngestionStack.eventsTable,
+      locationIndex: eventsIngestionStack.locationIndex,
     });
 
     new NotifyStack(this, 'notify-stack', {

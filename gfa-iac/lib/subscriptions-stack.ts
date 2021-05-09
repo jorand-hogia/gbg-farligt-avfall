@@ -9,7 +9,9 @@ export interface SubscriptionsStackProps extends NestedStackProps {
     api: HttpApi,
     verifyUrl: string,
     emailDomain: string,
-    apiKey: string
+    apiKey: string,
+    eventsTable: Table,
+    locationIndex: string,
 }
 
 export class SubscriptionStack extends NestedStack {
@@ -39,12 +41,15 @@ export class SubscriptionStack extends NestedStack {
             name: 'add-subscription',
             environment: {
                 SUBSCRIPTIONS_TABLE: this.subscriptionsDb.tableName,
+                EVENTS_TABLE: props.eventsTable.tableName,
+                LOCATION_INDEX: props.locationIndex,
                 VERIFY_URL: props.verifyUrl,
                 SENDGRID_API_KEY: props.apiKey,
                 EMAIL_DOMAIN: props.emailDomain,
             },
         });
         this.subscriptionsDb.grantReadWriteData(addSubscription.handler);
+        props.eventsTable.grantReadData(addSubscription.handler);
 
         const verifySubscription = new GfaFunction(this, 'verifySubscription', {
             name: 'verify-subscription',
