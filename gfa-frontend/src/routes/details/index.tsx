@@ -69,6 +69,7 @@ const Details: FunctionalComponent<DetailsProps> = props => {
           handleSubscribe(locationId, email)
             .then(() => {
               setLoading(false);
+              setError('');
               setHasSubscribed(true);
             })
             .catch(error => {
@@ -79,6 +80,11 @@ const Details: FunctionalComponent<DetailsProps> = props => {
         placeholder="someone@somewhere.com"
         type="email"
       />
+      <div className={style.feedback}>
+        {hasSubscribed && (
+          <p>Great! Please check your inbox to confirm your subscription.</p>
+        )}
+      </div>
     </div>
   );
 };
