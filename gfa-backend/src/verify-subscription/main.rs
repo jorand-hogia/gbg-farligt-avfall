@@ -30,8 +30,14 @@ async fn handle_request(
             return Ok(create_response(400, "Missing authentication token".to_owned()));
         }
     };
+    let email = match event.query_string_parameters.get("email") {
+        Some(email) => email,
+        None => {
+            return Ok(create_response(400, "Missing email".to_owned()));
+        }
+    };
 
-    let mut subscription = match get_subscription_by_auth_token(&subscriptions_table, &region, auth_token).await {
+    let mut subscription_from_db = match get_subscription_by_auth_token(&subscriptions_table, &region, auth_token).await {
         Ok(optional_subscription) => match optional_subscription {
             Some(subscription) => subscription,
             None => return Ok(create_response(404, "Subscription not found".to_owned()))
@@ -42,13 +48,16 @@ async fn handle_request(
         }
     };
 
-    if subscription.is_authenticated {
+    if subscription_from_db.is_authenticated {
         return Ok(create_response(400, "Subscription already verified".to_owned()))
     }
+    if subscription_from_db.email != *email {
+        return Ok(create_response(400, "Bad auth token".to_owned()))
+    }
 
-    subscription.verify();
+    subscription_from_db.verify();
 
-    match store_subscription(&subscriptions_table, &region, &subscription).await {
+    match store_subscription(&subscriptions_table, &region, &subscription_from_db).await {
         Ok(()) => Ok(create_response(200, "Successfully verified subscription".to_owned())),
         Err(error) => {
             error!("Failed to write to database: {}", error);

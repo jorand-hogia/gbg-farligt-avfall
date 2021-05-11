@@ -14,7 +14,7 @@ pub fn create_request(subscription: &Subscription, stop: &PickUpStop, email_doma
         recipients: vec![Recipient {
             email: subscription.email.to_owned(),
             substitutions: [
-                ("-verifyUrl-".to_owned(), format!("{}?auth_token={}", verify_url, subscription.auth_token.to_owned().unwrap())),
+                ("-verifyUrl-".to_owned(), format!("{}?email={}&auth_token={}", verify_url, subscription.email.to_owned(), subscription.auth_token.to_owned().unwrap())),
                 ("-street-".to_owned(), stop.street.clone()),
                 ("-district-".to_owned(), stop.district.clone()),
             ]
