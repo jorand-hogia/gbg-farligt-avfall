@@ -32,6 +32,11 @@ export class ApiClient {
       .then(res => res.data);
   }
 
+  public removeSubscription = (email: string, unsubscribe_token: string): Promise<void> => {
+    return this.instance.delete(`/subscriptions?email=${email}&unsubscribe_token=${unsubscribe_token}`)
+      .then(res => res.data);
+  }
+
   private initResponseInterceptor = (): void => {
     this.instance.interceptors.response.use(
       response => response,

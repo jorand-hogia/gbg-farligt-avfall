@@ -35,7 +35,7 @@ export class ApiStack extends NestedStack {
             corsPreflight: {
                 allowHeaders: ['Content-Type', 'Accept'],
                 allowOrigins: ['*'],
-                allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.PUT, CorsHttpMethod.POST],
+                allowMethods: [CorsHttpMethod.GET, CorsHttpMethod.PUT, CorsHttpMethod.POST, CorsHttpMethod.DELETE],
             },
             defaultDomainMapping: {
                 domainName: customDomainName,

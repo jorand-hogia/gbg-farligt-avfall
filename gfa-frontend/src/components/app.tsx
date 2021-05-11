@@ -6,6 +6,7 @@ import { Stop as StopType } from '../types/Stop';
 import List from '../routes/list';
 import Details from '../routes/details';
 import VerifySubscription from '../routes/verify';
+import Unsubscribe from '../routes/unsubscribe';
 
 export const StopsContext = createContext<StopType[]>([]);
 
@@ -30,6 +31,7 @@ const App: FunctionalComponent<{}> = () => {
           <Route path="/" component={List} default />
           <Route path="/details/:locationId" component={Details} />
           <Route path="/verify" component={VerifySubscription} />
+          <Route path="/unsubscribe" component={Unsubscribe} />
         </Router>
       </StopsContext.Provider>
     </div>

@@ -1,5 +1,5 @@
 use std::{error, fmt, collections::HashMap};
-use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, QueryInput, AttributeValue};
+use rusoto_dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput, QueryInput, DeleteItemInput, AttributeValue};
 use rusoto_core::{Region};
 use log::{self, warn};
 use crate::subscription::Subscription;
@@ -10,7 +10,7 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[derive(Debug)]
 struct MalformedSubscription {
     email: Option<String>,
-    auth_token: Option<String>
+    token: Option<String>
 }
 impl fmt::Display for MalformedSubscription {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -18,8 +18,8 @@ impl fmt::Display for MalformedSubscription {
     if self.email.is_some() {
         error_message.push_str(&format!("Email: {}.", self.email.as_ref().unwrap()));
     }
-    if self.auth_token.is_some() {
-        error_message.push_str(&format!("Auth token: {}.", self.auth_token.as_ref().unwrap()));
+    if self.token.is_some() {
+        error_message.push_str(&format!("Token: {}.", self.token.as_ref().unwrap()));
     }
     write!(f, "{}", error_message)
   } 
@@ -27,13 +27,13 @@ impl fmt::Display for MalformedSubscription {
 impl error::Error for MalformedSubscription {}
 
 #[derive(Debug)]
-struct AuthTokenCollision;
-impl fmt::Display for AuthTokenCollision {
+struct TokenCollision;
+impl fmt::Display for TokenCollision {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "More than two subscriptions were found with the same auth_token")
+        write!(f, "More than two subscriptions were found with the same token")
     }
 }
-impl error::Error for AuthTokenCollision {}
+impl error::Error for TokenCollision {}
 
 pub async fn store_subscription(table: &str, region: &Region, subscription: &Subscription) -> Result<(), Error> {
     let client = DynamoDbClient::new(region.clone());
@@ -50,6 +50,12 @@ pub async fn store_subscription(table: &str, region: &Region, subscription: &Sub
     if subscription.auth_token.is_some() {
         attributes.insert("auth_token".to_owned(), AttributeValue{
             s: Some(subscription.auth_token.as_ref().unwrap().clone()),
+            ..Default::default()
+        });
+    }
+    if subscription.unsubscribe_token.is_some() {
+        attributes.insert("unsubscribe_token".to_owned(), AttributeValue{
+            s: Some(subscription.unsubscribe_token.as_ref().unwrap().clone()),
             ..Default::default()
         });
     }
@@ -108,7 +114,7 @@ pub async fn get_subscription(table: &str, region: &Region, email: &str, locatio
                 None => {
                     Err(Box::new(MalformedSubscription{
                         email: Some(email.to_owned()),
-                        auth_token: None,
+                        token: None,
                     }))
                 }
             }
@@ -119,18 +125,26 @@ pub async fn get_subscription(table: &str, region: &Region, email: &str, locatio
     }
 }
 
+pub async fn get_subscription_by_unsubscribe_token(table: &str, region: &Region, unsubscribe_token: &str) -> Result<Option<Subscription>, Error> {
+    get_subscription_by_token(table, region, "byUnsubscribeToken", "unsubscribe_token", unsubscribe_token).await
+}
+
 pub async fn get_subscription_by_auth_token(table: &str, region: &Region, auth_token: &str) -> Result<Option<Subscription>, Error> {
+    get_subscription_by_token(table, region, "byAuthToken", "auth_token", auth_token).await
+}
+
+async fn get_subscription_by_token(table: &str, region: &Region, index_name: &str, property_name: &str, value: &str) -> Result<Option<Subscription>, Error> {
     let client = DynamoDbClient::new(region.clone());
     let mut attribute_values = HashMap::new();
-    attribute_values.insert(":authToken".to_owned(), AttributeValue{
-        s: Some(auth_token.to_owned()),
+    attribute_values.insert(format!(":{}", property_name), AttributeValue{
+        s: Some(value.to_owned()),
         ..Default::default()
     });
     match client.query(QueryInput{
-        index_name: Some("byAuthToken".to_owned()),
+        index_name: Some(index_name.to_owned()),
         table_name: table.to_owned(),
         expression_attribute_values: Some(attribute_values),
-        key_condition_expression: Some("auth_token = :authToken".to_owned()),
+        key_condition_expression: Some(format!("{} = :{}", property_name, property_name)),
         ..Default::default()
     }).await {
         Ok(response) => {
@@ -142,7 +156,7 @@ pub async fn get_subscription_by_auth_token(table: &str, region: &Region, auth_t
                 return Ok(None)
             }
             if items.len() > 1 {
-                return Err(Box::new(AuthTokenCollision{}))
+                return Err(Box::new(TokenCollision{}))
             }
             let item = items.first().unwrap();
             match item_to_subscription(item) {
@@ -150,7 +164,7 @@ pub async fn get_subscription_by_auth_token(table: &str, region: &Region, auth_t
                 None => {
                     Err(Box::new(MalformedSubscription{
                         email: None,
-                        auth_token: Some(auth_token.to_owned())
+                        token: Some(value.to_owned())
                     }))
                 }
             }
@@ -198,6 +212,21 @@ pub async fn get_authenticated_subscriptions(table: &str, region: &Region, locat
     }
 }
 
+pub async fn remove_subscription(table: &str, region: &Region, subscription: &Subscription) -> Result<(), Error> {
+    let client = DynamoDbClient::new(region.clone());
+    match client.delete_item(DeleteItemInput{
+        table_name: table.to_owned(),
+        key: [
+            ("email".to_owned(), AttributeValue{s: Some(subscription.email.to_owned()), ..Default::default()}),
+            ("location_id".to_owned(), AttributeValue{s: Some(subscription.location_id.to_owned()), ..Default::default()})
+        ].iter().cloned().collect(),
+        ..Default::default()
+    }).await {
+        Ok(_output) => Ok(()),
+        Err(error) => Err(Box::new(error))
+    }
+}
+
 fn item_to_subscription(item: &HashMap<String, AttributeValue>) -> Option<Subscription> {
     let email = item.get("email")?.s.as_ref()?;
     let location_id = item.get("location_id")?.s.as_ref()?;
@@ -205,6 +234,10 @@ fn item_to_subscription(item: &HashMap<String, AttributeValue>) -> Option<Subscr
     let auth_token = match item.get("auth_token") {
         None => None,
         Some(auth_token) => Some(auth_token.s.as_ref()?.clone())
+    };
+    let unsubscribe_token = match item.get("unsubscribe_token") {
+        None => None,
+        Some(unsubscribe_token) => Some(unsubscribe_token.s.as_ref()?.clone())
     };
     let ttl = match item.get("ttl") {
         None => None,
@@ -214,6 +247,7 @@ fn item_to_subscription(item: &HashMap<String, AttributeValue>) -> Option<Subscr
         email: email.clone(),
         location_id: location_id.clone(),
         auth_token,
+        unsubscribe_token,
         is_authenticated: *is_authenticated,
         ttl,
     })

@@ -72,7 +72,7 @@ async fn handle_request(
         }
     };
 
-    let subscription = Subscription::new(request.email, request.location_id);
+    let subscription = Subscription::new(&request.email, &request.location_id);
     match store_subscription(&subscriptions_table, &region, &subscription).await {
         Ok(()) => (),
         Err(error) => {

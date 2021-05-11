@@ -1,0 +1,17 @@
+.main {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0px 8px;
+  color: #082456;
+}
+
+.link {
+  font-weight: bold;
+}
+.link:hover {
+  cursor: pointer;
+}

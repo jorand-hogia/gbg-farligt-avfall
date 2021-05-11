@@ -28,6 +28,10 @@ path = "src/add-subscription/main.rs"
 name = "verify-subscription"
 path = "src/verify-subscription/main.rs"
 
+[[bin]]
+name = "remove-subscription"
+path = "src/remove-subscription/main.rs"
+
 [lib]
 name = "common"
 path = "src/common/lib.rs"

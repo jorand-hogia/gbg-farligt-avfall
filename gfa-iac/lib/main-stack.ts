@@ -57,6 +57,7 @@ export class GbgFarligtAvfallStack extends Stack {
       subscriptionsTable: subscriptionsStack.subscriptionsDb, 
       apiKey: sendgridApiKey,
       emailDomain: domainName,
+      unsubscribeUrl: `https://${webStack.externalDomain}/unsubscribe`,
       alertTopic,
     });
 

@@ -13,6 +13,7 @@ interface NotifyStackProps extends NestedStackProps {
     subscriptionsTable: ITable,
     apiKey: string,
     emailDomain: string,
+    unsubscribeUrl: string,
     alertTopic: ITopic
 }
 
@@ -27,7 +28,8 @@ export class NotifyStack extends NestedStack {
                 SUBSCRIPTIONS_TABLE: props.subscriptionsTable.tableName,
                 SENDGRID_API_KEY: props.apiKey,
                 EMAIL_DOMAIN: props.emailDomain,
-            }
+                UNSUBSCRIBE_URL: props.unsubscribeUrl,
+            },
         });
         props.eventsTable.grantReadData(notify.handler);
         props.subscriptionsTable.grantReadData(notify.handler);

@@ -8,23 +8,18 @@ pub struct Subscription {
     pub email: String,
     pub location_id: String,
     pub auth_token: Option<String>,
+    pub unsubscribe_token: Option<String>,
     pub is_authenticated: bool,
     pub ttl: Option<i64>
 }
 
 impl Subscription {
-    pub fn new(email: String, location_id: String) -> Self {
-        let mut random_bytes = [0u8; 32];
-        thread_rng().fill_bytes(&mut random_bytes);
-        let mut auth_token = Sha512::new();
-        auth_token.update(&random_bytes);
-        auth_token.update(email.as_bytes());
-        auth_token.update(location_id.as_bytes());
-
+    pub fn new(email: &str, location_id: &str) -> Self {
         Subscription{
-            email,
-            location_id,
-            auth_token: Some(format!("{:x}", auth_token.finalize())),
+            email: email.to_owned(),
+            location_id: location_id.to_owned(),
+            auth_token: Some(Subscription::create_token(email, location_id)),
+            unsubscribe_token: None,
             is_authenticated: false,
             ttl: Some((Utc::now() + Duration::days(1)).timestamp())
         }
@@ -33,6 +28,17 @@ impl Subscription {
         self.is_authenticated = true;
         self.ttl = None;
         self.auth_token = None;
+        self.unsubscribe_token = Some(Subscription::create_token(&self.email, &self.location_id));
+    }
+
+    fn create_token(email: &str, location_id: &str) -> String {
+        let mut random_bytes = [0u8, 32];
+        thread_rng().fill_bytes(&mut random_bytes);
+        let mut token = Sha512::new();
+        token.update(&random_bytes);
+        token.update(email.as_bytes());
+        token.update(location_id.as_bytes());
+        format!("{:x}", token.finalize())
     }
 }
 
@@ -42,7 +48,7 @@ mod tests {
 
     #[test]
     fn should_create_subscription() {
-        let subscription = Subscription::new("email@email.com".to_owned(), "hisingen_nice".to_owned());
+        let subscription = Subscription::new("email@email.com", "hisingen_nice");
         assert_eq!("email@email.com".to_owned(), subscription.email);
         assert_eq!("hisingen_nice".to_owned(), subscription.location_id);
         assert_eq!(false, subscription.is_authenticated);
