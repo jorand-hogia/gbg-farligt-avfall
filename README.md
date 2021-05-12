@@ -1,17 +1,28 @@
 # gbg-farligt-avfall
-Scrapes times for when the "farligt avfall"-truck and stores them.
-End goal is to have subscriptions, and send notifications some time before the truck comes to your subscribed location.
+The purpose of this repository is to send e-mail notifications when the [Göteborg Farligt Avfall truck](https://goteborg.se/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen) is about to arrive to a subscribed location.
+
+The service is deployed to AWS, and exposes the following API endpoints:
+ - GET /stops
+    - Returns all stops (streets) which the Göteborg Farligt Avfall traffic
+ - PUT /subscriptions
+    - Add a new subscription
+ - POST /subscriptions/verify?email={email}&auth_token={token}
+    - Confirm a previously added subscription
+ - DELETE /subscriptions?email={email}&unsubscribe_token={token}
+    - Delete a previously added subscription
+
+Included in the service is also a frontend which displays a list of stops, and give the user possibility to subscribe to e-mail notifications for any of the stops.
 
 ## Requirements
- - Add the following secrets to the github repo:
-   - AWS_ACCESS_KEY_ID
-   - AWS_SECRET_ACCESS_KEY
-   - AWS_REGION
-   - S3_ARTIFACT_BUCKET 
-   - DOMAIN_NAME
-   - HOSTED_ZONE_ID
-   - SENDGRID_API_KEY
-   - ADMIN_EMAIL (optional)
+If you'd like to deploy your own instance of this service, fork the repo and add the following github secrets:
+ - AWS_ACCESS_KEY_ID
+ - AWS_SECRET_ACCESS_KEY
+ - AWS_REGION
+ - S3_ARTIFACT_BUCKET 
+ - DOMAIN_NAME
+ - HOSTED_ZONE_ID
+ - SENDGRID_API_KEY
+ - ADMIN_EMAIL (optional)
 
 ## First deploy
 The first time you're deploying this stack you'll need to run the following command:
