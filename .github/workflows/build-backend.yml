@@ -14,6 +14,13 @@ jobs:
       run: |
         PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
         echo "::set-output name=number::$PR_NUMBER" 
+      
+  quote:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: Dunklas/pr-quote-action@v1.0
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
   changes:
     runs-on: ubuntu-latest
