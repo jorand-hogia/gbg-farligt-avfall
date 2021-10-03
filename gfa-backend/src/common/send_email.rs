@@ -81,9 +81,9 @@ pub async fn send_email(api_key: &str, request: SendEmailRequest) -> Result<(), 
           if res.status().is_success() {
             return Ok(());
           }
-          return Err(Box::new(BadStatusCode{
+          Err(Box::new(BadStatusCode{
             status_code: res.status()
-          }));
+          }))
         },
         Err(e) => Err(Box::new(e))
       }

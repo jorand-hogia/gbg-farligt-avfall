@@ -44,10 +44,7 @@ pub async fn get_by_date(table: String, region: Region, date: String) -> Result<
                 item.get("location_id").unwrap().s.as_ref().unwrap().clone(),
                 item.get("street").unwrap().s.as_ref().unwrap().clone(),
                 item.get("district").unwrap().s.as_ref().unwrap().clone(),
-                match item.get("description") {
-                    Some(description) => Some(description.s.as_ref().unwrap().clone()),
-                    None => None,
-                },
+                item.get("description").map(|description| description.s.as_ref().unwrap().clone()),
                 item.get("start_time").unwrap().s.as_ref().unwrap().clone(),
                 item.get("end_time").unwrap().s.as_ref().unwrap().clone(),
             ).unwrap()
