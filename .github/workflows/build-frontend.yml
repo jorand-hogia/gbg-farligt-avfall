@@ -1,9 +1,6 @@
 name: Build/Test frontend
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'gfa-frontend/**'
+  workflow_dispatch:
 jobs:
   test-frontend:
     name: Test frontend

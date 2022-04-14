@@ -1,7 +1,6 @@
 name: Build/Test backend
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 env:
   EXECUTABLES: "get-stops save-events scraper notify add-subscription verify-subscription remove-subscription"
 jobs:

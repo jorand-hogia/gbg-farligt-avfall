@@ -1,9 +1,6 @@
 name: Build infrastructure
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'gfa-iac/**'
+  workflow_dispatch:
 jobs:
   test-infastructure:
     name: Test infastructure

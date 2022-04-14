@@ -1,4 +1,13 @@
 # gbg-farligt-avfall
+
+**ARCHIVED!**
+
+Göteborg Stad now provides a notification service of its own, hence there's no need for me to maintain this service any longer. 
+
+See: https://goteborg.se/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/fa-sms-nar-farligt-avfall-bilen-kommer
+
+---
+
 The purpose of this repository is to send e-mail notifications when the [Göteborg Farligt Avfall truck](https://goteborg.se/wps/portal/start/avfall-och-atervinning/har-lamnar-hushall-avfall/farligtavfallbilen/farligt-avfall-bilen) is about to arrive to a subscribed location.
 
 The service is deployed to AWS, and exposes the following API endpoints:
