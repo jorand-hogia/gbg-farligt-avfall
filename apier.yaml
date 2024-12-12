@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: gbg-farligt-avfall-api
+  description: API för hantering av insamling av farligt avfall
+  url: https://api.gbg-farligt-avfall.se
+spec:
+  type: openapi
+  lifecycle: production
+  owner: Drunken
