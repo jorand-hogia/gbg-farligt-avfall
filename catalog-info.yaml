@@ -1,19 +1,19 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: linjeguiden
+  name: Göteborg Farligt Avfall
   description: |
-    LinjeGuiden is a web based driver support application
+    Janne
   links:
     - title: Website
-      url: https://linjeguiden.transitcloud.se/journeyguide1.7.0/
+      url: https://aftonbladet.se
     - title: Documentation
-      url: https://hogia.sharepoint.com/sites/Site0114/Delade%20dokument/Forms/AllItems.aspx?FolderCTID=0x012000F1244823A6840E41814785E51F9FA19C&id=%2Fsites%2FSite0114%2FDelade%20dokument%2FProdukt%2FProdukter%2FLinjeGuiden%2FDokumentation&viewid=fa9c110e%2Ddac5%2D49cc%2Da028%2D2e3c2b0d71c5
+      url: https://www.expressen.se
   annotations:
     github.com/project-slug: backstage/backstage
     backstage.io/techdocs-ref: dir:.
     lighthouse.com/website-url: https://backstage.io  
 spec:
   type: application
-  owner: Götarna
+  owner: Dunken
   lifecycle: production
