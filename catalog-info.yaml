@@ -1,7 +1,9 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: Goteborg Farligt Avfall
+  name: gbgfarligtavfall
+  description: |
+    Janne
   links:
     - title: Website
       url: https://aftonbladet.se
