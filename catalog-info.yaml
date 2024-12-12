@@ -17,3 +17,5 @@ spec:
   type: application
   owner: Dunken
   lifecycle: production
+  dependsOn:
+    - component: apier.yaml
