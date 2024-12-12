@@ -18,4 +18,4 @@ spec:
   owner: Dunken
   lifecycle: production
   dependsOn:
-    - component: apier.yaml
+    - component: gbg-farligt-avfall-api
