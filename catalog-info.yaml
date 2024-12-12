@@ -17,5 +17,3 @@ spec:
   type: application
   owner: Dunken
   lifecycle: production
-  dependsOn:
-    - component: gbg-farligt-avfall-api
